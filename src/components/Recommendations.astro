@@ -1,0 +1,293 @@
+---
+/** LinkedIn recommendations: pick a name, read their letter. */
+import { RELATIONS, recommendations } from '../data/recommendations';
+
+const items = recommendations.map((r) => ({
+	...r,
+	year: r.date.slice(0, 4),
+	rel: RELATIONS[r.relation].en,
+}));
+---
+
+<section class="recs" aria-labelledby="recs-heading" data-recs data-reveal>
+	<p class="kicker"><span class="n">03</span> Recommendations</p>
+	<h2 id="recs-heading">What colleagues say.</h2>
+
+	<div class="layout">
+		<div class="names" role="tablist" aria-label="Recommendations" aria-orientation="vertical">
+			{
+				items.map((r, i) => (
+					<button
+						type="button"
+						role="tab"
+						id={`rec-tab-${i}`}
+						aria-controls={`rec-${i}`}
+						aria-selected={i === 0 ? 'true' : 'false'}
+						tabindex={i === 0 ? 0 : -1}
+						data-tab={i}
+					>
+						<span class="num">{String(i + 1).padStart(2, '0')}</span>
+						<span class="nm">{r.name}</span>
+					</button>
+				))
+			}
+		</div>
+
+		<div class="letters">
+			{
+				items.map((r, i) => (
+					<article class="letter" role="tabpanel" id={`rec-${i}`} aria-labelledby={`rec-tab-${i}`} hidden={i !== 0} data-letter>
+						<blockquote>
+							<p>{r.pull}</p>
+						</blockquote>
+						<button type="button" class="more" data-more aria-expanded="false" aria-controls={`rec-full-${i}`}>
+							<span data-more-label>Read the full letter</span> <span aria-hidden="true">+</span>
+						</button>
+						<div class="full" id={`rec-full-${i}`}>
+							<div>
+								{r.text.map((p) => (
+									<p>{p}</p>
+								))}
+							</div>
+						</div>
+						<footer>
+							<a href={r.linkedin} target="_blank" rel="noopener noreferrer" class="who">
+								{r.name} <span aria-hidden="true">↗</span>
+								<span class="sr-only">(LinkedIn, opens in a new tab)</span>
+							</a>
+							<span class="role">{r.role}</span>
+							<span class="meta">
+								{r.rel} · {r.org ? `${r.org} · ` : ''}
+								{r.year}
+							</span>
+						</footer>
+					</article>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<script>
+	import { tick } from '../lib/sound';
+
+	function init() {
+		const root = document.querySelector<HTMLElement>('[data-recs]');
+		if (!root || root.dataset.ready) return;
+		root.dataset.ready = '1';
+		const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+		const letters = [...root.querySelectorAll<HTMLElement>('[data-letter]')];
+		let current = 0;
+
+		function select(i: number, focus = false) {
+			i = (i + tabs.length) % tabs.length;
+			tabs.forEach((t, k) => {
+				t.setAttribute('aria-selected', String(k === i));
+				t.tabIndex = k === i ? 0 : -1;
+			});
+			letters.forEach((l, k) => {
+				l.hidden = k !== i;
+				l.classList.toggle('enter', k === i);
+			});
+			if (focus) tabs[i].focus();
+			if (i !== current) tick();
+			current = i;
+		}
+
+		tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
+		root.querySelector('[role=tablist]')!.addEventListener('keydown', (e) => {
+			const k = (e as KeyboardEvent).key;
+			const map: Record<string, number> = {
+				ArrowDown: current + 1,
+				ArrowRight: current + 1,
+				ArrowUp: current - 1,
+				ArrowLeft: current - 1,
+				Home: 0,
+				End: tabs.length - 1,
+			};
+			if (k in map) {
+				e.preventDefault();
+				select(map[k], true);
+			}
+		});
+		root.querySelectorAll<HTMLButtonElement>('[data-more]').forEach((b) => {
+			b.addEventListener('click', () => {
+				const open = b.getAttribute('aria-expanded') !== 'true';
+				b.setAttribute('aria-expanded', String(open));
+				b.querySelector('[data-more-label]')!.textContent = open ? 'Fold the letter' : 'Read the full letter';
+			});
+		});
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.recs {
+		margin: 0 0 7rem;
+	}
+	h2 {
+		margin: 0 0 2.5rem;
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
+	}
+	.layout {
+		display: grid;
+		grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: start;
+	}
+	.names {
+		display: flex;
+		flex-direction: column;
+		border-left: 1px solid var(--rule);
+	}
+	[role='tab'] {
+		display: flex;
+		gap: 0.75rem;
+		align-items: baseline;
+		margin-left: -1px;
+		padding: 0.5rem 0 0.5rem 1rem;
+		border: 0;
+		border-left: 2px solid transparent;
+		background: none;
+		color: var(--muted);
+		font: inherit;
+		font-size: 0.95rem;
+		text-align: left;
+		cursor: pointer;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+	[role='tab']:hover {
+		color: var(--text);
+	}
+	[role='tab'][aria-selected='true'] {
+		border-left-color: var(--accent);
+		color: var(--text);
+		font-weight: 600;
+	}
+	[role='tab']:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: -2px;
+	}
+	.num {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		font-weight: 400;
+		color: var(--faint);
+	}
+	[aria-selected='true'] .num {
+		color: var(--accent);
+	}
+
+	.letter.enter {
+		animation: rise 0.5s var(--ease-out);
+	}
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+	}
+	blockquote {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		color: var(--text);
+	}
+	blockquote p {
+		margin: 0;
+		font-size: clamp(1.4rem, 3vw, 2rem);
+		font-weight: 500;
+		line-height: 1.3;
+		letter-spacing: -0.025em;
+		text-wrap: pretty;
+	}
+	blockquote p::before {
+		content: '“';
+		color: var(--accent);
+	}
+	blockquote p::after {
+		content: '”';
+		color: var(--accent);
+	}
+	.more {
+		margin-top: 1.25rem;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: var(--blue);
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.full {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 0.45s var(--ease-out);
+	}
+	.full > div {
+		overflow: hidden;
+	}
+	.more[aria-expanded='true'] + .full {
+		grid-template-rows: 1fr;
+	}
+	.full p {
+		margin: 0.85rem 0 0;
+		max-width: 44rem;
+		color: var(--muted);
+		font-size: 1rem;
+	}
+	footer {
+		display: grid;
+		gap: 0.1rem;
+		margin-top: 1.75rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--rule);
+		max-width: 44rem;
+	}
+	.who {
+		color: var(--text);
+		font-weight: 600;
+		text-decoration: none;
+	}
+	.who:hover {
+		color: var(--accent);
+	}
+	.role {
+		color: var(--muted);
+		font-size: 0.92rem;
+	}
+	.meta {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	@media (max-width: 760px) {
+		.layout {
+			grid-template-columns: 1fr;
+		}
+		.names {
+			flex-direction: row;
+			overflow-x: auto;
+			border-left: 0;
+			border-bottom: 1px solid var(--rule);
+			scrollbar-width: none;
+		}
+		[role='tab'] {
+			flex: none;
+			margin: 0 0 -1px;
+			padding: 0.5rem 0.75rem;
+			border-left: 0;
+			border-bottom: 2px solid transparent;
+		}
+		[role='tab'][aria-selected='true'] {
+			border-bottom-color: var(--accent);
+		}
+	}
+</style>

@@ -36,8 +36,8 @@ const ogImage = image
 		<link rel="sitemap" href="/sitemap-index.xml" />
 		<link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={new URL('rss.xml', Astro.site)} />
 		<link rel="canonical" href={canonicalURL} />
-		<Font cssVariable="--font-atkinson" preload />
-		<Font cssVariable="--font-display" />
+		<Font cssVariable="--font-sans" preload />
+		<Font cssVariable="--font-mono" />
 
 		<title>{fullTitle}</title>
 		<meta name="description" content={description} />
@@ -71,7 +71,7 @@ const ogImage = image
 		</script>
 		<ClientRouter />
 	</head>
-	<body>
+	<body class:list={{ 'grid-paper': wide }}>
 		<a class="skip" href="#main">Skip to content</a>
 		<Header />
 		<main id="main" class:list={['container', { wide }]}>

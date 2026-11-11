@@ -4,10 +4,9 @@ const year = new Date().getFullYear();
 ---
 
 <footer>
-	<div class="belt" aria-hidden="true"></div>
 	<div class="container wide inner">
 		<p>
-			© {year} {SITE_TITLE}
+			© {year} {SITE_TITLE} · Drawn in Bengaluru
 		</p>
 		<ul>
 			{
@@ -26,9 +25,13 @@ const year = new Date().getFullYear();
 
 <style>
 	footer {
-		padding: 0 0 2.5rem;
-		color: var(--muted);
-		font-size: 0.95rem;
+		padding: 1.5rem 0 2.5rem;
+		border-top: 1px solid var(--rule);
+		color: var(--faint);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 	}
 	/* A black belt runs along the top of the footer. */
 	.belt {

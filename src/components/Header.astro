@@ -13,7 +13,7 @@ const path = Astro.url.pathname;
 	<nav class="container wide" aria-label="Main">
 		<a class="brand" href="/">
 			<img class="mark" src="/favicon.svg" width="36" height="36" alt="" />
-			<span>{SITE_TITLE}<span class="dot">.</span></span>
+			<span class="brand-name">{SITE_TITLE}<span class="dot">.</span></span>
 		</a>
 		<div class="links">
 			{
@@ -117,11 +117,11 @@ const path = Astro.url.pathname;
 		display: flex;
 		align-items: center;
 		gap: 0.6rem;
-		font-family: var(--font-display);
-		font-weight: 900;
+		font-weight: 650;
+		letter-spacing: -0.02em;
 		color: var(--text);
 		text-decoration: none;
-		font-size: 1.15rem;
+		font-size: 1.05rem;
 	}
 	.mark {
 		border-radius: 50%;
@@ -148,7 +148,10 @@ const path = Astro.url.pathname;
 		gap: 0.4rem;
 		color: var(--muted);
 		text-decoration: none;
-		font-size: 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 	}
 	.links a .ko {
 		font-size: 0.8rem;
@@ -242,6 +245,11 @@ const path = Astro.url.pathname;
 		}
 		:global(:root:not([data-theme='light'])) .moon {
 			display: block;
+		}
+	}
+	@media (max-width: 480px) {
+		.brand-name {
+			display: none;
 		}
 	}
 	@media (max-width: 640px) {

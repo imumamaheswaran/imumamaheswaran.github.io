@@ -17,10 +17,8 @@ const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en
 			const d = post.data.pubDate;
 			return (
 				<li class:list={{ featured: featureFirst && i === 0 }}>
-					<time class="seal" datetime={d.toISOString()}>
-						<span class="m">{fmt(d, { month: 'short' })}</span>
-						<span class="d">{fmt(d, { day: 'numeric' })}</span>
-						<span class="y">{fmt(d, { year: 'numeric' })}</span>
+					<time class="date" datetime={d.toISOString()}>
+						{fmt(d, { year: 'numeric', month: 'short', day: '2-digit' })}
 					</time>
 					<div class="body">
 						{featureFirst && i === 0 && <p class="flag">Latest</p>}
@@ -38,54 +36,30 @@ const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en
 		list-style: none;
 		margin: 0;
 		padding: 0;
+		border-top: 1px solid var(--rule);
 	}
 	li {
 		display: grid;
-		grid-template-columns: 4.25rem 1fr;
-		gap: 1.1rem;
-		align-items: start;
-		padding: 1.15rem 0;
-		border-bottom: 1px dashed var(--border);
+		grid-template-columns: 7.5rem minmax(0, 1fr);
+		gap: 1.5rem;
+		padding: 1.25rem 0;
+		border-bottom: 1px solid var(--border);
 	}
-	li:last-child {
-		border-bottom: 0;
-	}
-	/* The date is pressed like a red ink seal. */
-	.seal {
-		display: grid;
-		justify-items: center;
-		line-height: 1;
-		gap: 0.15rem;
-		padding: 0.45rem 0.2rem 0.4rem;
-		border: 3px double var(--accent);
-		border-radius: 4px;
-		color: var(--accent);
-		font-family: var(--font-display);
-		transform: rotate(-2deg);
-		transition: transform 0.35s var(--ease-press);
-	}
-	li:hover .seal {
-		transform: rotate(-7deg) translateY(-2px) scale(1.04);
-	}
-	.m {
-		font-size: 0.7rem;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-	}
-	.d {
-		font-size: 1.35rem;
-		font-weight: 900;
-	}
-	.y {
-		font-size: 0.7rem;
-		opacity: 0.85;
+	.date {
+		padding-top: 0.2rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		color: var(--faint);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 	.body {
 		min-width: 0;
 	}
 	a {
-		font-weight: 700;
+		font-weight: 600;
 		font-size: 1.15rem;
+		letter-spacing: -0.015em;
 		color: var(--text);
 		text-decoration: none;
 		line-height: 1.35;
@@ -94,43 +68,23 @@ const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en
 		color: var(--accent);
 	}
 	.desc {
-		margin: 0.3rem 0 0.4rem;
+		margin: 0.35rem 0 0;
 		color: var(--muted);
-		font-size: 1rem;
+		font-size: 0.98rem;
 		line-height: 1.55;
 	}
-	.featured {
-		grid-template-columns: 5.25rem 1fr;
-		padding: 1.5rem;
-		margin-bottom: 0.5rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 10px;
-	}
-	.featured a {
-		font-size: 1.45rem;
-		font-family: var(--font-display);
-		font-weight: 900;
-	}
-	.featured .d {
-		font-size: 1.75rem;
-	}
 	.flag {
-		margin: 0 0 0.35rem;
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
+		margin: 0 0 0.25rem;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--accent);
 	}
-	@media (max-width: 480px) {
-		li,
-		.featured {
-			grid-template-columns: 3.6rem 1fr;
-			gap: 0.85rem;
-		}
-		.featured {
-			padding: 1rem;
+	@media (max-width: 560px) {
+		li {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
 		}
 	}
 </style>

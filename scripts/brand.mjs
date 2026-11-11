@@ -107,8 +107,8 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width
   <path d="M-300 0A300 300 0 0 1 300 0A150 150 0 0 1 0 0A150 150 0 0 0 -300 0Z" fill="${C.red}"/>
 </g>
 <text x="80" y="150" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="${C.red}">SOFTWARE ARCHITECT · BENGALURU</text>
-<text x="80" y="260" font-family="Georgia, serif" font-size="80" font-weight="900" fill="#0d0e10">Umamaheswaran<tspan fill="${C.red}">.</tspan></text>
-<text x="80" y="330" font-family="Georgia, serif" font-size="36" font-weight="700" fill="${C.blue}">Software Architect <tspan fill="#9aa0a8">/</tspan> <tspan fill="#555a63">Engineering Manager</tspan></text>
+<text x="80" y="260" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="80" font-weight="900" fill="#0d0e10">Umamaheswaran<tspan fill="${C.red}">.</tspan></text>
+<text x="80" y="330" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="36" font-weight="700" fill="${C.blue}">Software Architect <tspan fill="#9aa0a8">/</tspan> <tspan fill="#555a63">Engineering Manager</tspan></text>
 <text x="80" y="392" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#555a63">.NET · React · Azure/AWS · AI · Taekwondo black belt</text>
 <text x="80" y="470" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#0d0e10">umamaheswaran.com</text>
 <g transform="translate(830 150) scale(1.1)">

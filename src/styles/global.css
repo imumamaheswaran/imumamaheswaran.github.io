@@ -1,56 +1,66 @@
-/* Dobok white, black belt, and the red/blue of the taegeuk. */
+/* Blueprint paper: ink, one red accent, blue for structure. */
 :root {
-	--bg: #f7f8fa;
+	--bg: #f8f9fb;
 	--surface: #ffffff;
-	--text: #0d0e10;
-	--muted: #555a63;
-	--border: #e1e4e9;
+	--text: #0e1116;
+	--muted: #5a606b;
+	--faint: #8a909a;
+	--border: #dfe3e8;
+	--rule: #c9cfd7;
+	--grid: rgb(0 71 160 / 0.055);
 	--accent: #cd2e3a;
 	--accent-soft: #fbe9ea;
 	--blue: #0047a0;
 	--wood: #d9b27c;
 	--wood-dark: #a77a43;
-	--belt: #0d0e10;
+	--belt: #0e1116;
 	--gold: #c9a14a;
 	--code-bg: #eef0f3;
+	--font-display: var(--font-sans);
 	--measure: 42rem;
-	--wide: 66rem;
+	--wide: 68rem;
 	--ease-press: cubic-bezier(0.2, 0.9, 0.3, 1.2);
 	color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #0a0b0d;
-		--surface: #131519;
-		--text: #f2f3f5;
-		--muted: #9ba1ab;
-		--border: #262a31;
-		--accent: #ff4d5a;
-		--accent-soft: #2a1316;
-		--blue: #4d8dff;
+		--bg: #0b111b;
+		--surface: #111926;
+		--text: #e9edf3;
+		--muted: #9aa4b2;
+		--faint: #6c7686;
+		--border: #222d3c;
+		--rule: #2c3a4d;
+		--grid: rgb(120 160 230 / 0.07);
+		--accent: #ff5a66;
+		--accent-soft: #2a1519;
+		--blue: #6fa0ff;
 		--wood: #b88d55;
 		--wood-dark: #7c5a2f;
 		--belt: #000000;
 		--gold: #d8b45e;
-		--code-bg: #181b20;
+		--code-bg: #151e2c;
 		color-scheme: dark;
 	}
 }
 :root[data-theme='dark'] {
-	--bg: #0a0b0d;
-	--surface: #131519;
-	--text: #f2f3f5;
-	--muted: #9ba1ab;
-	--border: #262a31;
-	--accent: #ff4d5a;
-	--accent-soft: #2a1316;
-	--blue: #4d8dff;
+	--bg: #0b111b;
+	--surface: #111926;
+	--text: #e9edf3;
+	--muted: #9aa4b2;
+	--faint: #6c7686;
+	--border: #222d3c;
+	--rule: #2c3a4d;
+	--grid: rgb(120 160 230 / 0.07);
+	--accent: #ff5a66;
+	--accent-soft: #2a1519;
+	--blue: #6fa0ff;
 	--wood: #b88d55;
 	--wood-dark: #7c5a2f;
 	--belt: #000000;
 	--gold: #d8b45e;
-	--code-bg: #181b20;
+	--code-bg: #151e2c;
 	color-scheme: dark;
 }
 
@@ -68,9 +78,10 @@ body {
 	margin: 0;
 	background: var(--bg);
 	color: var(--text);
-	font-family: var(--font-atkinson);
-	font-size: 1.125rem;
+	font-family: var(--font-sans);
+	font-size: 1.0625rem;
 	line-height: 1.7;
+	-webkit-font-smoothing: antialiased;
 	overflow-wrap: break-word;
 }
 
@@ -84,27 +95,42 @@ body {
 	max-width: var(--wide);
 }
 
-/* Small bilingual label: English with its Korean term. */
-.ko {
-	font-family: var(--font-display);
-	font-weight: 600;
+/* Grid paper behind the home page, fading out toward the edges. */
+.grid-paper {
+	background-image:
+		linear-gradient(var(--grid) 1px, transparent 1px),
+		linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+	background-size: 32px 32px;
+	background-position: center top;
 }
+
+/* Mono section label, e.g. "01 — Architecture". */
 .kicker {
 	display: flex;
 	align-items: center;
-	gap: 0.6rem;
-	font-size: 0.8rem;
-	font-weight: 700;
-	letter-spacing: 0.12em;
+	gap: 0.75rem;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--muted);
-	margin: 0 0 0.75rem;
+	margin: 0 0 1rem;
 }
-.kicker .ko {
+.kicker .n {
 	color: var(--accent);
-	letter-spacing: 0.05em;
-	font-size: 0.95rem;
-	text-transform: none;
+}
+.kicker::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--rule);
+}
+.kicker.bare::after {
+	display: none;
+}
+.mono {
+	font-family: var(--font-mono);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -125,10 +151,10 @@ h1,
 h2,
 h3,
 h4 {
-	font-family: var(--font-display);
-	font-weight: 900;
-	letter-spacing: -0.01em;
-	line-height: 1.25;
+	font-family: var(--font-sans);
+	font-weight: 650;
+	letter-spacing: -0.03em;
+	line-height: 1.15;
 	margin: 2em 0 0.6em;
 	text-wrap: balance;
 }
@@ -179,7 +205,7 @@ blockquote {
 }
 
 code {
-	font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+	font-family: var(--font-mono);
 	font-size: 0.875em;
 }
 :not(pre) > code {

@@ -1,13 +1,11 @@
 ---
-/** Home page hero: a black-belt certificate with toon Uma standing on it. */
-import Taegeuk from './Taegeuk.astro';
+/** Home page hero, drawn like the title sheet of a blueprint. */
 import avatarSvg from '../assets/avatar.svg?raw';
 ---
 
-<section class="cert" aria-labelledby="hero-name">
-	<div class="frame">
-		<Taegeuk size={352} class="watermark" />
-		<p class="kicker in-1">Bengaluru · 15+ years</p>
+<section class="hero" aria-labelledby="hero-name">
+	<div class="text">
+		<p class="kicker bare in-1"><span class="n">●</span> Software Architect // Bengaluru</p>
 		<h1 id="hero-name" aria-label="Umamaheswaran">
 			<span aria-hidden="true">
 				{[...'Umamaheswaran'].map((ch, i) => <span class="ch" style={`--i:${i}`}>{ch}</span>)}<span
@@ -16,46 +14,34 @@ import avatarSvg from '../assets/avatar.svg?raw';
 				>
 			</span>
 		</h1>
-		<p class="title in-2">
-			<span class="title-en">Software Architect</span>
-			<span class="title-sep" aria-hidden="true">/</span>
-			<span class="title-sub">Engineering Manager</span>
-		</p>
-		<p class="role in-2">
-			I design platforms in .NET, React and the cloud. Off the keyboard, I'm a Taekwondo black belt.
-		</p>
-
-		<div class="actions in-4">
+		<div class="dim" aria-hidden="true">
+			<span class="dim-line"></span>
+			<span class="dim-label">15+ years · .NET · React · cloud</span>
+			<span class="dim-line"></span>
+		</div>
+		<p class="title in-2">Software Architect <span>/ Engineering Manager</span></p>
+		<p class="lede in-2">I design platforms that teams can build on, and lately the AI products that sit on top of them.</p>
+		<div class="actions in-3">
 			<a class="btn primary" href="#architecture">How I architect</a>
 			<a class="btn" href="/blog/">Read my writing</a>
 		</div>
+	</div>
 
+	<figure class="figure in-3">
 		<button type="button" class="toon" data-toon aria-label="Say hello to toon Uma">
 			<span class="toon-body" set:html={avatarSvg} />
 			<span class="bubble" data-bubble aria-live="polite"></span>
 		</button>
-
-		<!-- 도장 means both "training hall" and "seal". -->
-		<div class="seal" aria-hidden="true">
-			<span lang="ko">도장</span>
-		</div>
-	</div>
-
-	<div class="belt" aria-hidden="true">
-		<span class="embroidery">UMAMAHESWARAN · TAEKWONDO</span>
-		<svg class="knot" viewBox="0 0 120 130">
-			<path class="tail" d="M46 46 L64 46 L40 128 L18 122 Z"></path>
-			<path class="tail" d="M58 46 L76 46 L104 122 L82 128 Z"></path>
-			<rect class="k" x="36" y="6" width="48" height="44" rx="6"></rect>
-			<path class="fold" d="M40 12 L80 44 M80 12 L40 44"></path>
-		</svg>
-	</div>
+		<span class="callout c1" aria-hidden="true"><span>Black belt</span></span>
+		<span class="callout c2" aria-hidden="true"><span>Architect</span></span>
+		<figcaption class="mono">Fig. 1 — The architect, off duty</figcaption>
+	</figure>
 </section>
 
 <script>
 	import { whoosh } from '../lib/sound';
 
-	const LINES = ['Hello!', 'Taekwon!', 'Stance first.', 'Ship it small.', 'Draw the boxes first.'];
+	const LINES = ['Hello!', 'Taekwondo!', 'Stance first.', 'Ship it small.', 'Draw the boxes first.'];
 	function init() {
 		const toon = document.querySelector<HTMLButtonElement>('[data-toon]');
 		if (!toon || toon.dataset.ready) return;
@@ -77,167 +63,104 @@ import avatarSvg from '../assets/avatar.svg?raw';
 </script>
 
 <style>
-	.cert {
-		position: relative;
-		margin: 0 0 4.5rem;
-	}
-	.frame {
-		position: relative;
-		padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3.5rem) clamp(5rem, 9vw, 6rem);
-		background:
-			radial-gradient(60% 70% at 100% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
-			radial-gradient(50% 60% at 0% 100%, color-mix(in srgb, var(--blue) 7%, transparent), transparent 70%),
-			var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		box-shadow:
-			0 0 0 6px var(--surface),
-			0 0 0 7px var(--border),
-			0 24px 48px -28px rgb(0 0 0 / 0.35);
-		overflow: hidden;
-	}
-	/* Faint taegeuk watermark. */
-	.frame :global(.watermark) {
-		position: absolute;
-		right: -5rem;
-		bottom: -5rem;
-		width: 22rem;
-		height: auto;
-		opacity: 0.07;
-		pointer-events: none;
-	}
-	@supports (animation-timeline: view()) {
-		.frame :global(.watermark) {
-			animation: spin-watermark linear both;
-			animation-timeline: view();
-		}
-	}
-	@keyframes spin-watermark {
-		to {
-			transform: rotate(240deg);
-		}
-	}
-	.no {
-		margin-left: auto;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.06em;
-	}
-	.certify {
-		margin: 1.75rem 0 0.25rem;
-		font-family: var(--font-display);
-		font-style: italic;
-		color: var(--muted);
+	.hero {
+		display: grid;
+		grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: center;
+		min-height: min(78vh, 46rem);
+		padding: 2rem 0 4rem;
 	}
 	h1 {
-		font-size: clamp(2.4rem, 8vw, 4.75rem);
-		line-height: 1;
-		margin: 0 0 1.25rem;
-		letter-spacing: -0.03em;
-		overflow-wrap: anywhere;
+		margin: 0;
+		font-size: clamp(2.3rem, 5.6vw, 4.4rem);
+		font-weight: 700;
+		letter-spacing: -0.055em;
+		line-height: 0.95;
+		white-space: nowrap;
 	}
 	.dot {
 		color: var(--accent);
 	}
-	/* Entrance: letters snap up like a rising kick, then the rest follows. */
 	.ch {
 		display: inline-block;
-		animation: kick-up 0.75s var(--ease-out) both;
-		animation-delay: calc(var(--i) * 32ms + 80ms);
+		animation: rise 0.8s var(--ease-out) both;
+		animation-delay: calc(var(--i) * 28ms + 80ms);
 	}
-	@keyframes kick-up {
+	@keyframes rise {
 		from {
 			opacity: 0;
-			transform: translateY(0.55em) rotate(8deg);
+			transform: translateY(0.45em);
 		}
 	}
-	.dot.ch {
-		animation: dot-pop 0.6s var(--ease-press) 0.7s both;
-	}
-	@keyframes dot-pop {
-		from {
-			opacity: 0;
-			transform: scale(3);
-		}
-	}
-	.in-1,
-	.in-2,
-	.in-3,
-	.in-4 {
-		animation: fade-up 0.8s var(--ease-out) both;
-	}
-	.in-1 {
-		animation-delay: 0.05s;
-	}
-	.in-2 {
-		animation-delay: 0.45s;
-	}
-	.in-3 {
-		animation-delay: 0.6s;
-	}
-	.in-4 {
-		animation-delay: 0.75s;
-	}
-	@keyframes fade-up {
-		from {
-			opacity: 0;
-			transform: translateY(14px);
-		}
-	}
-	.title {
+
+	/* A drafting dimension line under the name. */
+	.dim {
 		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 0.2rem 0.6rem;
-		margin: -0.25rem 0 1rem;
-		font-family: var(--font-display);
-		font-weight: 900;
-		font-size: clamp(1.25rem, 3.2vw, 1.75rem);
-		line-height: 1.2;
-	}
-	.title-en {
+		align-items: center;
+		gap: 0.75rem;
+		margin: 1.1rem 0 1.75rem;
+		max-width: 34rem;
 		color: var(--blue);
+		animation: fade 0.6s var(--ease-out) 0.6s both;
 	}
-	.title-sep {
-		color: var(--border);
-		font-weight: 600;
+	.dim-line {
+		position: relative;
+		flex: 1;
+		height: 1px;
+		background: currentColor;
+		opacity: 0.6;
+		transform-origin: center;
+		animation: grow 0.8s var(--ease-out) 0.7s both;
 	}
-	.title-sub {
-		color: var(--muted);
-		font-weight: 600;
+	.dim-line:first-child::before,
+	.dim-line:last-child::after {
+		content: '';
+		position: absolute;
+		top: -5px;
+		width: 1px;
+		height: 11px;
+		background: currentColor;
 	}
-	.role {
-		max-width: 38rem;
-		font-size: clamp(1.05rem, 2.2vw, 1.25rem);
-		color: var(--muted);
-		margin-bottom: 2rem;
+	.dim-line:first-child::before {
+		left: 0;
 	}
-	.kicker {
-		margin-bottom: 1.25rem;
+	.dim-line:last-child::after {
+		right: 0;
 	}
-	.meta {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-		gap: 1rem 2rem;
-		margin: 0 0 2rem;
-		padding: 1.25rem 0;
-		border-block: 1px solid var(--border);
-		max-width: 46rem;
-	}
-	.meta dt {
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
+	.dim-label {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
+		white-space: nowrap;
+	}
+	@keyframes grow {
+		from {
+			transform: scaleX(0);
+		}
+	}
+	@keyframes fade {
+		from {
+			opacity: 0;
+		}
+	}
+
+	.title {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.25rem, 2.6vw, 1.6rem);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+	.title span {
 		color: var(--muted);
+		font-weight: 400;
 	}
-	.meta dt span {
-		color: var(--accent);
-		letter-spacing: 0;
-		margin-left: 0.2rem;
-	}
-	.meta dd {
-		margin: 0.2rem 0 0;
-		font-weight: 700;
+	.lede {
+		max-width: 32rem;
+		margin: 0 0 2rem;
+		color: var(--muted);
+		font-size: 1.1rem;
 	}
 	.actions {
 		display: flex;
@@ -248,77 +171,65 @@ import avatarSvg from '../assets/avatar.svg?raw';
 		display: inline-flex;
 		align-items: center;
 		min-height: 2.75rem;
-		padding: 0 1.15rem;
-		border: 1.5px solid var(--text);
-		border-radius: 4px;
+		padding: 0 1.2rem;
+		border: 1px solid var(--text);
 		color: var(--text);
-		font-weight: 700;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 500;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		text-decoration: none;
 		transition:
-			transform 0.2s var(--ease-press),
-			box-shadow 0.2s;
+			background 0.2s,
+			color 0.2s;
 	}
 	.btn:hover {
-		transform: translate(-2px, -2px);
-		box-shadow: 3px 3px 0 var(--text);
-	}
-	.btn:active {
-		transform: translate(0, 0);
-		box-shadow: none;
+		background: var(--text);
+		color: var(--bg);
 	}
 	.btn.primary {
+		background: var(--text);
+		color: var(--bg);
+	}
+	.btn.primary:hover {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: #fff;
 	}
-	.btn.primary:hover {
-		box-shadow: 3px 3px 0 var(--text);
+	.in-1,
+	.in-2,
+	.in-3 {
+		animation: fade-up 0.8s var(--ease-out) both;
 	}
-	.seal {
-		position: absolute;
-		top: clamp(4rem, 9vw, 5.5rem);
-		right: clamp(1rem, 5vw, 3.5rem);
-		display: grid;
-		place-items: center;
-		width: clamp(4.5rem, 11vw, 6.5rem);
-		aspect-ratio: 1;
-		border: 4px solid var(--accent);
-		border-radius: 8px;
-		color: var(--accent);
-		font-family: var(--font-display);
-		font-weight: 900;
-		font-size: clamp(1.1rem, 3vw, 1.6rem);
-		writing-mode: vertical-rl;
-		letter-spacing: 0.15em;
-		transform: rotate(8deg);
-		opacity: 0.9;
-		box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 5px var(--accent);
-		animation: stamp 0.7s 1.5s var(--ease-press) both;
+	.in-2 {
+		animation-delay: 0.45s;
 	}
-	@keyframes stamp {
+	.in-3 {
+		animation-delay: 0.65s;
+	}
+	@keyframes fade-up {
 		from {
-			transform: rotate(-10deg) scale(1.8);
 			opacity: 0;
+			transform: translateY(14px);
 		}
 	}
-	/* Toon Uma stands on the right, on top of the belt. */
+
+	/* Fig. 1: the toon, with drafting callouts. */
+	.figure {
+		position: relative;
+		margin: 0;
+		justify-self: center;
+		width: min(100%, 20rem);
+	}
 	.toon {
-		position: absolute;
-		right: clamp(1rem, 6vw, 4.5rem);
-		bottom: 3.25rem;
-		width: clamp(13rem, 24vw, 17rem);
+		position: relative;
+		display: block;
+		width: 100%;
 		padding: 0;
 		border: 0;
 		background: none;
 		cursor: pointer;
-		z-index: 1;
-		animation: toon-in 0.9s var(--ease-press) 0.9s both;
-	}
-	@keyframes toon-in {
-		from {
-			opacity: 0;
-			transform: translateY(40px);
-		}
 	}
 	.toon-body {
 		display: block;
@@ -369,24 +280,20 @@ import avatarSvg from '../assets/avatar.svg?raw';
 	.toon:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 4px;
-		border-radius: 8px;
 	}
 	.bubble {
 		position: absolute;
-		top: -4%;
-		left: -12%;
-		padding: 0.45rem 0.8rem;
-		border: 2px solid var(--text);
-		border-radius: 14px 14px 2px 14px;
-		background: var(--surface);
+		top: 2%;
+		left: -8%;
+		padding: 0.4rem 0.75rem;
+		border: 1px solid var(--text);
+		background: var(--bg);
 		color: var(--text);
-		font-family: var(--font-display);
-		font-weight: 900;
-		font-size: 0.95rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
 		white-space: nowrap;
 		opacity: 0;
-		transform: scale(0.6) translateY(8px);
-		transform-origin: 100% 100%;
+		transform: translateY(8px);
 		transition:
 			opacity 0.2s,
 			transform 0.35s var(--ease-press);
@@ -396,104 +303,71 @@ import avatarSvg from '../assets/avatar.svg?raw';
 		opacity: 1;
 		transform: none;
 	}
-	/* Leave room for the toon beside the text on wide screens. */
-	@media (min-width: 900px) {
-		.role {
-			max-width: calc(100% - 18rem);
-		}
-	}
-	@media (max-width: 899px) {
-		.toon {
-			position: relative;
-			right: auto;
-			bottom: auto;
-			display: block;
-			width: 13rem;
-			margin: 1.5rem auto -1.5rem;
-		}
-		.bubble {
-			left: auto;
-			right: 85%;
-		}
-	}
-
-	/* The black belt tied across the bottom of the certificate. */
-	.belt {
+	.callout {
 		position: absolute;
-		left: -1rem;
-		right: -1rem;
-		bottom: 1.4rem;
-		height: 1.9rem;
 		display: flex;
 		align-items: center;
-		background:
-			repeating-linear-gradient(90deg, transparent 0 7px, rgb(255 255 255 / 0.05) 7px 8px),
-			linear-gradient(var(--belt), var(--belt));
-		box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.5);
-		transform-origin: left center;
-		animation: belt-in 0.9s var(--ease-out) 0.5s both;
-	}
-	@keyframes belt-in {
-		from {
-			clip-path: inset(-5rem 100% -8rem 0);
-		}
-		to {
-			clip-path: inset(-5rem -2rem -8rem 0);
-		}
-	}
-	.embroidery {
-		padding-left: clamp(2rem, 6vw, 4.5rem);
-		color: var(--gold);
-		font-size: 0.7rem;
-		font-weight: 700;
-		letter-spacing: 0.3em;
+		gap: 0.5rem;
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--blue);
 		white-space: nowrap;
+		pointer-events: none;
 	}
-	.knot {
+	.callout::before {
+		content: '';
+		width: 2rem;
+		height: 1px;
+		background: currentColor;
+		opacity: 0.7;
+	}
+	.callout::after {
+		content: '';
 		position: absolute;
-		right: 18%;
-		top: -0.55rem;
-		width: 4.6rem;
-		overflow: visible;
-		animation: knot-drop 0.6s var(--ease-press) 1.25s both;
+		left: -3px;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: currentColor;
 	}
-	@keyframes knot-drop {
-		from {
-			opacity: 0;
-			transform: translateY(-1.2rem) scale(0.6);
+	.c1 {
+		left: 90%;
+		bottom: 15%;
+	}
+	.c2 {
+		left: 66%;
+		top: 30%;
+	}
+	figcaption {
+		margin-top: 0.75rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--rule);
+		font-size: 0.7rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+		text-align: center;
+	}
+
+	@media (max-width: 820px) {
+		.hero {
+			grid-template-columns: 1fr;
+			min-height: 0;
+			padding-top: 0.5rem;
 		}
-	}
-	.knot .k,
-	.knot .tail {
-		fill: var(--belt);
-		stroke: color-mix(in srgb, var(--gold) 35%, transparent);
-		stroke-width: 1.5;
-	}
-	.knot .fold {
-		stroke: rgb(255 255 255 / 0.12);
-		stroke-width: 2;
-	}
-	.knot .tail {
-		transform-origin: 60px 46px;
-		animation: sway 4s ease-in-out infinite alternate;
-	}
-	@keyframes sway {
-		to {
-			transform: rotate(3deg);
+		.figure {
+			width: min(80%, 16rem);
 		}
-	}
-	@media (max-width: 680px) {
-		.seal {
-			top: 1rem;
-			width: 3.6rem;
-			font-size: 0.95rem;
-			border-width: 3px;
-		}
-		.no {
+		.callout {
 			display: none;
 		}
-		.knot {
-			right: 8%;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.toon-body,
+		.toon-body :global(.eyes) {
+			animation: none;
 		}
 	}
 </style>

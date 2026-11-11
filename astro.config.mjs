@@ -21,33 +21,17 @@ export default defineConfig({
 	fonts: [
 		{
 			provider: fontProviders.google(),
-			name: 'Noto Serif KR',
-			cssVariable: '--font-display',
-			weights: [600, 900],
-			subsets: ['latin', 'korean'],
-			fallbacks: ['Georgia', 'serif'],
+			name: 'Geist',
+			cssVariable: '--font-sans',
+			weights: ['300 800'],
+			fallbacks: ['system-ui', 'sans-serif'],
 		},
 		{
-			provider: fontProviders.local(),
-			name: 'Atkinson',
-			cssVariable: '--font-atkinson',
-			fallbacks: ['sans-serif'],
-			options: {
-				variants: [
-					{
-						src: ['./src/assets/fonts/atkinson-regular.woff'],
-						weight: 400,
-						style: 'normal',
-						display: 'swap',
-					},
-					{
-						src: ['./src/assets/fonts/atkinson-bold.woff'],
-						weight: 700,
-						style: 'normal',
-						display: 'swap',
-					},
-				],
-			},
+			provider: fontProviders.google(),
+			name: 'Geist Mono',
+			cssVariable: '--font-mono',
+			weights: [400, 500, 600],
+			fallbacks: ['ui-monospace', 'monospace'],
 		},
 	],
 });

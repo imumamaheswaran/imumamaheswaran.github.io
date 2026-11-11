@@ -2,7 +2,8 @@
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
 import Architecture from '../components/Architecture.astro';
-import BeltRack from '../components/BeltRack.astro';
+import Experience from '../components/Experience.astro';
+import Recommendations from '../components/Recommendations.astro';
 import Bookshelf from '../components/Bookshelf.astro';
 import PostList from '../components/PostList.astro';
 import { getPosts } from '../lib/posts';
@@ -17,22 +18,23 @@ const latest = posts.slice(0, 4);
 
 	<Architecture />
 
-	<BeltRack />
+	<Experience />
+
+	<Recommendations />
 
 	<Bookshelf />
 
 	<section class="writing" aria-labelledby="writing-heading" data-reveal>
+		<p class="kicker"><span class="n">05</span> Writing</p>
 		<div class="row">
-			<div>
-				<p class="kicker">Writing</p>
-				<h2 id="writing-heading">Latest posts</h2>
-			</div>
+			<h2 id="writing-heading">Latest posts.</h2>
 			<a class="all" href="/blog/">All {posts.length} posts →</a>
 		</div>
 		<PostList posts={latest} />
 	</section>
 
 	<section class="hello" aria-labelledby="hello-heading" data-reveal>
+		<p class="kicker"><span class="n">06</span> Contact</p>
 		<h2 id="hello-heading">Say hello.</h2>
 		<ul>
 			{
@@ -52,53 +54,57 @@ const latest = posts.slice(0, 4);
 <style>
 	h2 {
 		margin: 0;
-		font-size: clamp(1.6rem, 4vw, 2.25rem);
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
 	}
 	.writing {
-		margin: 6rem 0;
-	}
-	.writing :global(.post-list) {
-		max-width: 50rem;
+		margin: 0 0 7rem;
 	}
 	.row {
 		display: flex;
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: 1rem;
-		margin-bottom: 1rem;
+		margin-bottom: 2rem;
+		max-width: 52rem;
+	}
+	.writing :global(.post-list) {
+		max-width: 52rem;
 	}
 	.all {
-		font-weight: 700;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 		white-space: nowrap;
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.all:hover {
+		color: var(--accent);
 	}
 	.hello {
-		text-align: center;
-		margin: 6rem auto 4rem;
+		margin: 0 0 5rem;
 	}
 	.hello ul {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.75rem;
+		gap: 0.75rem 2rem;
 		list-style: none;
 		margin: 1.5rem 0 0;
 		padding: 0;
 	}
 	.hello a {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		min-height: 2.75rem;
-		padding: 0 1.1rem;
-		border: 1px solid var(--border);
-		border-radius: 999px;
-		background: var(--surface);
+		font-family: var(--font-mono);
+		font-size: 0.9rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 		color: var(--text);
 		text-decoration: none;
-		font-weight: 700;
+		border-bottom: 1px solid var(--rule);
+		padding-bottom: 0.2rem;
 	}
 	.hello a:hover {
-		border-color: var(--accent);
 		color: var(--accent);
+		border-color: var(--accent);
 	}
 </style>

@@ -24,7 +24,7 @@ const dims = (title: string, i: number) => ({
 
 <section class="books" aria-labelledby="books-heading" data-reveal>
 	<div class="head">
-		<p class="kicker">Bookshelf</p>
+		<p class="kicker"><span class="n">04</span> Bookshelf</p>
 		<h2 id="books-heading">Books that shaped how I build.</h2>
 	</div>
 
@@ -75,11 +75,11 @@ const dims = (title: string, i: number) => ({
 
 <style>
 	.books {
-		margin: 6rem 0;
+		margin: 0 0 7rem;
 	}
 	h2 {
-		margin: 0 0 2rem;
-		font-size: clamp(1.6rem, 4vw, 2.25rem);
+		margin: 0 0 2.5rem;
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
 	}
 
 	/* Featured books: a drawn cover beside a short note. */
@@ -91,12 +91,8 @@ const dims = (title: string, i: number) => ({
 	}
 	.fav {
 		display: flex;
-		gap: 1.25rem;
+		gap: 1.5rem;
 		align-items: center;
-		padding: 1.25rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: 8px;
 	}
 	.cover {
 		flex: none;
@@ -121,8 +117,7 @@ const dims = (title: string, i: number) => ({
 		transform: rotate(0) translateY(-4px) scale(1.04);
 	}
 	.c-title {
-		font-family: var(--font-display);
-		font-weight: 900;
+		font-weight: 700;
 		font-size: 0.8rem;
 		line-height: 1.15;
 	}
@@ -133,12 +128,10 @@ const dims = (title: string, i: number) => ({
 	.badge {
 		display: inline-block;
 		margin: 0 0 0.4rem;
-		padding: 0.1rem 0.5rem;
-		border-radius: 3px;
-		background: var(--accent-soft);
 		color: var(--accent);
-		font-size: 0.7rem;
-		font-weight: 700;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		font-weight: 500;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
@@ -147,9 +140,12 @@ const dims = (title: string, i: number) => ({
 		font-size: 1.25rem;
 	}
 	.by {
-		margin: 0.1rem 0 0.4rem;
-		font-size: 0.9rem;
-		color: var(--muted);
+		margin: 0.15rem 0 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--blue);
 	}
 	.why {
 		margin: 0;

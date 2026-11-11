@@ -1,0 +1,166 @@
+---
+/**
+ * Career timeline from LinkedIn. Each stage's line is drawn in the colour of
+ * the belt it earned, from yellow to black.
+ */
+const career = [
+	{
+		org: 'Provus',
+		years: '2025 – now',
+		role: 'Technical Architect',
+		belt: 'var(--belt)',
+		work: 'Architected and built CPQ Express, a pricing and quoting platform.',
+	},
+	{
+		org: 'Definitive Healthcare',
+		years: '2023 – 2025',
+		role: 'Technical Lead → Engineering Manager',
+		belt: '#cd2e3a',
+		work: 'Moved critical services to AWS and cut operating costs by 40%.',
+	},
+	{
+		org: 'Conga',
+		years: '2019 – 2023',
+		role: 'Principal Software Engineer',
+		belt: '#0047a0',
+		work: 'Data platform with 95% of queries under 200 ms.',
+	},
+	{
+		org: 'Kovai.co',
+		years: '2016 – 2019',
+		role: 'Technical Lead',
+		belt: '#2f7a3b',
+		work: 'Led the team that shipped Atomic Scope and Document360.',
+	},
+	{
+		org: 'Lightcast',
+		years: '2011 – 2016',
+		role: 'Software Engineer → Lead Engineer',
+		belt: '#e2b419',
+		work: 'Re-architected an analytics app and built its REST APIs.',
+	},
+];
+---
+
+<section class="exp" aria-labelledby="exp-heading" data-reveal>
+	<p class="kicker"><span class="n">02</span> Experience</p>
+	<h2 id="exp-heading">Fifteen years, five belts.</h2>
+
+	<ol class="timeline" data-stagger>
+		{
+			career.map((c, i) => (
+				<li style={`--belt:${c.belt}`} class:list={{ now: i === 0 }}>
+					<span class="years">{c.years}</span>
+					<span class="track" aria-hidden="true">
+						<span class="dot" />
+					</span>
+					<div class="what">
+						<h3>{c.role}</h3>
+						<p class="org">{c.org}</p>
+						<p class="work">{c.work}</p>
+					</div>
+				</li>
+			))
+		}
+	</ol>
+</section>
+
+<style>
+	.exp {
+		margin: 0 0 7rem;
+	}
+	h2 {
+		margin: 0 0 2.5rem;
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
+	}
+	.timeline {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		max-width: 52rem;
+	}
+	li {
+		display: grid;
+		grid-template-columns: 8.5rem 2rem minmax(0, 1fr);
+		gap: 0 1rem;
+	}
+	.years {
+		padding-top: 0.2rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--muted);
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	/* Each segment of the line is the colour of the belt earned there. */
+	.track {
+		position: relative;
+		display: flex;
+		justify-content: center;
+	}
+	.track::before {
+		content: '';
+		position: absolute;
+		top: 0.55rem;
+		bottom: -0.55rem;
+		width: 3px;
+		border-radius: 2px;
+		background: var(--belt);
+	}
+	li:last-child .track::before {
+		bottom: 0;
+	}
+	.dot {
+		position: relative;
+		margin-top: 0.35rem;
+		width: 0.8rem;
+		height: 0.8rem;
+		border-radius: 50%;
+		background: var(--bg);
+		border: 2px solid var(--belt);
+	}
+	.now .dot {
+		background: var(--accent);
+		border-color: var(--accent);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
+	}
+	.what {
+		padding-bottom: 2.25rem;
+	}
+	h3 {
+		margin: 0;
+		font-size: 1.2rem;
+		letter-spacing: -0.02em;
+	}
+	.org {
+		margin: 0.15rem 0 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--blue);
+	}
+	.work {
+		margin: 0;
+		color: var(--muted);
+		font-size: 1rem;
+	}
+	@media (max-width: 600px) {
+		li {
+			grid-template-columns: 1.25rem minmax(0, 1fr);
+		}
+		.years {
+			grid-column: 2;
+			grid-row: 1;
+			text-align: left;
+			padding: 0 0 0.2rem;
+		}
+		.track {
+			grid-column: 1;
+			grid-row: 1 / span 2;
+		}
+		.what {
+			grid-column: 2;
+		}
+	}
+</style>
