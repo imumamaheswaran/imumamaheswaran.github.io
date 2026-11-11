@@ -33,7 +33,7 @@ import Weather from './Weather.astro';
 	</div>
 
 	<figure class="figure in-3" data-scene>
-		<!-- Scenery behind the toon, switched on by the time and weather in Attur. -->
+		{/* Scenery behind the toon, switched on by the local time and weather. */}
 		<div class="sky" aria-hidden="true">
 			<svg class="sun" viewBox="0 0 100 100">
 				<g class="rays">
@@ -115,19 +115,19 @@ import Weather from './Weather.astro';
 		const scene = forced ?? (night ? 'sleep' : wet ? (storm ? 'storm' : 'rain') : clear ? (wx!.t >= 33 ? 'hot' : 'sunny') : evening ? 'night' : cloudy ? 'cloudy' : wx?.icon === 'fog' ? 'mist' : '');
 		switch (scene) {
 			case 'sleep':
-				return { on: ['sleep', 'night', ...(wet ? ['rain'] : [])], caption: `Fig. 1 — The architect, asleep. It's ${istTime()} in Attur.` };
+				return { on: ['sleep', 'night', ...(wet ? ['rain'] : [])], caption: `Fig. 1 — The architect, asleep. It's ${istTime()} here.` };
 			case 'storm':
-				return { on: ['rain', 'storm'], caption: 'Fig. 1 — The architect, under an umbrella. Thunderstorms in Attur.' };
+				return { on: ['rain', 'storm'], caption: 'Fig. 1 — The architect, under an umbrella. Thunderstorms today.' };
 			case 'rain':
-				return { on: ['rain'], caption: "Fig. 1 — The architect, under an umbrella. It's raining in Attur." };
+				return { on: ['rain'], caption: "Fig. 1 — The architect, under an umbrella. It's raining here." };
 			case 'hot':
-				return { on: ['sunny', 'hot'], caption: `Fig. 1 — The architect, in shades. ${wx?.t ?? 34}°C in Attur.` };
+				return { on: ['sunny', 'hot'], caption: `Fig. 1 — The architect, in shades. It's ${wx?.t ?? 34}°C here.` };
 			case 'sunny':
-				return { on: ['sunny'], caption: `Fig. 1 — The architect, in shades. Sunny${wx ? `, ${wx.t}°C` : ''} in Attur.` };
+				return { on: ['sunny'], caption: `Fig. 1 — The architect, in shades. Sunny${wx ? `, ${wx.t}°C` : ''} here.` };
 			case 'night':
 				return { on: ['night'], caption: 'Fig. 1 — The architect, winding down for the evening.' };
 			case 'cloudy':
-				return { on: ['cloudy'], caption: 'Fig. 1 — The architect, on a cloudy day in Attur.' };
+				return { on: ['cloudy'], caption: 'Fig. 1 — The architect, on a cloudy day.' };
 			case 'mist':
 				return { on: ['mist'], caption: 'Fig. 1 — The architect, in the morning mist.' };
 			default:
@@ -679,8 +679,13 @@ import Weather from './Weather.astro';
 		background: currentColor;
 	}
 	.c1 {
-		left: 90%;
+		right: 92%;
 		top: 88%;
+		flex-direction: row-reverse;
+	}
+	.c1::after {
+		left: auto;
+		right: -3px;
 	}
 	.c2 {
 		left: 67%;
