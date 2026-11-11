@@ -1,38 +1,56 @@
+/* Dobok white, black belt, and the red/blue of the taegeuk. */
 :root {
-	--bg: #fbfaf7;
+	--bg: #f7f8fa;
 	--surface: #ffffff;
-	--text: #1d1e22;
-	--muted: #62666e;
-	--border: #e4e1da;
-	--accent: #b4410f;
-	--accent-soft: #fbeee6;
-	--code-bg: #f3f1ec;
+	--text: #0d0e10;
+	--muted: #555a63;
+	--border: #e1e4e9;
+	--accent: #cd2e3a;
+	--accent-soft: #fbe9ea;
+	--blue: #0047a0;
+	--wood: #d9b27c;
+	--wood-dark: #a77a43;
+	--belt: #0d0e10;
+	--gold: #c9a14a;
+	--code-bg: #eef0f3;
 	--measure: 42rem;
+	--wide: 66rem;
+	--ease-press: cubic-bezier(0.2, 0.9, 0.3, 1.2);
 	color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #141517;
-		--surface: #1b1c1f;
-		--text: #e8e6e1;
-		--muted: #9b9fa6;
-		--border: #2c2e33;
-		--accent: #f59e62;
-		--accent-soft: #3a2518;
-		--code-bg: #1f2024;
+		--bg: #0a0b0d;
+		--surface: #131519;
+		--text: #f2f3f5;
+		--muted: #9ba1ab;
+		--border: #262a31;
+		--accent: #ff4d5a;
+		--accent-soft: #2a1316;
+		--blue: #4d8dff;
+		--wood: #b88d55;
+		--wood-dark: #7c5a2f;
+		--belt: #000000;
+		--gold: #d8b45e;
+		--code-bg: #181b20;
 		color-scheme: dark;
 	}
 }
 :root[data-theme='dark'] {
-	--bg: #141517;
-	--surface: #1b1c1f;
-	--text: #e8e6e1;
-	--muted: #9b9fa6;
-	--border: #2c2e33;
-	--accent: #f59e62;
-	--accent-soft: #3a2518;
-	--code-bg: #1f2024;
+	--bg: #0a0b0d;
+	--surface: #131519;
+	--text: #f2f3f5;
+	--muted: #9ba1ab;
+	--border: #262a31;
+	--accent: #ff4d5a;
+	--accent-soft: #2a1316;
+	--blue: #4d8dff;
+	--wood: #b88d55;
+	--wood-dark: #7c5a2f;
+	--belt: #000000;
+	--gold: #d8b45e;
+	--code-bg: #181b20;
 	color-scheme: dark;
 }
 
@@ -62,6 +80,41 @@ body {
 	margin: 0 auto;
 	padding-inline: 1rem;
 }
+.container.wide {
+	max-width: var(--wide);
+}
+
+/* Small bilingual label: English with its Korean term. */
+.ko {
+	font-family: var(--font-display);
+	font-weight: 600;
+}
+.kicker {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--muted);
+	margin: 0 0 0.75rem;
+}
+.kicker .ko {
+	color: var(--accent);
+	letter-spacing: 0.05em;
+	font-size: 0.95rem;
+	text-transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+	}
+}
 
 main {
 	padding-top: 3rem;
@@ -72,6 +125,9 @@ h1,
 h2,
 h3,
 h4 {
+	font-family: var(--font-display);
+	font-weight: 900;
+	letter-spacing: -0.01em;
 	line-height: 1.25;
 	margin: 2em 0 0.6em;
 	text-wrap: balance;
@@ -208,5 +264,104 @@ iframe {
 	}
 	h2 {
 		font-size: 1.4rem;
+	}
+}
+
+.skip {
+	position: absolute;
+	left: 1rem;
+	top: -3rem;
+	z-index: 10;
+	padding: 0.5rem 0.9rem;
+	background: var(--text);
+	color: var(--bg);
+	border-radius: 6px;
+}
+.skip:focus {
+	top: 1rem;
+}
+
+/* ── Motion ─────────────────────────────────────────────── */
+:root {
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sections "bow in" as they enter the viewport (only when JS is running). */
+.js [data-reveal] {
+	opacity: 0;
+	transform: translateY(28px);
+	transition:
+		opacity 0.8s var(--ease-out),
+		transform 0.9s var(--ease-out);
+}
+.js [data-reveal].in {
+	opacity: 1;
+	transform: none;
+}
+.js [data-reveal] [data-stagger] > * {
+	opacity: 0;
+	transform: translateY(18px);
+	transition:
+		opacity 0.6s var(--ease-out) var(--d, 0ms),
+		transform 0.7s var(--ease-out) var(--d, 0ms);
+}
+.js [data-reveal].in [data-stagger] > * {
+	opacity: 1;
+	transform: none;
+}
+
+/* Page changes slide like a step forward. */
+@keyframes page-out {
+	to {
+		opacity: 0;
+		transform: translateX(-24px);
+	}
+}
+@keyframes page-in {
+	from {
+		opacity: 0;
+		transform: translateX(24px);
+	}
+}
+::view-transition-old(main) {
+	animation: page-out 0.22s ease-in both;
+}
+::view-transition-new(main) {
+	animation: page-in 0.38s var(--ease-out) both;
+}
+main {
+	view-transition-name: main;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-reveal],
+	.js [data-reveal] [data-stagger] > * {
+		opacity: 1;
+		transform: none;
+	}
+	::view-transition-old(main),
+	::view-transition-new(main) {
+		animation: none;
+	}
+}
+
+/* Theme switch: the new colours spread out from the toggle in a circle. */
+.theme-swap::view-transition-old(root),
+.theme-swap::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+.theme-swap::view-transition-new(root) {
+	animation: theme-in 0.6s var(--ease-out);
+}
+.theme-swap main {
+	view-transition-name: none;
+}
+@keyframes theme-in {
+	from {
+		clip-path: circle(0 at var(--tx, 100%) var(--ty, 0));
+	}
+	to {
+		clip-path: circle(150vmax at var(--tx, 100%) var(--ty, 0));
 	}
 }

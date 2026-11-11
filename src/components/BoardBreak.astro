@@ -1,0 +1,355 @@
+---
+/**
+ * 격파 (board breaking): each strike breaks the top board and reveals one
+ * lesson from the mat. Edit the list below to change them.
+ */
+const lessons = [
+	'A kick is a hip movement that happens to end in a foot. Most bugs are a design decision that happens to end in a line of code.',
+	'You learn a form until you stop thinking about it. Learn design patterns deeply, then let them fade into instinct.',
+	"You don't spar to win. You spar to find out what you don't know yet. Code review works the same way.",
+	'Slow, correct reps beat fast, sloppy ones. Ship small, and ship it right.',
+	'A black belt is a white belt who kept showing up.',
+	"To break a board, aim past it. Aim past the ticket, at the user's real problem.",
+	'Stance first, technique second. Get tests, logging and CI in place before the flashy work.',
+	'Bow in, bow out. Start and end every incident with respect for the people in it.',
+];
+---
+
+<section class="break" aria-labelledby="break-heading" data-break data-lessons={JSON.stringify(lessons)} data-reveal>
+	<div class="copy">
+		<p class="kicker">While you're here</p>
+		<h2 id="break-heading">Break a board.</h2>
+		<p class="muted">Each one holds a lesson from the mat.</p>
+		<button type="button" class="strike" data-strike>
+			<span>Strike</span>
+		</button>
+		<p class="count" data-count>0 of {lessons.length} boards broken</p>
+	</div>
+
+	<div class="stage">
+		<div class="stack" data-stack aria-hidden="true">
+			<div class="board top" data-top>
+				<span class="half l"></span>
+				<span class="half r"></span>
+			</div>
+			<div class="board"></div>
+			<div class="board"></div>
+			<div class="board"></div>
+			<div class="blocks"><span></span><span></span></div>
+			<span class="burst">Crack!</span>
+		</div>
+		<blockquote class="lesson" data-lesson aria-live="polite">
+			<p>Break the first board to read a lesson.</p>
+		</blockquote>
+	</div>
+</section>
+
+<script>
+	import { thwack, tick } from '../lib/sound';
+
+	function init() {
+		const root = document.querySelector<HTMLElement>('[data-break]');
+		if (!root || root.dataset.ready) return;
+		root.dataset.ready = '1';
+		const lessons: string[] = JSON.parse(root.dataset.lessons ?? '[]');
+		const btn = root.querySelector<HTMLButtonElement>('[data-strike]')!;
+		const label = btn.firstElementChild as HTMLElement;
+		const top = root.querySelector<HTMLElement>('[data-top]')!;
+		const stack = root.querySelector<HTMLElement>('[data-stack]')!;
+		const quote = root.querySelector<HTMLElement>('[data-lesson]')!;
+		const count = root.querySelector<HTMLElement>('[data-count]')!;
+		const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		let broken = 0;
+		let busy = false;
+
+		// Wood splinters fly out from the point of impact.
+		function splinters() {
+			if (reduced) return;
+			const r = top.getBoundingClientRect();
+			const s = stack.getBoundingClientRect();
+			for (let i = 0; i < 14; i++) {
+				const el = document.createElement('span');
+				el.className = 'splinter';
+				el.style.left = `${r.left - s.left + r.width / 2}px`;
+				el.style.top = `${r.top - s.top + r.height / 2}px`;
+				stack.appendChild(el);
+				const angle = Math.random() * Math.PI * 2;
+				const dist = 50 + Math.random() * 110;
+				el.animate(
+					[
+						{ transform: `translate(-50%, -50%) rotate(0deg)`, opacity: 1 },
+						{
+							transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist + 40}px)) rotate(${Math.random() * 720 - 360}deg)`,
+							opacity: 0,
+						},
+					],
+					{ duration: 600 + Math.random() * 400, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)' },
+				).onfinish = () => el.remove();
+			}
+		}
+
+		function strike() {
+			if (busy) return;
+			if (broken >= lessons.length) {
+				broken = 0;
+				count.textContent = `0 of ${lessons.length} boards broken`;
+				quote.innerHTML = '<p>Fresh boards, stacked and ready. Break the first one.</p>';
+				label.textContent = 'Strike';
+				tick();
+				return;
+			}
+			busy = true;
+			const text = lessons[broken];
+			broken += 1;
+			thwack();
+			splinters();
+			stack.classList.add('hit');
+			top.classList.add('broken');
+			const p = document.createElement('p');
+			p.textContent = text;
+			const cite = document.createElement('footer');
+			cite.textContent = `Board ${broken} of ${lessons.length}`;
+			quote.replaceChildren(p, cite);
+			quote.classList.remove('show');
+			void quote.offsetWidth;
+			quote.classList.add('show');
+			count.textContent = `${broken} of ${lessons.length} boards broken`;
+			if (broken >= lessons.length) label.textContent = 'Stack new boards';
+
+			setTimeout(
+				() => {
+					stack.classList.remove('hit');
+					top.classList.remove('broken');
+					top.classList.add('drop');
+					setTimeout(
+						() => {
+							top.classList.remove('drop');
+							busy = false;
+						},
+						reduced ? 0 : 350,
+					);
+				},
+				reduced ? 0 : 750,
+			);
+		}
+
+		btn.addEventListener('click', strike);
+		stack.addEventListener('click', strike);
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.break {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: center;
+		margin: 5rem 0;
+		padding: clamp(1.5rem, 4vw, 3rem);
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 6px;
+	}
+	h2 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.5rem, 3.5vw, 2rem);
+	}
+	.strike {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 3rem;
+		margin-top: 0.5rem;
+		padding: 0 1.5rem;
+		border: 0;
+		border-radius: 4px;
+		background: var(--accent);
+		color: #fff;
+		font: inherit;
+		font-weight: 700;
+		cursor: pointer;
+		box-shadow: 0 4px 0 color-mix(in srgb, var(--accent) 55%, black);
+		transition:
+			transform 0.1s,
+			box-shadow 0.1s;
+	}
+	.strike:active {
+		transform: translateY(4px);
+		box-shadow: 0 0 0 transparent;
+	}
+	.strike .ko {
+		font-size: 0.85rem;
+		opacity: 0.85;
+	}
+	.count {
+		margin: 0.85rem 0 0;
+		font-size: 0.85rem;
+		color: var(--muted);
+		font-variant-numeric: tabular-nums;
+	}
+	.stage {
+		display: grid;
+		gap: 1.5rem;
+	}
+	/* The stack of pine boards resting on two blocks. */
+	.stack {
+		position: relative;
+		display: grid;
+		gap: 4px;
+		width: min(100%, 20rem);
+		margin-inline: auto;
+		padding-top: 1rem;
+		cursor: pointer;
+	}
+	.board,
+	.half {
+		height: 1.6rem;
+		border-radius: 2px;
+		background:
+			repeating-linear-gradient(
+				178deg,
+				transparent 0 5px,
+				color-mix(in srgb, var(--wood-dark) 35%, transparent) 5px 6px,
+				transparent 6px 13px
+			),
+			linear-gradient(var(--wood), color-mix(in srgb, var(--wood) 80%, var(--wood-dark)));
+		box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--wood-dark) 60%, transparent);
+	}
+	.board.top {
+		display: flex;
+		background: none;
+		box-shadow: none;
+	}
+	.half {
+		flex: 1;
+		transition:
+			transform 0.6s cubic-bezier(0.3, 0.6, 0.4, 1),
+			opacity 0.6s;
+	}
+	.half.l {
+		clip-path: polygon(0 0, 100% 0, 92% 30%, 100% 55%, 90% 80%, 100% 100%, 0 100%);
+	}
+	.half.r {
+		clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10% 75%, 0 50%, 8% 25%);
+		margin-left: -10%;
+	}
+	.broken .half.l {
+		transform: translate(-2.5rem, 3.5rem) rotate(-28deg);
+		opacity: 0;
+	}
+	.broken .half.r {
+		transform: translate(2.5rem, 3.5rem) rotate(28deg);
+		opacity: 0;
+	}
+	.drop .half {
+		transition: none;
+		animation: drop 0.35s var(--ease-press);
+	}
+	@keyframes drop {
+		from {
+			transform: translateY(-1.5rem);
+			opacity: 0;
+		}
+	}
+	.stack :global(.splinter) {
+		position: absolute;
+		width: 0.7rem;
+		height: 0.22rem;
+		border-radius: 1px;
+		background: var(--wood);
+		box-shadow: inset 0 -1px 0 var(--wood-dark);
+		pointer-events: none;
+		z-index: 4;
+	}
+	.blocks {
+		display: flex;
+		justify-content: space-between;
+		padding-inline: 0.5rem;
+	}
+	.blocks span {
+		width: 3.25rem;
+		height: 2.75rem;
+		background: color-mix(in srgb, var(--muted) 45%, var(--surface));
+		border-radius: 2px;
+	}
+	.hit {
+		animation: shake 0.3s;
+	}
+	@keyframes shake {
+		25% {
+			transform: translateY(3px);
+		}
+		50% {
+			transform: translate(-2px, 1px);
+		}
+		75% {
+			transform: translate(2px, 0);
+		}
+	}
+	.burst {
+		position: absolute;
+		left: 50%;
+		top: -0.5rem;
+		translate: -50% 0;
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: 1.5rem;
+		color: var(--accent);
+		opacity: 0;
+		pointer-events: none;
+	}
+	.hit .burst {
+		animation: burst 0.7s ease-out;
+	}
+	@keyframes burst {
+		0% {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+		30% {
+			opacity: 1;
+			transform: scale(1.2) rotate(-6deg);
+		}
+		100% {
+			opacity: 0;
+			transform: scale(1.4) translateY(-1rem) rotate(-6deg);
+		}
+	}
+	.lesson {
+		margin: 0;
+		padding: 1.25rem 1.4rem;
+		min-height: 7.5rem;
+		border: 0;
+		border-left: 4px solid var(--blue);
+		background: var(--bg);
+		border-radius: 0 6px 6px 0;
+		color: var(--text);
+	}
+	.lesson p {
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 1.1rem;
+		line-height: 1.5;
+	}
+	.lesson footer {
+		margin-top: 0.75rem;
+		font-size: 0.8rem;
+		color: var(--muted);
+	}
+	.lesson.show {
+		animation: reveal 0.45s var(--ease-press);
+	}
+	@keyframes reveal {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+	}
+	@media (max-width: 760px) {
+		.break {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

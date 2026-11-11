@@ -1,0 +1,499 @@
+---
+/** Home page hero: a black-belt certificate with toon Uma standing on it. */
+import Taegeuk from './Taegeuk.astro';
+import avatarSvg from '../assets/avatar.svg?raw';
+---
+
+<section class="cert" aria-labelledby="hero-name">
+	<div class="frame">
+		<Taegeuk size={352} class="watermark" />
+		<p class="kicker in-1">Bengaluru · 15+ years</p>
+		<h1 id="hero-name" aria-label="Umamaheswaran">
+			<span aria-hidden="true">
+				{[...'Umamaheswaran'].map((ch, i) => <span class="ch" style={`--i:${i}`}>{ch}</span>)}<span
+					class="ch dot"
+					style="--i:13">.</span
+				>
+			</span>
+		</h1>
+		<p class="title in-2">
+			<span class="title-en">Software Architect</span>
+			<span class="title-sep" aria-hidden="true">/</span>
+			<span class="title-sub">Engineering Manager</span>
+		</p>
+		<p class="role in-2">
+			I design platforms in .NET, React and the cloud. Off the keyboard, I'm a Taekwondo black belt.
+		</p>
+
+		<div class="actions in-4">
+			<a class="btn primary" href="#architecture">How I architect</a>
+			<a class="btn" href="/blog/">Read my writing</a>
+		</div>
+
+		<button type="button" class="toon" data-toon aria-label="Say hello to toon Uma">
+			<span class="toon-body" set:html={avatarSvg} />
+			<span class="bubble" data-bubble aria-live="polite"></span>
+		</button>
+
+		<!-- 도장 means both "training hall" and "seal". -->
+		<div class="seal" aria-hidden="true">
+			<span lang="ko">도장</span>
+		</div>
+	</div>
+
+	<div class="belt" aria-hidden="true">
+		<span class="embroidery">UMAMAHESWARAN · TAEKWONDO</span>
+		<svg class="knot" viewBox="0 0 120 130">
+			<path class="tail" d="M46 46 L64 46 L40 128 L18 122 Z"></path>
+			<path class="tail" d="M58 46 L76 46 L104 122 L82 128 Z"></path>
+			<rect class="k" x="36" y="6" width="48" height="44" rx="6"></rect>
+			<path class="fold" d="M40 12 L80 44 M80 12 L40 44"></path>
+		</svg>
+	</div>
+</section>
+
+<script>
+	import { whoosh } from '../lib/sound';
+
+	const LINES = ['Hello!', 'Taekwon!', 'Stance first.', 'Ship it small.', 'Draw the boxes first.'];
+	function init() {
+		const toon = document.querySelector<HTMLButtonElement>('[data-toon]');
+		if (!toon || toon.dataset.ready) return;
+		toon.dataset.ready = '1';
+		const bubble = toon.querySelector<HTMLElement>('[data-bubble]')!;
+		let n = 0;
+		let timer = 0;
+		toon.addEventListener('click', () => {
+			bubble.textContent = LINES[n++ % LINES.length];
+			toon.classList.remove('pop');
+			void toon.offsetWidth;
+			toon.classList.add('pop');
+			whoosh();
+			clearTimeout(timer);
+			timer = window.setTimeout(() => toon.classList.remove('pop'), 1800);
+		});
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.cert {
+		position: relative;
+		margin: 0 0 4.5rem;
+	}
+	.frame {
+		position: relative;
+		padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.25rem, 5vw, 3.5rem) clamp(5rem, 9vw, 6rem);
+		background:
+			radial-gradient(60% 70% at 100% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+			radial-gradient(50% 60% at 0% 100%, color-mix(in srgb, var(--blue) 7%, transparent), transparent 70%),
+			var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		box-shadow:
+			0 0 0 6px var(--surface),
+			0 0 0 7px var(--border),
+			0 24px 48px -28px rgb(0 0 0 / 0.35);
+		overflow: hidden;
+	}
+	/* Faint taegeuk watermark. */
+	.frame :global(.watermark) {
+		position: absolute;
+		right: -5rem;
+		bottom: -5rem;
+		width: 22rem;
+		height: auto;
+		opacity: 0.07;
+		pointer-events: none;
+	}
+	@supports (animation-timeline: view()) {
+		.frame :global(.watermark) {
+			animation: spin-watermark linear both;
+			animation-timeline: view();
+		}
+	}
+	@keyframes spin-watermark {
+		to {
+			transform: rotate(240deg);
+		}
+	}
+	.no {
+		margin-left: auto;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.06em;
+	}
+	.certify {
+		margin: 1.75rem 0 0.25rem;
+		font-family: var(--font-display);
+		font-style: italic;
+		color: var(--muted);
+	}
+	h1 {
+		font-size: clamp(2.4rem, 8vw, 4.75rem);
+		line-height: 1;
+		margin: 0 0 1.25rem;
+		letter-spacing: -0.03em;
+		overflow-wrap: anywhere;
+	}
+	.dot {
+		color: var(--accent);
+	}
+	/* Entrance: letters snap up like a rising kick, then the rest follows. */
+	.ch {
+		display: inline-block;
+		animation: kick-up 0.75s var(--ease-out) both;
+		animation-delay: calc(var(--i) * 32ms + 80ms);
+	}
+	@keyframes kick-up {
+		from {
+			opacity: 0;
+			transform: translateY(0.55em) rotate(8deg);
+		}
+	}
+	.dot.ch {
+		animation: dot-pop 0.6s var(--ease-press) 0.7s both;
+	}
+	@keyframes dot-pop {
+		from {
+			opacity: 0;
+			transform: scale(3);
+		}
+	}
+	.in-1,
+	.in-2,
+	.in-3,
+	.in-4 {
+		animation: fade-up 0.8s var(--ease-out) both;
+	}
+	.in-1 {
+		animation-delay: 0.05s;
+	}
+	.in-2 {
+		animation-delay: 0.45s;
+	}
+	.in-3 {
+		animation-delay: 0.6s;
+	}
+	.in-4 {
+		animation-delay: 0.75s;
+	}
+	@keyframes fade-up {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
+	}
+	.title {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.2rem 0.6rem;
+		margin: -0.25rem 0 1rem;
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+		line-height: 1.2;
+	}
+	.title-en {
+		color: var(--blue);
+	}
+	.title-sep {
+		color: var(--border);
+		font-weight: 600;
+	}
+	.title-sub {
+		color: var(--muted);
+		font-weight: 600;
+	}
+	.role {
+		max-width: 38rem;
+		font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+		color: var(--muted);
+		margin-bottom: 2rem;
+	}
+	.kicker {
+		margin-bottom: 1.25rem;
+	}
+	.meta {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+		gap: 1rem 2rem;
+		margin: 0 0 2rem;
+		padding: 1.25rem 0;
+		border-block: 1px solid var(--border);
+		max-width: 46rem;
+	}
+	.meta dt {
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+	.meta dt span {
+		color: var(--accent);
+		letter-spacing: 0;
+		margin-left: 0.2rem;
+	}
+	.meta dd {
+		margin: 0.2rem 0 0;
+		font-weight: 700;
+	}
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+	}
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		padding: 0 1.15rem;
+		border: 1.5px solid var(--text);
+		border-radius: 4px;
+		color: var(--text);
+		font-weight: 700;
+		text-decoration: none;
+		transition:
+			transform 0.2s var(--ease-press),
+			box-shadow 0.2s;
+	}
+	.btn:hover {
+		transform: translate(-2px, -2px);
+		box-shadow: 3px 3px 0 var(--text);
+	}
+	.btn:active {
+		transform: translate(0, 0);
+		box-shadow: none;
+	}
+	.btn.primary {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+	.btn.primary:hover {
+		box-shadow: 3px 3px 0 var(--text);
+	}
+	.seal {
+		position: absolute;
+		top: clamp(4rem, 9vw, 5.5rem);
+		right: clamp(1rem, 5vw, 3.5rem);
+		display: grid;
+		place-items: center;
+		width: clamp(4.5rem, 11vw, 6.5rem);
+		aspect-ratio: 1;
+		border: 4px solid var(--accent);
+		border-radius: 8px;
+		color: var(--accent);
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: clamp(1.1rem, 3vw, 1.6rem);
+		writing-mode: vertical-rl;
+		letter-spacing: 0.15em;
+		transform: rotate(8deg);
+		opacity: 0.9;
+		box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 5px var(--accent);
+		animation: stamp 0.7s 1.5s var(--ease-press) both;
+	}
+	@keyframes stamp {
+		from {
+			transform: rotate(-10deg) scale(1.8);
+			opacity: 0;
+		}
+	}
+	/* Toon Uma stands on the right, on top of the belt. */
+	.toon {
+		position: absolute;
+		right: clamp(1rem, 6vw, 4.5rem);
+		bottom: 3.25rem;
+		width: clamp(13rem, 24vw, 17rem);
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		z-index: 1;
+		animation: toon-in 0.9s var(--ease-press) 0.9s both;
+	}
+	@keyframes toon-in {
+		from {
+			opacity: 0;
+			transform: translateY(40px);
+		}
+	}
+	.toon-body {
+		display: block;
+		transform-origin: 50% 100%;
+		animation: breathe 4s ease-in-out infinite;
+	}
+	.toon-body :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.toon-body :global(.eyes) {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: blink 5s infinite;
+	}
+	@keyframes breathe {
+		50% {
+			transform: scaleY(1.012) translateY(-1px);
+		}
+	}
+	@keyframes blink {
+		0%,
+		92%,
+		100% {
+			transform: scaleY(1);
+		}
+		95% {
+			transform: scaleY(0.1);
+		}
+	}
+	.toon:hover .toon-body {
+		animation: bow 0.9s var(--ease-out);
+	}
+	@keyframes bow {
+		40% {
+			transform: rotate(-4deg) translateY(4px);
+		}
+	}
+	.toon.pop .toon-body {
+		animation: hop 0.5s var(--ease-press);
+	}
+	@keyframes hop {
+		40% {
+			transform: translateY(-14px) scale(1.02, 0.98);
+		}
+	}
+	.toon:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 8px;
+	}
+	.bubble {
+		position: absolute;
+		top: -4%;
+		left: -12%;
+		padding: 0.45rem 0.8rem;
+		border: 2px solid var(--text);
+		border-radius: 14px 14px 2px 14px;
+		background: var(--surface);
+		color: var(--text);
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: 0.95rem;
+		white-space: nowrap;
+		opacity: 0;
+		transform: scale(0.6) translateY(8px);
+		transform-origin: 100% 100%;
+		transition:
+			opacity 0.2s,
+			transform 0.35s var(--ease-press);
+		pointer-events: none;
+	}
+	.pop .bubble {
+		opacity: 1;
+		transform: none;
+	}
+	/* Leave room for the toon beside the text on wide screens. */
+	@media (min-width: 900px) {
+		.role {
+			max-width: calc(100% - 18rem);
+		}
+	}
+	@media (max-width: 899px) {
+		.toon {
+			position: relative;
+			right: auto;
+			bottom: auto;
+			display: block;
+			width: 13rem;
+			margin: 1.5rem auto -1.5rem;
+		}
+		.bubble {
+			left: auto;
+			right: 85%;
+		}
+	}
+
+	/* The black belt tied across the bottom of the certificate. */
+	.belt {
+		position: absolute;
+		left: -1rem;
+		right: -1rem;
+		bottom: 1.4rem;
+		height: 1.9rem;
+		display: flex;
+		align-items: center;
+		background:
+			repeating-linear-gradient(90deg, transparent 0 7px, rgb(255 255 255 / 0.05) 7px 8px),
+			linear-gradient(var(--belt), var(--belt));
+		box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.5);
+		transform-origin: left center;
+		animation: belt-in 0.9s var(--ease-out) 0.5s both;
+	}
+	@keyframes belt-in {
+		from {
+			clip-path: inset(-5rem 100% -8rem 0);
+		}
+		to {
+			clip-path: inset(-5rem -2rem -8rem 0);
+		}
+	}
+	.embroidery {
+		padding-left: clamp(2rem, 6vw, 4.5rem);
+		color: var(--gold);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.3em;
+		white-space: nowrap;
+	}
+	.knot {
+		position: absolute;
+		right: 18%;
+		top: -0.55rem;
+		width: 4.6rem;
+		overflow: visible;
+		animation: knot-drop 0.6s var(--ease-press) 1.25s both;
+	}
+	@keyframes knot-drop {
+		from {
+			opacity: 0;
+			transform: translateY(-1.2rem) scale(0.6);
+		}
+	}
+	.knot .k,
+	.knot .tail {
+		fill: var(--belt);
+		stroke: color-mix(in srgb, var(--gold) 35%, transparent);
+		stroke-width: 1.5;
+	}
+	.knot .fold {
+		stroke: rgb(255 255 255 / 0.12);
+		stroke-width: 2;
+	}
+	.knot .tail {
+		transform-origin: 60px 46px;
+		animation: sway 4s ease-in-out infinite alternate;
+	}
+	@keyframes sway {
+		to {
+			transform: rotate(3deg);
+		}
+	}
+	@media (max-width: 680px) {
+		.seal {
+			top: 1rem;
+			width: 3.6rem;
+			font-size: 0.95rem;
+			border-width: 3px;
+		}
+		.no {
+			display: none;
+		}
+		.knot {
+			right: 8%;
+		}
+	}
+</style>

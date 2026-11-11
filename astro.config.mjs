@@ -20,6 +20,14 @@ export default defineConfig({
 	},
 	fonts: [
 		{
+			provider: fontProviders.google(),
+			name: 'Noto Serif KR',
+			cssVariable: '--font-display',
+			weights: [600, 900],
+			subsets: ['latin', 'korean'],
+			fallbacks: ['Georgia', 'serif'],
+		},
+		{
 			provider: fontProviders.local(),
 			name: 'Atkinson',
 			cssVariable: '--font-atkinson',

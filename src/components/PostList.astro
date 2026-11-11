@@ -1,25 +1,35 @@
 ---
-import FormattedDate from './FormattedDate.astro';
 import { type Post, postUrl } from '../lib/posts';
 
 interface Props {
 	posts: Post[];
 	showDescription?: boolean;
+	/** Give the first post a larger, featured row. */
+	featureFirst?: boolean;
 }
-const { posts, showDescription = true } = Astro.props;
+const { posts, showDescription = true, featureFirst = false } = Astro.props;
+const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en-US', { timeZone: 'UTC', ...o });
 ---
 
 <ul class="post-list">
 	{
-		posts.map((post) => (
-			<li>
-				<a href={postUrl(post)}>{post.data.title}</a>
-				{showDescription && <p class="desc">{post.data.description}</p>}
-				<span class="date">
-					<FormattedDate date={post.data.pubDate} />
-				</span>
-			</li>
-		))
+		posts.map((post, i) => {
+			const d = post.data.pubDate;
+			return (
+				<li class:list={{ featured: featureFirst && i === 0 }}>
+					<time class="seal" datetime={d.toISOString()}>
+						<span class="m">{fmt(d, { month: 'short' })}</span>
+						<span class="d">{fmt(d, { day: 'numeric' })}</span>
+						<span class="y">{fmt(d, { year: 'numeric' })}</span>
+					</time>
+					<div class="body">
+						{featureFirst && i === 0 && <p class="flag">Latest</p>}
+						<a href={postUrl(post)}>{post.data.title}</a>
+						{showDescription && post.data.description && <p class="desc">{post.data.description}</p>}
+					</div>
+				</li>
+			);
+		})
 	}
 </ul>
 
@@ -30,11 +40,48 @@ const { posts, showDescription = true } = Astro.props;
 		padding: 0;
 	}
 	li {
-		padding: 1rem 0;
-		border-bottom: 1px solid var(--border);
+		display: grid;
+		grid-template-columns: 4.25rem 1fr;
+		gap: 1.1rem;
+		align-items: start;
+		padding: 1.15rem 0;
+		border-bottom: 1px dashed var(--border);
 	}
 	li:last-child {
 		border-bottom: 0;
+	}
+	/* The date is pressed like a red ink seal. */
+	.seal {
+		display: grid;
+		justify-items: center;
+		line-height: 1;
+		gap: 0.15rem;
+		padding: 0.45rem 0.2rem 0.4rem;
+		border: 3px double var(--accent);
+		border-radius: 4px;
+		color: var(--accent);
+		font-family: var(--font-display);
+		transform: rotate(-2deg);
+		transition: transform 0.35s var(--ease-press);
+	}
+	li:hover .seal {
+		transform: rotate(-7deg) translateY(-2px) scale(1.04);
+	}
+	.m {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+	.d {
+		font-size: 1.35rem;
+		font-weight: 900;
+	}
+	.y {
+		font-size: 0.7rem;
+		opacity: 0.85;
+	}
+	.body {
+		min-width: 0;
 	}
 	a {
 		font-weight: 700;
@@ -47,15 +94,43 @@ const { posts, showDescription = true } = Astro.props;
 		color: var(--accent);
 	}
 	.desc {
-		margin: 0.3rem 0 0.25rem;
+		margin: 0.3rem 0 0.4rem;
 		color: var(--muted);
 		font-size: 1rem;
 		line-height: 1.55;
 	}
-	.date {
-		display: block;
-		color: var(--muted);
-		font-size: 0.875rem;
-		margin-top: 0.2rem;
+	.featured {
+		grid-template-columns: 5.25rem 1fr;
+		padding: 1.5rem;
+		margin-bottom: 0.5rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+	}
+	.featured a {
+		font-size: 1.45rem;
+		font-family: var(--font-display);
+		font-weight: 900;
+	}
+	.featured .d {
+		font-size: 1.75rem;
+	}
+	.flag {
+		margin: 0 0 0.35rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	@media (max-width: 480px) {
+		li,
+		.featured {
+			grid-template-columns: 3.6rem 1fr;
+			gap: 0.85rem;
+		}
+		.featured {
+			padding: 1rem;
+		}
 	}
 </style>

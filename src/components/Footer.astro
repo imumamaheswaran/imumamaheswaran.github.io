@@ -4,8 +4,11 @@ const year = new Date().getFullYear();
 ---
 
 <footer>
-	<div class="container">
-		<p>© {year} {SITE_TITLE}</p>
+	<div class="belt" aria-hidden="true"></div>
+	<div class="container wide inner">
+		<p>
+			© {year} {SITE_TITLE}
+		</p>
 		<ul>
 			{
 				SOCIAL_LINKS.map((l) => (
@@ -23,12 +26,20 @@ const year = new Date().getFullYear();
 
 <style>
 	footer {
-		border-top: 1px solid var(--border);
-		padding: 1.5rem 0 2.5rem;
+		padding: 0 0 2.5rem;
 		color: var(--muted);
 		font-size: 0.95rem;
 	}
-	.container {
+	/* A black belt runs along the top of the footer. */
+	.belt {
+		height: 0.9rem;
+		background:
+			repeating-linear-gradient(90deg, transparent 0 6px, rgb(255 255 255 / 0.05) 6px 7px),
+			var(--belt);
+		border-block: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+		margin-bottom: 1.75rem;
+	}
+	.inner {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-between;
@@ -36,6 +47,10 @@ const year = new Date().getFullYear();
 	}
 	p {
 		margin: 0;
+	}
+	.kihap {
+		color: var(--accent);
+		font-weight: 700;
 	}
 	ul {
 		display: flex;

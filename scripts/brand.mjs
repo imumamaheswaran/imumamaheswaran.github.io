@@ -1,0 +1,129 @@
+// Generates the toon brand assets (avatar, favicon, social card) as SVG and
+// PNG. Run with: node scripts/brand.mjs
+import { writeFileSync } from 'node:fs';
+import sharp from 'sharp';
+
+const C = {
+	skin: '#8d5a3b',
+	skinShade: '#74462c',
+	hair: '#16100d',
+	hairHi: '#3a2c25',
+	line: '#1a1210',
+	dobok: '#f7f7f4',
+	dobokShade: '#dcdcd6',
+	belt: '#111214',
+	red: '#cd2e3a',
+	blue: '#0047a0',
+	bg: '#f7f8fa',
+	gold: '#d8b45e',
+};
+
+// The head, drawn in a 200×200 box (face centred on x=100).
+const head = ({ smile = true } = {}) => `
+<g stroke="${C.line}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+  <!-- neck -->
+  <path d="M83 150 L83 196 L117 196 L117 150 Z" fill="${C.skinShade}"/>
+  <!-- hair behind -->
+  <path d="M54 110 C44 82 52 56 84 44 C104 36 134 38 148 46 C164 58 164 86 150 110 Z" fill="${C.hair}"/>
+  <!-- ears -->
+  <ellipse cx="57" cy="114" rx="9" ry="14" fill="${C.skin}"/>
+  <ellipse cx="143" cy="114" rx="9" ry="14" fill="${C.skin}"/>
+  <!-- face -->
+  <path d="M58 90 C58 62 142 62 142 90 L141 120 C138 152 120 170 100 172 C80 170 62 152 59 120 Z" fill="${C.skin}"/>
+</g>
+<!-- stubble and beard -->
+<path d="M60 124 C64 152 82 170 100 172 C118 170 136 152 140 124 C134 142 124 152 114 151 C108 148 92 148 86 151 C76 152 66 142 60 124 Z" fill="${C.hair}" opacity="0.32"/>
+<path d="M88 160 C92 168 108 168 112 160 C108 164 92 164 88 160 Z" fill="${C.hair}" opacity="0.45"/>
+<!-- hair: thick and full, swept to the right, forehead showing -->
+<g stroke="${C.line}" stroke-width="3" stroke-linejoin="round">
+  <path d="M146 40 C160 32 174 36 178 46 C170 43 163 45 160 50 Z" fill="${C.hair}"/>
+  <path d="M156 62 C168 58 178 64 180 74 C172 70 165 70 160 73 Z" fill="${C.hair}"/>
+  <path d="M56 106 C50 84 54 66 68 56 C70 44 84 36 98 38 C110 28 134 28 146 38 C160 42 166 54 162 64 C168 78 160 94 150 106 C148 94 144 88 138 84 C124 78 104 78 90 82 C76 86 66 96 60 106 Z" fill="${C.hair}"/>
+  <path d="M62 100 C70 86 92 76 122 78 C106 82 96 88 88 98 C84 92 72 94 62 100 Z" fill="${C.hair}"/>
+</g>
+<path d="M82 52 C98 42 122 40 146 50" fill="none" stroke="${C.hairHi}" stroke-width="4" stroke-linecap="round"/>
+<path d="M76 68 C94 60 120 58 148 66" fill="none" stroke="${C.hairHi}" stroke-width="3" stroke-linecap="round"/>
+<!-- eyebrows -->
+<path d="M70 96 Q82 87 95 93 L94 99 Q82 94 71 101 Z" fill="${C.hair}"/>
+<path d="M130 96 Q118 87 105 93 L106 99 Q118 94 129 101 Z" fill="${C.hair}"/>
+<!-- eyes -->
+<g class="eyes">
+<ellipse cx="83" cy="111" rx="5" ry="6.2" fill="${C.line}"/>
+<ellipse cx="117" cy="111" rx="5" ry="6.2" fill="${C.line}"/>
+<circle cx="85" cy="108.6" r="1.8" fill="#fff"/>
+<circle cx="119" cy="108.6" r="1.8" fill="#fff"/>
+</g>
+<!-- nose -->
+<path d="M101 112 C99 122 95 128 97 132 C100 135 105 134 107 131" fill="none" stroke="${C.skinShade}" stroke-width="3" stroke-linecap="round"/>
+<!-- moustache -->
+<path d="M83 142 C89 135 97 135 100 139 C103 135 111 135 117 142 C110 141 105 142 100 144 C95 142 90 141 83 142 Z" fill="${C.hair}"/>
+${
+	smile
+		? `<path d="M87 148 Q100 160 113 148 Q100 153 87 148 Z" fill="#5a2a22" stroke="${C.line}" stroke-width="2" stroke-linejoin="round"/>
+<path d="M90 149.5 Q100 154 110 149.5 Q100 151.5 90 149.5 Z" fill="#fff"/>`
+		: `<path d="M90 150 Q100 155 110 150" fill="none" stroke="${C.line}" stroke-width="2.5" stroke-linecap="round"/>`
+}
+<!-- cheeks -->
+<ellipse cx="72" cy="128" rx="7" ry="4" fill="${C.red}" opacity="0.18"/>
+<ellipse cx="128" cy="128" rx="7" ry="4" fill="${C.red}" opacity="0.18"/>
+`;
+
+// Half-body: head on a black-belt dobok (black collar trim for dan grades).
+const body = `
+<g stroke="${C.line}" stroke-width="3" stroke-linejoin="round">
+  <path d="M28 400 C28 300 70 244 160 240 C250 244 292 300 292 400 Z" fill="${C.dobok}"/>
+  <path d="M140 240 L160 296 L180 240 Z" fill="${C.skinShade}"/>
+  <path d="M128 242 L190 372 L210 362 L152 240 Z" fill="${C.belt}"/>
+  <path d="M194 242 L158 330 L140 320 L170 240 Z" fill="${C.belt}"/>
+  <path d="M60 300 C70 330 72 360 70 400" fill="none" stroke="${C.dobokShade}" stroke-width="3"/>
+  <path d="M260 300 C250 330 248 360 250 400" fill="none" stroke="${C.dobokShade}" stroke-width="3"/>
+  <path d="M34 356 L286 356 L288 384 L32 384 Z" fill="${C.belt}"/>
+  <rect x="146" y="350" width="30" height="40" rx="4" fill="${C.belt}"/>
+</g>
+<path d="M150 388 L140 400 M172 388 L182 400" stroke="${C.line}" stroke-width="10"/>
+<rect x="60" y="364" width="64" height="5" fill="${C.gold}" opacity="0.9"/>
+<g transform="translate(232 300) rotate(-33.7)">
+  <circle r="11" fill="${C.blue}"/>
+  <path d="M-11 0A11 11 0 0 1 11 0A5.5 5.5 0 0 1 0 0A5.5 5.5 0 0 0 -11 0Z" fill="${C.red}"/>
+</g>
+`;
+
+const avatar = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 50 320 350" width="320" height="350">
+<g transform="translate(60 60)">${head()}</g>
+${body}
+</svg>`;
+
+const favicon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<defs><clipPath id="c"><circle cx="100" cy="100" r="92"/></clipPath></defs>
+<circle cx="100" cy="100" r="96" fill="${C.bg}"/>
+<g clip-path="url(#c)"><g transform="translate(-2 6) scale(1.02)">${head()}</g></g>
+<circle cx="100" cy="100" r="93" fill="none" stroke="${C.red}" stroke-width="8"/>
+</svg>`;
+
+const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<rect width="1200" height="630" fill="${C.bg}"/>
+<g opacity="0.07" transform="translate(1010 140) rotate(-33.7)">
+  <circle r="300" fill="${C.blue}"/>
+  <path d="M-300 0A300 300 0 0 1 300 0A150 150 0 0 1 0 0A150 150 0 0 0 -300 0Z" fill="${C.red}"/>
+</g>
+<text x="80" y="150" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="${C.red}">SOFTWARE ARCHITECT · BENGALURU</text>
+<text x="80" y="260" font-family="Georgia, serif" font-size="80" font-weight="900" fill="#0d0e10">Umamaheswaran<tspan fill="${C.red}">.</tspan></text>
+<text x="80" y="330" font-family="Georgia, serif" font-size="36" font-weight="700" fill="${C.blue}">Software Architect <tspan fill="#9aa0a8">/</tspan> <tspan fill="#555a63">Engineering Manager</tspan></text>
+<text x="80" y="392" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#555a63">.NET · React · Azure/AWS · AI · Taekwondo black belt</text>
+<text x="80" y="470" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#0d0e10">umamaheswaran.com</text>
+<g transform="translate(830 150) scale(1.1)">
+  <g transform="translate(60 60)">${head()}</g>${body}
+</g>
+<rect x="0" y="540" width="1200" height="44" fill="${C.belt}"/>
+<text x="80" y="569" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="6" fill="${C.gold}">UMAMAHESWARAN · TAEKWONDO · ARCHITECTURE</text>
+</svg>`;
+
+writeFileSync('public/brand/avatar.svg', avatar);
+writeFileSync('src/assets/avatar.svg', avatar);
+writeFileSync('public/favicon.svg', favicon);
+writeFileSync('public/brand/og.svg', og);
+await sharp(Buffer.from(og)).png().toFile('public/og.png');
+await sharp(Buffer.from(favicon)).resize(180, 180).png().toFile('public/apple-touch-icon.png');
+await sharp(Buffer.from(favicon)).resize(32, 32).png().toFile('public/favicon-32.png');
+await sharp(Buffer.from(avatar)).resize(640).png().toFile('public/brand/avatar.png');
+console.log('brand assets written');

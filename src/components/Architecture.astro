@@ -1,0 +1,601 @@
+---
+/**
+ * 구조 (structure): how I architect, drawn as a blueprint. Each layer of a
+ * system maps to a Taekwondo stance; click a layer to read the principle.
+ * Below it, the promotion path from tech lead to architect.
+ */
+
+type Node = {
+	id: string;
+	label: string;
+	sub: string;
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+	stance: string;
+	title: string;
+	body: string;
+	tech: string[];
+};
+
+const nodes: Node[] = [
+	{
+		id: 'client',
+		label: 'Clients',
+		sub: 'React · Next.js',
+		x: 16, y: 176, w: 128, h: 56,
+		stance: 'Front stance',
+		title: 'Lean toward the user.',
+		body: 'The front end carries its weight forward: typed end to end, fast on first paint, and honest about loading and failure states.',
+		tech: ['React', 'Next.js', 'TypeScript'],
+	},
+	{
+		id: 'gateway',
+		label: 'API gateway',
+		sub: 'auth · limits',
+		x: 188, y: 176, w: 128, h: 56,
+		stance: 'Closed stance',
+		title: 'One narrow, guarded entrance.',
+		body: 'A single front door for identity, rate limits and versioning, so the services behind it can stay simple and change safely.',
+		tech: ['OAuth / OIDC', 'Versioning', 'Rate limits'],
+	},
+	{
+		id: 'services',
+		label: 'Domain services',
+		sub: '.NET microservices',
+		x: 362, y: 158, w: 140, h: 92,
+		stance: 'Horse-riding stance',
+		title: 'A wide, stable base.',
+		body: 'Services drawn around business boundaries, each owning its own data. Clear contracts first, so teams can move without stepping on each other.',
+		tech: ['.NET / C#', 'Microservices', 'DDD'],
+	},
+	{
+		id: 'bus',
+		label: 'Event bus',
+		sub: 'async · retries',
+		x: 548, y: 120, w: 128, h: 56,
+		stance: 'Tiger stance',
+		title: 'Weight back, ready to react.',
+		body: 'Events decouple who does the work from who asked for it. Consumers are idempotent, retries are expected, and nothing is lost when one part falls over.',
+		tech: ['Queues', 'Logic Apps', 'Idempotency'],
+	},
+	{
+		id: 'data',
+		label: 'Data',
+		sub: 'PostgreSQL · Redis',
+		x: 548, y: 236, w: 128, h: 56,
+		stance: 'Parallel stance',
+		title: 'Balanced on both feet.',
+		body: 'A relational store for the source of truth and a fast store for what has to be instant. Pick each one for the access pattern, not out of habit.',
+		tech: ['PostgreSQL', 'Redis', 'Blob storage'],
+	},
+	{
+		id: 'ai',
+		label: 'AI layer',
+		sub: 'LLMs · agents',
+		x: 362, y: 22, w: 140, h: 56,
+		stance: 'Back stance',
+		title: 'Guarded, with room to move.',
+		body: 'The model is a component, not the architecture. It sits behind guardrails, evaluations and fallbacks, so the product still works when the model is wrong.',
+		tech: ['LLMs', 'Agents', 'Evals'],
+	},
+];
+
+// Edges as paths between node edges (drawn and animated in the SVG).
+const edges = [
+	{ id: 'e1', d: 'M144 204 H188' },
+	{ id: 'e2', d: 'M316 204 H362' },
+	{ id: 'e3', d: 'M432 158 V78' },
+	{ id: 'e4', d: 'M502 186 C525 186 525 148 548 148' },
+	{ id: 'e5', d: 'M502 224 C525 224 525 264 548 264' },
+	{ id: 'e6', d: 'M612 176 V236' },
+];
+
+// From LinkedIn experience. Each stage earns the next belt.
+const career = [
+	{
+		org: 'Lightcast',
+		years: '2011–2016',
+		role: 'Software Engineer → Lead Engineer',
+		belt: '#e2b419',
+		work: 'Re-architected an analytics app and built its REST APIs',
+	},
+	{
+		org: 'Kovai.co',
+		years: '2016–2019',
+		role: 'Technical Lead',
+		belt: '#2f7a3b',
+		work: 'Led the team that shipped Atomic Scope and Document360',
+	},
+	{
+		org: 'Conga',
+		years: '2019–2023',
+		role: 'Principal Software Engineer',
+		belt: '#0047a0',
+		work: 'Data platform with 95% of queries under 200 ms',
+	},
+	{
+		org: 'Definitive Healthcare',
+		years: '2023–2025',
+		role: 'Technical Lead → Engineering Manager',
+		belt: '#cd2e3a',
+		work: 'Moved critical services to AWS and cut costs by 40%',
+	},
+	{
+		org: 'Provus',
+		years: '2025–now',
+		role: 'Technical Architect',
+		belt: '#0d0e10',
+		work: 'Architected and built CPQ Express',
+	},
+];
+
+---
+
+<section id="architecture" class="arch" aria-labelledby="arch-heading" data-arch data-reveal>
+	<div class="head">
+		<p class="kicker">Architecture</p>
+		<h2 id="arch-heading">Every system starts from a stance.</h2>
+		<p class="muted intro">The shape I reach for most often. Pick a layer to see why.</p>
+	</div>
+
+	<div class="board">
+		<div class="blueprint">
+			<span class="stamp" aria-hidden="true">Drawing no. UM-01 · rev. {new Date().getFullYear()}</span>
+			<svg viewBox="0 0 692 312" role="group" aria-label="Architecture diagram">
+				<rect class="cloud" x="172" y="104" width="512" height="200" rx="10"></rect>
+				<text class="cloud-label" x="186" y="124">Azure / AWS</text>
+				{edges.map((e) => <path id={`arch-${e.id}`} class="edge" d={e.d} pathLength="1" />)}
+				{
+					edges.map((e, i) => (
+						<circle class="packet" r="3.5">
+							<animateMotion dur={`${2.2 + (i % 3) * 0.5}s`} repeatCount="indefinite" begin={`${i * 0.35}s`}>
+								<mpath href={`#arch-${e.id}`} />
+							</animateMotion>
+						</circle>
+					))
+				}
+				{
+					nodes.map((n, i) => (
+						<g
+							class="node"
+							data-node={n.id}
+							role="button"
+							tabindex="0"
+							aria-pressed={i === 2 ? 'true' : 'false'}
+							aria-label={`${n.label}: ${n.stance}`}
+							style={`--i:${i}`}
+						>
+							<rect x={n.x} y={n.y} width={n.w} height={n.h} rx="8" />
+							<text class="nl" x={n.x + n.w / 2} y={n.y + n.h / 2 - 3}>
+								{n.label}
+							</text>
+							<text class="ns" x={n.x + n.w / 2} y={n.y + n.h / 2 + 14}>
+								{n.sub}
+							</text>
+						</g>
+					))
+				}
+			</svg>
+		</div>
+
+		<div class="panel" aria-live="polite">
+			{
+				nodes.map((n, i) => (
+					<article class="principle" data-principle={n.id} hidden={i !== 2}>
+						<p class="stance">{n.stance}</p>
+						<h3>{n.title}</h3>
+						<p class="body">{n.body}</p>
+						<ul class="tech" aria-label="Tools">
+							{n.tech.map((t) => (
+								<li>{t}</li>
+							))}
+						</ul>
+					</article>
+				))
+			}
+			<div class="steps" aria-hidden="true">
+				{nodes.map((n) => <span data-step={n.id} />)}
+			</div>
+		</div>
+	</div>
+
+	<div class="career">
+		<div class="career-head">
+			<h3>Fifteen years, five belts.</h3>
+		</div>
+		<ol class="path" data-stagger>
+			{
+				career.map((c) => (
+					<li style={`--belt:${c.belt}`}>
+						<span class="belt-line" aria-hidden="true" />
+						<p class="org">
+							{c.org} <span class="yrs">{c.years}</span>
+						</p>
+						<p class="crole">{c.role}</p>
+						<p class="work">{c.work}</p>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+</section>
+
+<script>
+	import { tick } from '../lib/sound';
+
+	function init() {
+		const root = document.querySelector<HTMLElement>('[data-arch]');
+		if (!root || root.dataset.ready) return;
+		root.dataset.ready = '1';
+		const nodes = [...root.querySelectorAll<SVGGElement>('[data-node]')];
+		const panels = [...root.querySelectorAll<HTMLElement>('[data-principle]')];
+		const steps = [...root.querySelectorAll<HTMLElement>('[data-step]')];
+
+		function show(id: string, sound = true) {
+			nodes.forEach((n) => n.setAttribute('aria-pressed', String(n.dataset.node === id)));
+			panels.forEach((p) => {
+				const on = p.dataset.principle === id;
+				p.hidden = !on;
+				p.classList.toggle('enter', on);
+			});
+			steps.forEach((s) => s.classList.toggle('on', s.dataset.step === id));
+			if (sound) tick();
+		}
+
+		nodes.forEach((n) => {
+			n.addEventListener('click', () => show(n.dataset.node!));
+			n.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					show(n.dataset.node!);
+				}
+			});
+		});
+		show('services', false);
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.arch {
+		margin: 6rem 0;
+		scroll-margin-top: 5.5rem;
+	}
+	.head {
+		max-width: 40rem;
+	}
+	h2 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.6rem, 4vw, 2.25rem);
+	}
+	.intro {
+		font-size: 1.05rem;
+	}
+	.board {
+		display: grid;
+		grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+		margin-top: 2rem;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--surface);
+	}
+
+	/* Blueprint paper. */
+	.blueprint {
+		--line: color-mix(in srgb, var(--blue) 14%, transparent);
+		--line-strong: color-mix(in srgb, var(--blue) 24%, transparent);
+		position: relative;
+		padding: 2.25rem 1rem 1rem;
+		background:
+			linear-gradient(var(--line-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+			linear-gradient(90deg, var(--line-strong) 1px, transparent 1px) 0 0 / 80px 80px,
+			linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 16px 16px,
+			linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 16px 16px,
+			color-mix(in srgb, var(--blue) 5%, var(--surface));
+		border-right: 1px solid var(--border);
+	}
+	.stamp {
+		position: absolute;
+		top: 0.75rem;
+		left: 1rem;
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--blue);
+		opacity: 0.8;
+	}
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+	.cloud {
+		fill: none;
+		stroke: var(--blue);
+		stroke-width: 1.2;
+		stroke-dasharray: 6 5;
+		opacity: 0.5;
+	}
+	.cloud-label {
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 11px;
+		fill: var(--blue);
+		opacity: 0.8;
+		letter-spacing: 0.06em;
+	}
+	.edge {
+		fill: none;
+		stroke: var(--blue);
+		stroke-width: 1.6;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		opacity: 0.7;
+	}
+	:global(.in) .edge {
+		animation: draw 1.1s var(--ease-out) forwards;
+		animation-delay: 0.6s;
+	}
+	@keyframes draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	.packet {
+		fill: var(--accent);
+		opacity: 0;
+	}
+	:global(.in) .packet {
+		animation: show 0.3s 1.6s forwards;
+	}
+	@keyframes show {
+		to {
+			opacity: 1;
+		}
+	}
+	.node {
+		cursor: pointer;
+		outline: none;
+	}
+	.node rect {
+		fill: var(--surface);
+		stroke: var(--text);
+		stroke-width: 1.4;
+		transition:
+			fill 0.25s,
+			stroke 0.25s,
+			transform 0.3s var(--ease-press);
+		transform-box: fill-box;
+		transform-origin: center;
+	}
+	:global(.in) .node {
+		animation: node-in 0.6s var(--ease-out) backwards;
+		animation-delay: calc(var(--i) * 90ms + 150ms);
+	}
+	@keyframes node-in {
+		from {
+			opacity: 0;
+		}
+	}
+	.node text {
+		text-anchor: middle;
+		pointer-events: none;
+	}
+	.nl {
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: 14px;
+		fill: var(--text);
+	}
+	.ns {
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 10.5px;
+		fill: var(--muted);
+	}
+	.node:hover rect {
+		stroke: var(--accent);
+		transform: scale(1.04);
+	}
+	.node:focus-visible rect {
+		stroke: var(--accent);
+		stroke-width: 3;
+	}
+	.node[aria-pressed='true'] rect {
+		fill: var(--accent);
+		stroke: var(--accent);
+	}
+	.node[aria-pressed='true'] .nl,
+	.node[aria-pressed='true'] .ns {
+		fill: #fff;
+	}
+
+	/* The principle for the chosen layer. */
+	.panel {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		padding: clamp(1.25rem, 3vw, 2rem);
+	}
+	.principle.enter {
+		animation: slide 0.45s var(--ease-out);
+	}
+	@keyframes slide {
+		from {
+			opacity: 0;
+			transform: translateX(14px);
+		}
+	}
+	.stance {
+		margin: 0 0 0.6rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.principle h3 {
+		margin: 0 0 0.6rem;
+		font-size: 1.35rem;
+	}
+	.body {
+		margin: 0 0 1rem;
+		color: var(--muted);
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+	.layer {
+		margin: 0 0 0.5rem;
+		font-size: 0.85rem;
+		color: var(--muted);
+	}
+	.layer strong {
+		color: var(--text);
+	}
+	.tech {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	.tech li {
+		padding: 0.15rem 0.6rem;
+		border-radius: 3px;
+		background: color-mix(in srgb, var(--blue) 10%, transparent);
+		color: var(--blue);
+		font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+		font-size: 0.75rem;
+	}
+	.steps {
+		display: flex;
+		gap: 0.35rem;
+		margin-top: auto;
+		padding-top: 1.5rem;
+	}
+	.steps span {
+		height: 4px;
+		flex: 1;
+		border-radius: 2px;
+		background: var(--border);
+		transition: background 0.3s;
+	}
+	.steps span.on {
+		background: var(--accent);
+	}
+
+	/* Career path: each stage earns a darker belt. */
+	.career {
+		display: grid;
+		gap: 1.75rem;
+		margin-top: 3.5rem;
+	}
+	.career h3 {
+		margin: 0;
+		font-size: clamp(1.3rem, 3vw, 1.6rem);
+	}
+	.path {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 1.25rem;
+	}
+	.yrs {
+		display: block;
+		margin-top: 0.15rem;
+		font-weight: 400;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		font-variant-numeric: tabular-nums;
+	}
+	.path > li {
+		position: relative;
+		padding-top: 1.4rem;
+	}
+	.belt-line {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: -1.25rem;
+		height: 0.55rem;
+		border-radius: 2px;
+		background:
+			repeating-linear-gradient(90deg, transparent 0 6px, rgb(255 255 255 / 0.08) 6px 7px),
+			var(--belt);
+		box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+	}
+	.path > li:last-child .belt-line {
+		right: 0;
+	}
+	.path > li:last-child .belt-line::after {
+		content: '';
+		position: absolute;
+		right: -0.2rem;
+		top: -0.35rem;
+		width: 1.25rem;
+		height: 1.25rem;
+		border-radius: 3px;
+		background: var(--belt);
+		box-shadow: 0 0 0 1px #d8b45e;
+	}
+	.org {
+		margin: 0;
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+	.crole {
+		margin: 0.2rem 0 0.1rem;
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: 1.1rem;
+		line-height: 1.3;
+	}
+	.work {
+		margin: 0.35rem 0 0;
+		font-size: 0.9rem;
+		line-height: 1.5;
+		color: var(--muted);
+	}
+
+	@media (max-width: 860px) {
+		.board {
+			grid-template-columns: 1fr;
+		}
+		.blueprint {
+			border-right: 0;
+			border-bottom: 1px solid var(--border);
+		}
+		.path {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.path > li .belt-line {
+			right: 0;
+		}
+	}
+	@media (max-width: 640px) {
+		.path {
+			grid-template-columns: 1fr;
+		}
+		.belt-line {
+			right: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.packet {
+			display: none;
+		}
+		.edge {
+			stroke-dashoffset: 0;
+		}
+	}
+</style>

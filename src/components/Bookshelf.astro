@@ -1,0 +1,246 @@
+---
+/** The technical books on my shelf, with the most influential ones up front. */
+import { type Book, books } from '../data/books';
+
+const TOPIC: Record<Book['topic'], { bg: string; ink: string }> = {
+	'C#': { bg: '#5c2d91', ink: '#ffffff' },
+	JavaScript: { bg: '#e2b419', ink: '#17150f' },
+	Web: { bg: '#c4472a', ink: '#ffffff' },
+	Systems: { bg: '#2f4858', ink: '#ffffff' },
+	Product: { bg: '#cd2e3a', ink: '#ffffff' },
+	Practice: { bg: '#2f7a3b', ink: '#ffffff' },
+	Python: { bg: '#306998', ink: '#ffffff' },
+	Maths: { bg: '#4a4f57', ink: '#ffffff' },
+};
+
+const favourites = books.filter((b) => b.favourite).sort((a, b) => a.year - b.year);
+const shelf = [...books].sort((a, b) => b.year - a.year);
+// Deterministic variety in spine height and width.
+const dims = (title: string, i: number) => ({
+	h: 9.5 + ((title.length * 7 + i * 13) % 30) / 10,
+	w: 2.1 + ((i * 5) % 4) / 10,
+});
+---
+
+<section class="books" aria-labelledby="books-heading" data-reveal>
+	<div class="head">
+		<p class="kicker">Bookshelf</p>
+		<h2 id="books-heading">Books that shaped how I build.</h2>
+	</div>
+
+	<div class="featured">
+		{
+			favourites.map((b) => {
+				const t = TOPIC[b.topic];
+				return (
+					<article class="fav">
+						<div class="cover" style={`--bg:${t.bg};--ink:${t.ink}`} aria-hidden="true">
+							<span class="c-title">{b.title}</span>
+							<span class="c-author">{b.author}</span>
+						</div>
+						<div class="fav-text">
+							<p class="badge">Most influential</p>
+							<h3>{b.title}</h3>
+							<p class="by">{b.author}</p>
+							<p class="why">{b.favourite}</p>
+						</div>
+					</article>
+				);
+			})
+		}
+	</div>
+
+	<div class="shelf-wrap">
+		<ul class="shelf" aria-label={`${books.length} technical books`}>
+			{
+				shelf.map((b, i) => {
+					const t = TOPIC[b.topic];
+					const d = dims(b.title, i);
+					return (
+						<li
+							class:list={['spine', { star: b.favourite }]}
+							style={`--bg:${t.bg};--ink:${t.ink};--h:${d.h}rem;--w:${d.w}rem;--i:${i}`}
+							title={b.author ? `${b.title} by ${b.author}` : b.title}
+							tabindex="0"
+						>
+							<span class="s-title">{b.title}</span>
+						</li>
+					);
+				})
+			}
+		</ul>
+		<div class="board" aria-hidden="true"></div>
+	</div>
+</section>
+
+<style>
+	.books {
+		margin: 6rem 0;
+	}
+	h2 {
+		margin: 0 0 2rem;
+		font-size: clamp(1.6rem, 4vw, 2.25rem);
+	}
+
+	/* Featured books: a drawn cover beside a short note. */
+	.featured {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+		gap: 1.25rem;
+		margin-bottom: 3rem;
+	}
+	.fav {
+		display: flex;
+		gap: 1.25rem;
+		align-items: center;
+		padding: 1.25rem;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+	}
+	.cover {
+		flex: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		width: 6.5rem;
+		aspect-ratio: 2 / 3;
+		padding: 0.7rem 0.6rem 0.6rem 0.85rem;
+		border-radius: 2px 6px 6px 2px;
+		background:
+			linear-gradient(90deg, rgb(0 0 0 / 0.25) 0 4px, rgb(255 255 255 / 0.12) 4px 6px, transparent 6px),
+			var(--bg);
+		color: var(--ink);
+		box-shadow:
+			0 14px 24px -14px rgb(0 0 0 / 0.6),
+			inset 0 0 0 1px rgb(0 0 0 / 0.15);
+		transform: rotate(-3deg);
+		transition: transform 0.4s var(--ease-press);
+	}
+	.fav:hover .cover {
+		transform: rotate(0) translateY(-4px) scale(1.04);
+	}
+	.c-title {
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: 0.8rem;
+		line-height: 1.15;
+	}
+	.c-author {
+		font-size: 0.6rem;
+		opacity: 0.85;
+	}
+	.badge {
+		display: inline-block;
+		margin: 0 0 0.4rem;
+		padding: 0.1rem 0.5rem;
+		border-radius: 3px;
+		background: var(--accent-soft);
+		color: var(--accent);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.fav h3 {
+		margin: 0;
+		font-size: 1.25rem;
+	}
+	.by {
+		margin: 0.1rem 0 0.4rem;
+		font-size: 0.9rem;
+		color: var(--muted);
+	}
+	.why {
+		margin: 0;
+		font-size: 0.95rem;
+		color: var(--muted);
+	}
+
+	/* The shelf: spines standing on a wooden board. */
+	.shelf-wrap {
+		overflow-x: auto;
+		padding: 1rem 0.25rem 0;
+		scrollbar-width: thin;
+	}
+	.shelf {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 3px;
+		width: max-content;
+		min-width: 100%;
+		margin: 0;
+		padding: 0 1rem;
+		list-style: none;
+	}
+	.spine {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		width: var(--w);
+		height: var(--h);
+		padding: 0.6rem 0;
+		border-radius: 3px 3px 1px 1px;
+		background:
+			linear-gradient(transparent 0.7rem, rgb(255 255 255 / 0.25) 0.7rem 0.82rem, transparent 0.82rem),
+			linear-gradient(90deg, rgb(0 0 0 / 0.18), transparent 30%, transparent 70%, rgb(0 0 0 / 0.22)),
+			var(--bg);
+		color: var(--ink);
+		cursor: default;
+		transform-origin: bottom center;
+		transition: transform 0.3s var(--ease-press);
+	}
+	:global(.in) .spine {
+		animation: shelve 0.6s var(--ease-out) backwards;
+		animation-delay: calc(var(--i) * 30ms + 200ms);
+	}
+	@keyframes shelve {
+		from {
+			opacity: 0;
+			transform: translateY(-1.5rem);
+		}
+	}
+	.spine:hover,
+	.spine:focus-visible {
+		transform: translateY(-0.6rem);
+		outline: none;
+	}
+	.spine:focus-visible {
+		box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+	}
+	.spine.star::after {
+		content: '★';
+		position: absolute;
+		bottom: 0.35rem;
+		left: 50%;
+		translate: -50% 0;
+		font-size: 0.7rem;
+		color: #f2d27a;
+	}
+	.s-title {
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		font-size: 0.68rem;
+		font-weight: 700;
+		line-height: 1.1;
+		max-height: calc(var(--h) - 2.2rem);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.board {
+		height: 0.9rem;
+		margin-top: -1px;
+		border-radius: 3px;
+		background:
+			repeating-linear-gradient(92deg, transparent 0 11px, rgb(0 0 0 / 0.12) 11px 12px),
+			linear-gradient(#8a6440, #6b4b2e);
+		box-shadow: 0 10px 18px -10px rgb(0 0 0 / 0.5);
+		width: max-content;
+		min-width: 100%;
+	}
+	.shelf-wrap {
+		display: grid;
+	}
+</style>

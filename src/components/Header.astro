@@ -2,6 +2,7 @@
 import { SITE_TITLE } from '../consts';
 
 const links = [
+	{ href: '/#architecture', label: 'Architecture' },
 	{ href: '/blog/', label: 'Writing' },
 	{ href: '/about-me/', label: 'About' },
 ];
@@ -9,18 +10,28 @@ const path = Astro.url.pathname;
 ---
 
 <header>
-	<nav class="container" aria-label="Main">
-		<a class="brand" href="/">{SITE_TITLE}</a>
+	<nav class="container wide" aria-label="Main">
+		<a class="brand" href="/">
+			<img class="mark" src="/favicon.svg" width="36" height="36" alt="" />
+			<span>{SITE_TITLE}<span class="dot">.</span></span>
+		</a>
 		<div class="links">
 			{
 				links.map((l) => (
 					<a href={l.href} aria-current={path.startsWith(l.href) ? 'page' : undefined}>
-						{l.label}
+						<span>{l.label}</span>
 					</a>
 				))
 			}
-			<button type="button" class="theme-toggle" aria-label="Switch between light and dark mode">
-				<svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+			<button type="button" class="theme-toggle sound-toggle" aria-label="Sound effects" aria-pressed="true">
+				<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M11 5 6 9H3v6h3l5 4z"></path>
+					<path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"></path>
+					<path class="mute" d="m16 9 6 6m0-6-6 6"></path>
+				</svg>
+			</button>
+			<button type="button" class="theme-toggle" aria-label="Dark mode" aria-pressed="false">
+				<svg class="sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 					<circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"></circle>
 					<path
 						d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
@@ -28,7 +39,7 @@ const path = Astro.url.pathname;
 						stroke-width="2"
 						stroke-linecap="round"></path>
 				</svg>
-				<svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+				<svg class="moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 					<path
 						d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"
 						fill="none"
@@ -39,25 +50,60 @@ const path = Astro.url.pathname;
 			</button>
 		</div>
 	</nav>
+	<!-- Reading progress, tied as a belt that earns its colours as you scroll. -->
+	<div class="progress" aria-hidden="true"></div>
 </header>
 
 <script>
-	const root = document.documentElement;
-	const isDark = () =>
-		root.dataset.theme
-			? root.dataset.theme === 'dark'
-			: window.matchMedia('(prefers-color-scheme: dark)').matches;
-	document.querySelector('.theme-toggle')?.addEventListener('click', () => {
-		const next = isDark() ? 'light' : 'dark';
-		root.dataset.theme = next;
-		try {
-			localStorage.setItem('theme', next);
-		} catch {}
-	});
+	import { setSound, soundOn, tick } from '../lib/sound';
+
+	function init() {
+		const root = document.documentElement;
+		const theme = document.querySelector<HTMLButtonElement>('.theme-toggle:not(.sound-toggle)');
+		const sound = document.querySelector<HTMLButtonElement>('.sound-toggle');
+		const isDark = () =>
+			root.dataset.theme
+				? root.dataset.theme === 'dark'
+				: window.matchMedia('(prefers-color-scheme: dark)').matches;
+		theme?.setAttribute('aria-pressed', String(isDark()));
+		theme?.addEventListener('click', () => {
+			const next = isDark() ? 'light' : 'dark';
+			const swap = () => {
+				root.dataset.theme = next;
+				theme.setAttribute('aria-pressed', String(next === 'dark'));
+			};
+			// Sweep the new theme in from the toggle, where supported.
+			const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+			if (document.startViewTransition && !reduced) {
+				const r = theme.getBoundingClientRect();
+				root.style.setProperty('--tx', `${r.left + r.width / 2}px`);
+				root.style.setProperty('--ty', `${r.top + r.height / 2}px`);
+				root.classList.add('theme-swap');
+				document.startViewTransition(swap).finished.finally(() => root.classList.remove('theme-swap'));
+			} else swap();
+			tick();
+			try {
+				localStorage.setItem('theme', next);
+			} catch {}
+		});
+		sound?.setAttribute('aria-pressed', String(soundOn()));
+		sound?.addEventListener('click', () => {
+			const on = !soundOn();
+			setSound(on);
+			sound.setAttribute('aria-pressed', String(on));
+			tick();
+		});
+	}
+	document.addEventListener('astro:page-load', init);
 </script>
 
 <style>
 	header {
+		position: sticky;
+		top: 0;
+		z-index: 5;
+		background: color-mix(in srgb, var(--bg) 88%, transparent);
+		backdrop-filter: blur(8px);
 		border-bottom: 1px solid var(--border);
 	}
 	nav {
@@ -65,29 +111,55 @@ const path = Astro.url.pathname;
 		align-items: center;
 		justify-content: space-between;
 		gap: 1rem;
-		min-height: 4rem;
+		min-height: 4.25rem;
 	}
 	.brand {
-		font-weight: 700;
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		font-family: var(--font-display);
+		font-weight: 900;
 		color: var(--text);
 		text-decoration: none;
-		font-size: 1.1rem;
+		font-size: 1.15rem;
+	}
+	.mark {
+		border-radius: 50%;
+		transition: transform 0.5s var(--ease-press);
+	}
+	/* A small bow on hover. */
+	.brand:hover .mark {
+		transform: rotate(-12deg) translateY(2px);
+	}
+	.dot {
+		color: var(--accent);
 	}
 	.links {
 		display: flex;
 		align-items: center;
-		gap: 1.25rem;
+		gap: 1.5rem;
+	}
+	.links .theme-toggle + .theme-toggle {
+		margin-left: -0.9rem;
 	}
 	.links a {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
 		color: var(--muted);
 		text-decoration: none;
 		font-size: 1rem;
+	}
+	.links a .ko {
+		font-size: 0.8rem;
+		color: var(--accent);
+		opacity: 0.8;
 	}
 	.links a:hover,
 	.links a[aria-current='page'] {
 		color: var(--text);
 	}
-	.links a[aria-current='page'] {
+	.links a[aria-current='page'] span:first-child {
 		text-decoration: underline;
 		text-decoration-color: var(--accent);
 		text-decoration-thickness: 2px;
@@ -100,12 +172,60 @@ const path = Astro.url.pathname;
 		height: 2.25rem;
 		border: 1px solid var(--border);
 		border-radius: 999px;
-		background: transparent;
+		background: var(--surface);
 		color: var(--muted);
 		cursor: pointer;
 	}
 	.theme-toggle:hover {
 		color: var(--text);
+	}
+	.sound-toggle .mute {
+		display: none;
+	}
+	.sound-toggle[aria-pressed='false'] .mute {
+		display: block;
+	}
+	.sound-toggle[aria-pressed='false'] .wave {
+		display: none;
+	}
+	.progress {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -1px;
+		height: 3px;
+		transform-origin: left;
+		transform: scaleX(0);
+		background: var(--accent);
+	}
+	@supports (animation-timeline: scroll()) {
+		.progress {
+			animation: belt-progress linear both;
+			animation-timeline: scroll(root);
+		}
+	}
+	@keyframes belt-progress {
+		0% {
+			transform: scaleX(0);
+			background: #d9dce1;
+		}
+		20% {
+			background: #e2b419;
+		}
+		40% {
+			background: #2f7a3b;
+		}
+		60% {
+			background: #0047a0;
+		}
+		80% {
+			background: #cd2e3a;
+		}
+		100% {
+			transform: scaleX(1);
+			background: #0d0e10;
+			box-shadow: 0 0 0 1px #d8b45e;
+		}
 	}
 	.moon {
 		display: none;
@@ -122,6 +242,14 @@ const path = Astro.url.pathname;
 		}
 		:global(:root:not([data-theme='light'])) .moon {
 			display: block;
+		}
+	}
+	@media (max-width: 640px) {
+		.links {
+			gap: 1rem;
+		}
+		.links a[href='/#architecture'] {
+			display: none;
 		}
 	}
 </style>

@@ -1,9 +1,22 @@
 ---
 import Base from '../layouts/Base.astro';
+import BoardBreak from '../components/BoardBreak.astro';
 ---
 
-<Base title="Page not found">
-	<h1>Page not found</h1>
-	<p>That page doesn't exist, or it moved when this blog left WordPress.</p>
-	<p><a href="/blog/">Browse all writing →</a></p>
+<Base title="Page not found" wide>
+	<div class="lost">
+		<p class="kicker">404</p>
+		<h1>This page took a hit.</h1>
+		<p class="muted">
+			It doesn't exist, or it moved when this blog left WordPress. <a href="/blog/">Browse all writing →</a>
+		</p>
+	</div>
+	<BoardBreak />
 </Base>
+
+<style>
+	.lost {
+		max-width: 36rem;
+		margin-bottom: -2rem;
+	}
+</style>

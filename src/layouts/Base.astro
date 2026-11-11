@@ -6,18 +6,23 @@ import { getImage } from 'astro:assets';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
 	title?: string;
 	description?: string;
 	image?: ImageMetadata;
 	type?: 'website' | 'article';
+	/** Use the wider page width (home page). */
+	wide?: boolean;
 }
 
-const { title, description = SITE_DESCRIPTION, image, type = 'website' } = Astro.props;
+const { title, description = SITE_DESCRIPTION, image, type = 'website', wide = false } = Astro.props;
 const fullTitle = title ? `${title} · ${SITE_TITLE}` : SITE_TITLE;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const ogImage = image ? new URL((await getImage({ src: image, width: 1200, format: 'jpg' })).src, Astro.site) : undefined;
+const ogImage = image
+	? new URL((await getImage({ src: image, width: 1200, format: 'jpg' })).src, Astro.site)
+	: new URL('/og.png', Astro.site);
 ---
 
 <!doctype html>
@@ -26,11 +31,13 @@ const ogImage = image ? new URL((await getImage({ src: image, width: 1200, forma
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<link rel="sitemap" href="/sitemap-index.xml" />
 		<link rel="alternate" type="application/rss+xml" title={SITE_TITLE} href={new URL('rss.xml', Astro.site)} />
 		<link rel="canonical" href={canonicalURL} />
 		<Font cssVariable="--font-atkinson" preload />
+		<Font cssVariable="--font-display" />
 
 		<title>{fullTitle}</title>
 		<meta name="description" content={description} />
@@ -39,21 +46,62 @@ const ogImage = image ? new URL((await getImage({ src: image, width: 1200, forma
 		<meta property="og:title" content={title ?? SITE_TITLE} />
 		<meta property="og:description" content={description} />
 		{ogImage && <meta property="og:image" content={ogImage} />}
-		<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+		<meta name="twitter:card" content="summary_large_image" />
 
 		<script is:inline>
-			// Apply the saved light/dark choice before the page paints.
-			try {
-				const t = localStorage.getItem('theme');
-				if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-			} catch {}
+			// Apply the saved light/dark choice before the page paints, and again
+			// after each client-side page change (which replaces <html> attributes).
+			(function () {
+				function apply(doc) {
+					var root = doc.documentElement;
+					root.classList.add('js');
+					try {
+						var t = localStorage.getItem('theme');
+						if (t === 'light' || t === 'dark') root.dataset.theme = t;
+					} catch (e) {}
+				}
+				apply(document);
+				if (!window.__themeSwap) {
+					window.__themeSwap = true;
+					document.addEventListener('astro:before-swap', function (e) {
+						apply(e.newDocument);
+					});
+				}
+			})();
 		</script>
+		<ClientRouter />
 	</head>
 	<body>
+		<a class="skip" href="#main">Skip to content</a>
 		<Header />
-		<main class="container">
+		<main id="main" class:list={['container', { wide }]}>
 			<slot />
 		</main>
 		<Footer />
+		<script>
+			// Fade sections in as they scroll into view ("bow in").
+			function reveal() {
+				const els = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.in)');
+				if (!('IntersectionObserver' in window)) {
+					els.forEach((el) => el.classList.add('in'));
+					return;
+				}
+				const io = new IntersectionObserver(
+					(entries) => {
+						for (const e of entries) {
+							if (!e.isIntersecting) continue;
+							e.target.classList.add('in');
+							io.unobserve(e.target);
+						}
+					},
+					{ rootMargin: '0px 0px -12% 0px', threshold: 0.05 },
+				);
+				els.forEach((el) => {
+					el.querySelectorAll<HTMLElement>('[data-stagger] > *').forEach((c, i) => c.style.setProperty('--d', `${i * 80}ms`));
+					io.observe(el);
+				});
+			}
+			document.addEventListener('astro:page-load', reveal);
+		</script>
 	</body>
 </html>

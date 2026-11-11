@@ -2,7 +2,7 @@
 
 export const SITE_TITLE = 'Umamaheswaran';
 export const SITE_DESCRIPTION =
-	'Notes on software engineering, .NET, the web and AI, from a Principal Software Engineer.';
+	'Software architecture, .NET, React and AI, from a Technical Architect, engineering manager and Taekwondo black belt.';
 
 export const SOCIAL_LINKS = [
 	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/imumamaheswaran/' },
