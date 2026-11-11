@@ -1,0 +1,331 @@
+---
+/**
+ * Toon Uma, full body, doing airborne Taekwondo techniques. Every so often he
+ * leaps in from the left or right edge, strikes, and leaps back out the same
+ * side.
+ * Decorative: hidden from screen readers, never takes clicks, and switched off
+ * when the visitor prefers reduced motion.
+ */
+const fighter = `
+<svg viewBox="0 0 120 170" class="kb-svg">
+  <g data-part="body">
+    <g data-part="ab"><line class="o" x1="60" y1="56" x2="60" y2="80"/><line class="sleeve back" x1="60" y1="56" x2="60" y2="80"/><circle class="fist" cx="60" cy="84" r="4.5"/></g>
+    <g data-part="tb"><line class="o leg" x1="60" y1="94" x2="60" y2="124"/><line class="pants back" x1="60" y1="94" x2="60" y2="124"/>
+      <g data-part="sb"><line class="o leg" x1="60" y1="124" x2="60" y2="151"/><line class="pants back" x1="60" y1="124" x2="60" y2="151"/><ellipse class="foot" cx="64" cy="155" rx="7" ry="3.5"/></g>
+    </g>
+    <rect class="skin" x="56" y="43" width="8" height="9"/>
+    <path class="jacket" d="M47 54 C52 49 68 49 73 54 L71 96 L49 96 Z"/>
+    <path class="collar" d="M54 51 L66 74 M66 51 L56 67"/>
+    <rect class="belt" x="47" y="86" width="26" height="7"/>
+    <rect class="belt" x="57" y="84.5" width="7" height="10" rx="1"/>
+    <path class="tails" d="M59 94 L55 106 M62 94 L67 105"/>
+    <g data-part="head">
+      <circle class="skin face" cx="61" cy="31" r="13"/>
+      <path class="beard" d="M49 35 C52 46 68 47 73 35 C69 41 55 42 49 35 Z"/>
+      <path class="hair" d="M47 33 C44 18 56 11 67 13 C76 13 82 19 79 28 C83 30 83 35 77 33 C74 24 64 21 56 25 C52 27 49 31 48 35 Z"/>
+      <path class="hair" d="M70 15 L86 12 L77 22 Z"/>
+      <path class="brow" d="M57 27 L62 26.5 M66 26.5 L71 27.5"/>
+      <circle class="eye" cx="60" cy="31" r="1.6"/><circle class="eye" cx="68" cy="31" r="1.6"/>
+      <path class="hair" d="M60 37.5 C63 36 67 36 69 37.5 C66 38.5 63 38.5 60 37.5 Z"/>
+      <path class="mouth" d="M61 40.5 Q65 42.5 68 40.5"/>
+    </g>
+    <g data-part="tf"><line class="o leg" x1="60" y1="94" x2="60" y2="124"/><line class="pants" x1="60" y1="94" x2="60" y2="124"/>
+      <g data-part="sf"><line class="o leg" x1="60" y1="124" x2="60" y2="151"/><line class="pants" x1="60" y1="124" x2="60" y2="151"/><ellipse class="foot" cx="64" cy="155" rx="7" ry="3.5"/></g>
+    </g>
+    <g data-part="af"><line class="o" x1="60" y1="56" x2="60" y2="80"/><line class="sleeve" x1="60" y1="56" x2="60" y2="80"/><circle class="fist" cx="60" cy="84" r="4.5"/></g>
+  </g>
+</svg>`;
+---
+
+<div class="kb-layer" aria-hidden="true" transition:persist="kick-buddy">
+	<template id="kb-fighter" set:html={fighter} />
+</div>
+
+<script>
+	import { whoosh } from '../lib/sound';
+
+	type Pose = { r: number; s: number; tf: number; sf: number; tb: number; sb: number; af: number; ab: number };
+	type Key = Partial<Pose> & { at: number };
+
+	// In the air between moves: knees tucked, guard up.
+	const TUCK: Pose = { r: -8, s: 1, tf: -70, sf: 110, tb: -20, sb: 120, af: -120, ab: -60 };
+
+	// Every technique is airborne. Keys run 0..1 over the moment of the move.
+	const MOVES: { name: string; keys: Key[] }[] = [
+		{
+			name: 'Flying side kick',
+			keys: [{ at: 0 }, { at: 0.35, r: -28, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 0.75, r: -28, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 1 }],
+		},
+		{
+			name: 'Jumping front kick',
+			keys: [{ at: 0 }, { at: 0.35, r: -6, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 0.75, r: -6, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 1 }],
+		},
+		{
+			name: 'Jumping back kick',
+			keys: [{ at: 0 }, { at: 0.3, s: -1 }, { at: 0.5, s: -1, r: 14, tf: 92, sf: 0, af: -40, ab: -100 }, { at: 0.78, s: -1, r: 14, tf: 92, sf: 0, af: -40, ab: -100 }, { at: 1, s: -1 }],
+		},
+		{
+			name: '360 spin kick',
+			keys: [{ at: 0 }, { at: 0.25, s: -1, tf: -95, sf: 0 }, { at: 0.5, s: 1, tf: -100, sf: 0, af: -140 }, { at: 0.75, s: -1, tf: -95, sf: 0 }, { at: 1, s: 1 }],
+		},
+		{
+			name: 'Jumping spinning kick',
+			keys: [{ at: 0 }, { at: 0.3, s: -1, r: -10 }, { at: 0.52, s: 1, r: -20, tf: -100, sf: 100 }, { at: 0.66, s: 1, r: -22, tf: -100, sf: 0, af: -130 }, { at: 0.82, tf: -100, sf: 0, r: -22 }, { at: 1 }],
+		},
+		{
+			name: 'Jumping punch',
+			keys: [{ at: 0 }, { at: 0.3, af: -90, ab: 40, r: -4 }, { at: 0.42, af: -40, ab: -90 }, { at: 0.56, af: -90, ab: 40 }, { at: 0.7, af: -40, ab: -90 }, { at: 1 }],
+		},
+		{
+			name: 'Butterfly kick',
+			keys: [{ at: 0 }, { at: 0.5, r: -200, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 0.9, r: -360, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 1, r: -368 }],
+		},
+	];
+
+	const PARTS = ['body', 'tf', 'sf', 'tb', 'sb', 'af', 'ab'] as const;
+
+	// Fly in tucked, do the move, fly out tucked. `from`/`to` say where the
+	// move sits in the whole animation.
+	function sequence(move: Key[], from = 0.32, to = 0.74): Key[] {
+		const span = to - from;
+		const last = move.at(-1)!;
+		// A full rotation (butterfly) keeps its final angle so it doesn't unwind.
+		const end: Key = last.r !== undefined ? { at: 1, r: last.r } : { at: 1 };
+		return [{ at: 0 }, { at: from }, ...move.slice(1, -1).map((k) => ({ ...k, at: from + k.at * span })), { ...last, at: to }, end];
+	}
+
+	function play(el: Element, keys: Key[], ms: number) {
+		const out: Record<string, Keyframe[]> = {};
+		for (const p of PARTS) out[p] = [];
+		for (const k of keys) {
+			const pose = { ...TUCK, ...k };
+			out.body.push({ offset: k.at, transform: `rotate(${pose.r}deg) scaleX(${pose.s})` });
+			for (const p of ['tf', 'sf', 'tb', 'sb', 'af', 'ab'] as const) out[p].push({ offset: k.at, transform: `rotate(${pose[p]}deg)` });
+		}
+		return PARTS.map((p) =>
+			el.querySelector(`[data-part="${p}"]`)!.animate(out[p], { duration: ms, easing: 'ease-in-out', fill: 'forwards' }),
+		);
+	}
+
+	function makeFighter(size: number) {
+		const tpl = document.getElementById('kb-fighter') as HTMLTemplateElement | null;
+		if (!tpl) return null;
+		const wrap = document.createElement('div');
+		wrap.className = 'kb';
+		wrap.style.setProperty('--size', `${size}px`);
+		wrap.append(tpl.content.cloneNode(true));
+		const bubble = document.createElement('span');
+		bubble.className = 'kb-bubble';
+		wrap.append(bubble);
+		return { wrap, bubble };
+	}
+
+	// Shuffle-bag so every move comes up before any repeats.
+	let bag: number[] = [];
+	function nextMove() {
+		if (!bag.length) bag = MOVES.map((_, i) => i).sort(() => Math.random() - 0.5);
+		return MOVES[bag.pop()!];
+	}
+
+	const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+	async function perform(size: number, face: number, path: Keyframe[], ms: number, from?: number, to?: number) {
+		const layer = document.querySelector<HTMLElement>('.kb-layer');
+		const f = layer && makeFighter(size);
+		if (!layer || !f) return;
+		const { wrap, bubble } = f;
+		wrap.style.setProperty('--face', String(face));
+		const move = nextMove();
+		layer.append(wrap);
+		const keys = sequence(move.keys, from, to);
+		const parts = play(wrap, keys, ms);
+		const flight = wrap.animate(path, { duration: ms, easing: 'linear', fill: 'forwards' });
+		const at = (from ?? 0.32) * ms;
+		setTimeout(() => {
+			bubble.textContent = move.name + '!';
+			wrap.classList.add('talk');
+			whoosh();
+		}, at);
+		setTimeout(() => wrap.classList.remove('talk'), (to ?? 0.74) * ms + 250);
+		await Promise.all([flight.finished, ...parts.map((p) => p.finished)]);
+		wrap.remove();
+	}
+
+	// A visit: leap in from the left or right edge, strike, and leap back out
+	// the same side.
+	let visiting = false;
+	async function visit() {
+		if (visiting || document.hidden) return;
+		visiting = true;
+		const w = window.innerWidth;
+		const h = window.innerHeight;
+		const size = Math.min(110, Math.max(76, w * 0.08));
+		const fromLeft = Math.random() < 0.5;
+		const reach = Math.min(w * 0.22, 260);
+		const off = fromLeft ? -size - 40 : w + 40;
+		const tx = fromLeft ? rand(24, reach) : w - size - rand(24, reach);
+		const ty = rand(0.18, 0.7) * h;
+		const face = fromLeft ? 1 : -1;
+		const at = (x: number, y: number) => `translate(${x}px, ${y}px)`;
+		const path: Keyframe[] = [
+			{ offset: 0, transform: at(off, ty + 40) },
+			{ offset: 0.16, transform: at((off + tx) / 2, ty - 50) },
+			{ offset: 0.32, transform: at(tx, ty) },
+			{ offset: 0.74, transform: at(tx + face * 14, ty - 8) },
+			{ offset: 0.88, transform: at((off + tx) / 2, ty - 50) },
+			{ offset: 1, transform: at(off, ty + 40) },
+		];
+		await perform(size, face, path, 3400);
+		visiting = false;
+	}
+
+	function schedule() {
+		setTimeout(async () => {
+			await visit();
+			schedule();
+		}, rand(25000, 50000));
+	}
+
+	if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		setTimeout(async () => {
+			await visit();
+			schedule();
+		}, rand(8000, 14000));
+	}
+</script>
+
+<style is:global>
+	.kb-layer {
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+		pointer-events: none;
+		overflow: hidden;
+	}
+	.kb {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: var(--size);
+	}
+	.kb-svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		transform: scaleX(var(--face, 1));
+	}
+	.kb-svg [data-part] {
+		transform-box: view-box;
+	}
+	.kb-svg [data-part='body'],
+	.kb-svg [data-part='tf'],
+	.kb-svg [data-part='tb'] {
+		transform-origin: 60px 94px;
+	}
+	.kb-svg [data-part='sf'],
+	.kb-svg [data-part='sb'] {
+		transform-origin: 60px 124px;
+	}
+	.kb-svg [data-part='af'],
+	.kb-svg [data-part='ab'] {
+		transform-origin: 60px 56px;
+	}
+	.kb-svg .o {
+		stroke: #1a1210;
+		stroke-width: 12;
+		stroke-linecap: round;
+	}
+	.kb-svg .o.leg {
+		stroke-width: 13;
+	}
+	.kb-svg .pants,
+	.kb-svg .sleeve {
+		stroke: #f7f7f4;
+		stroke-width: 9;
+		stroke-linecap: round;
+	}
+	.kb-svg .pants {
+		stroke-width: 10;
+	}
+	.kb-svg .back {
+		stroke: #dcdcd6;
+	}
+	.kb-svg .fist,
+	.kb-svg .foot,
+	.kb-svg .skin {
+		fill: #8d5a3b;
+		stroke: #1a1210;
+		stroke-width: 1.5;
+	}
+	.kb-svg .face {
+		stroke-width: 2;
+	}
+	.kb-svg .jacket {
+		fill: #f7f7f4;
+		stroke: #1a1210;
+		stroke-width: 2;
+		stroke-linejoin: round;
+	}
+	.kb-svg .collar {
+		stroke: #111;
+		stroke-width: 4;
+		fill: none;
+	}
+	.kb-svg .belt {
+		fill: #111;
+	}
+	.kb-svg .tails {
+		stroke: #111;
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+	.kb-svg .hair {
+		fill: #16100d;
+	}
+	.kb-svg .beard {
+		fill: #16100d;
+		opacity: 0.35;
+	}
+	.kb-svg .brow {
+		stroke: #16100d;
+		stroke-width: 2;
+		stroke-linecap: round;
+	}
+	.kb-svg .eye {
+		fill: #16100d;
+	}
+	.kb-svg .mouth {
+		fill: none;
+		stroke: #1a1210;
+		stroke-width: 1.4;
+		stroke-linecap: round;
+	}
+	.kb-bubble {
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		translate: -50% 0;
+		padding: 0.25rem 0.55rem;
+		border: 1px solid var(--text);
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+		white-space: nowrap;
+		opacity: 0;
+		transform: translateY(6px);
+		transition:
+			opacity 0.2s,
+			transform 0.3s var(--ease-press);
+	}
+	.kb.talk .kb-bubble {
+		opacity: 1;
+		transform: none;
+	}
+	.kb.tiny .kb-bubble {
+		font-size: 0.62rem;
+		padding: 0.1rem 0.35rem;
+	}
+</style>

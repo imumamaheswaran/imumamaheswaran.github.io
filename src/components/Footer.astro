@@ -1,14 +1,16 @@
 ---
 import { SITE_TITLE, SOCIAL_LINKS } from '../consts';
+import Email from './Email.astro';
 const year = new Date().getFullYear();
 ---
 
 <footer>
 	<div class="container wide inner">
 		<p>
-			© {year} {SITE_TITLE} · Drawn in Bengaluru
+			© {year} {SITE_TITLE} · Drawn in India
 		</p>
 		<ul>
+			<li><Email /></li>
 			{
 				SOCIAL_LINKS.map((l) => (
 					<li>

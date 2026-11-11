@@ -1,0 +1,71 @@
+---
+/**
+ * My email address, joined in the browser so scrapers reading the HTML only
+ * see "name [at] domain". Optional copy button.
+ */
+import { EMAIL } from '../consts';
+
+interface Props {
+	copy?: boolean;
+	class?: string;
+}
+const { copy = false, class: className } = Astro.props;
+---
+
+<span class:list={['email', className]} data-email data-u={EMAIL.user} data-d={EMAIL.domain}>
+	<a href="/about-me/" data-email-link>{EMAIL.user} [at] {EMAIL.domain}</a>
+	{
+		copy && (
+			<button type="button" class="copy" data-email-copy aria-label="Copy email address">
+				Copy
+			</button>
+		)
+	}
+</span>
+
+<script>
+	function init() {
+		document.querySelectorAll<HTMLElement>('[data-email]:not([data-ready])').forEach((el) => {
+			el.dataset.ready = '1';
+			const address = `${el.dataset.u}@${el.dataset.d}`;
+			const link = el.querySelector<HTMLAnchorElement>('[data-email-link]')!;
+			link.href = `mailto:${address}`;
+			link.textContent = address;
+			const btn = el.querySelector<HTMLButtonElement>('[data-email-copy]');
+			btn?.addEventListener('click', async () => {
+				try {
+					await navigator.clipboard.writeText(address);
+					btn.textContent = 'Copied';
+				} catch {
+					btn.textContent = 'Press ⌘C';
+				}
+				setTimeout(() => (btn.textContent = 'Copy'), 1800);
+			});
+		});
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.email {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.75rem;
+	}
+	.copy {
+		padding: 0.15rem 0.55rem;
+		border: 1px solid var(--rule);
+		background: none;
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+	.copy:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+</style>

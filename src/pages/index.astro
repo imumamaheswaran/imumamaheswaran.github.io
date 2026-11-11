@@ -8,6 +8,7 @@ import Bookshelf from '../components/Bookshelf.astro';
 import PostList from '../components/PostList.astro';
 import { getPosts } from '../lib/posts';
 import { SOCIAL_LINKS } from '../consts';
+import Email from '../components/Email.astro';
 
 const posts = await getPosts();
 const latest = posts.slice(0, 4);
@@ -36,6 +37,7 @@ const latest = posts.slice(0, 4);
 	<section class="hello" aria-labelledby="hello-heading" data-reveal>
 		<p class="kicker"><span class="n">06</span> Contact</p>
 		<h2 id="hello-heading">Say hello.</h2>
+		<p class="mail"><Email copy class="big" /></p>
 		<ul>
 			{
 				SOCIAL_LINKS.map((l) => (
@@ -84,6 +86,20 @@ const latest = posts.slice(0, 4);
 	}
 	.hello {
 		margin: 0 0 5rem;
+	}
+	.mail {
+		margin: 1.25rem 0 0;
+	}
+	.mail :global(.big a) {
+		font-size: clamp(1.25rem, 3.5vw, 2rem);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		color: var(--text);
+		text-decoration: none;
+		border-bottom: 2px solid var(--accent);
+	}
+	.mail :global(.big a:hover) {
+		color: var(--accent);
 	}
 	.hello ul {
 		display: flex;

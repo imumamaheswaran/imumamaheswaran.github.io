@@ -8,3 +8,7 @@ export const SOCIAL_LINKS = [
 	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/imumamaheswaran/' },
 	{ label: 'X / Twitter', href: 'https://twitter.com/imumamaheswaran' },
 ];
+
+// Email, split so it isn't sitting whole in the page source for scrapers.
+// The Email component joins it in the browser.
+export const EMAIL = { user: 'umamaheswaran1', domain: 'gmail.com' };

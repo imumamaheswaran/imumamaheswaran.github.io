@@ -22,7 +22,7 @@ const dims = (title: string, i: number) => ({
 });
 ---
 
-<section class="books" aria-labelledby="books-heading" data-reveal>
+<section id="books" class="books" aria-labelledby="books-heading" data-reveal>
 	<div class="head">
 		<p class="kicker"><span class="n">04</span> Bookshelf</p>
 		<h2 id="books-heading">Books that shaped how I build.</h2>
@@ -76,6 +76,7 @@ const dims = (title: string, i: number) => ({
 <style>
 	.books {
 		margin: 0 0 7rem;
+		scroll-margin-top: 5.5rem;
 	}
 	h2 {
 		margin: 0 0 2.5rem;

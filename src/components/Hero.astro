@@ -1,11 +1,12 @@
 ---
 /** Home page hero, drawn like the title sheet of a blueprint. */
 import avatarSvg from '../assets/avatar.svg?raw';
+import Weather from './Weather.astro';
 ---
 
 <section class="hero" aria-labelledby="hero-name">
 	<div class="text">
-		<p class="kicker bare in-1"><span class="n">●</span> Software Architect // Bengaluru</p>
+		<p class="kicker bare in-1"><span class="n">●</span> Software Architect · India · remote</p>
 		<h1 id="hero-name" aria-label="Umamaheswaran">
 			<span aria-hidden="true">
 				{[...'Umamaheswaran'].map((ch, i) => <span class="ch" style={`--i:${i}`}>{ch}</span>)}<span
@@ -20,21 +21,49 @@ import avatarSvg from '../assets/avatar.svg?raw';
 			<span class="dim-line"></span>
 		</div>
 		<p class="title in-2">Software Architect <span>/ Engineering Manager</span></p>
-		<p class="lede in-2">I design platforms that teams can build on, and lately the AI products that sit on top of them.</p>
+		<p class="lede in-2">I start with the business, then design the platforms and code that serve it.</p>
 		<div class="actions in-3">
 			<a class="btn primary" href="#architecture">How I architect</a>
 			<a class="btn" href="/blog/">Read my writing</a>
 		</div>
+		<div class="now in-3">
+			<span class="now-label">Right now</span>
+			<Weather />
+		</div>
 	</div>
 
-	<figure class="figure in-3">
+	<figure class="figure in-3" data-scene>
+		<!-- Scenery behind the toon, switched on by the time and weather in Attur. -->
+		<div class="sky" aria-hidden="true">
+			<svg class="sun" viewBox="0 0 100 100">
+				<g class="rays">
+					{Array.from({ length: 12 }, (_, i) => <line x1="50" y1="6" x2="50" y2="18" transform={`rotate(${i * 30} 50 50)`} />)}
+				</g>
+				<circle cx="50" cy="50" r="22" />
+			</svg>
+			<svg class="moon" viewBox="0 0 100 100">
+				<path d="M62 18 A34 34 0 1 0 82 70 A28 28 0 1 1 62 18 Z" />
+				<circle class="star" cx="20" cy="22" r="2" /><circle class="star s2" cx="88" cy="20" r="1.6" /><circle class="star s3" cx="12" cy="62" r="1.4" />
+			</svg>
+			<svg class="cloud c1" viewBox="0 0 100 50"><path d="M20 42 H78 A16 16 0 0 0 74 12 A22 22 0 0 0 33 16 A14 14 0 0 0 20 42 Z" /></svg>
+			<svg class="cloud c2" viewBox="0 0 100 50"><path d="M20 42 H78 A16 16 0 0 0 74 12 A22 22 0 0 0 33 16 A14 14 0 0 0 20 42 Z" /></svg>
+			<div class="rain">{Array.from({ length: 22 }, (_, i) => <i style={`--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.13}s;--t:${0.6 + (i % 4) * 0.12}s`} />)}</div>
+			<div class="mist"><i /><i /><i /></div>
+			<span class="flash"></span>
+		</div>
+		<svg class="umbrella" viewBox="0 0 200 150" aria-hidden="true">
+			<path class="canopy" d="M10 70 Q100 -10 190 70 Q167 58 145 70 Q122 58 100 70 Q77 58 55 70 Q32 58 10 70 Z" />
+			<path class="ribs" d="M100 6 L55 70 M100 6 L100 70 M100 6 L145 70" />
+			<path class="handle" d="M100 70 V140 Q100 150 90 148" />
+		</svg>
+		<span class="zzz" aria-hidden="true"><b>z</b><b>z</b><b>Z</b></span>
 		<button type="button" class="toon" data-toon aria-label="Say hello to toon Uma">
 			<span class="toon-body" set:html={avatarSvg} />
 			<span class="bubble" data-bubble aria-live="polite"></span>
+			<span class="callout c1" aria-hidden="true"><span>Black belt</span></span>
+			<span class="callout c2" aria-hidden="true"><span>Architect</span></span>
 		</button>
-		<span class="callout c1" aria-hidden="true"><span>Black belt</span></span>
-		<span class="callout c2" aria-hidden="true"><span>Architect</span></span>
-		<figcaption class="mono">Fig. 1 — The architect, off duty</figcaption>
+		<figcaption class="mono" data-caption>Fig. 1 — The architect, off duty</figcaption>
 	</figure>
 </section>
 
@@ -60,6 +89,67 @@ import avatarSvg from '../assets/avatar.svg?raw';
 		});
 	}
 	document.addEventListener('astro:page-load', init);
+
+	// ── Scene: the toon dresses for the time and weather in Attur ──
+	type Wx = { t: number; code: number; day: boolean; icon: string };
+	const SCENES = ['sleep', 'night', 'rain', 'storm', 'sunny', 'hot', 'cloudy', 'mist'];
+
+	function istHour() {
+		return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Kolkata' }).format(new Date()));
+	}
+	function istTime() {
+		return new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
+			.format(new Date())
+			.toLowerCase();
+	}
+
+	function pick(wx: Wx | null): { on: string[]; caption: string } {
+		const forced = new URLSearchParams(location.search).get('scene');
+		const h = istHour();
+		const night = h >= 22 || h < 6;
+		const evening = h >= 18 && h < 22;
+		const wet = wx && (wx.icon === 'rain' || wx.icon === 'storm');
+		const storm = wx?.icon === 'storm';
+		const clear = wx && (wx.icon === 'sun' || wx.icon === 'partly') && wx.day;
+		const cloudy = wx && (wx.icon === 'cloud' || wx.icon === 'partly');
+		const scene = forced ?? (night ? 'sleep' : wet ? (storm ? 'storm' : 'rain') : clear ? (wx!.t >= 33 ? 'hot' : 'sunny') : evening ? 'night' : cloudy ? 'cloudy' : wx?.icon === 'fog' ? 'mist' : '');
+		switch (scene) {
+			case 'sleep':
+				return { on: ['sleep', 'night', ...(wet ? ['rain'] : [])], caption: `Fig. 1 — The architect, asleep. It's ${istTime()} in Attur.` };
+			case 'storm':
+				return { on: ['rain', 'storm'], caption: 'Fig. 1 — The architect, under an umbrella. Thunderstorms in Attur.' };
+			case 'rain':
+				return { on: ['rain'], caption: "Fig. 1 — The architect, under an umbrella. It's raining in Attur." };
+			case 'hot':
+				return { on: ['sunny', 'hot'], caption: `Fig. 1 — The architect, in shades. ${wx?.t ?? 34}°C in Attur.` };
+			case 'sunny':
+				return { on: ['sunny'], caption: `Fig. 1 — The architect, in shades. Sunny${wx ? `, ${wx.t}°C` : ''} in Attur.` };
+			case 'night':
+				return { on: ['night'], caption: 'Fig. 1 — The architect, winding down for the evening.' };
+			case 'cloudy':
+				return { on: ['cloudy'], caption: 'Fig. 1 — The architect, on a cloudy day in Attur.' };
+			case 'mist':
+				return { on: ['mist'], caption: 'Fig. 1 — The architect, in the morning mist.' };
+			default:
+				return { on: [], caption: 'Fig. 1 — The architect, off duty' };
+		}
+	}
+
+	function applyScene() {
+		const fig = document.querySelector<HTMLElement>('[data-scene]');
+		if (!fig) return;
+		const { on, caption } = pick(((window as any).__wx as Wx) ?? null);
+		for (const s of SCENES) fig.classList.toggle(`s-${s}`, on.includes(s));
+		const cap = fig.querySelector<HTMLElement>('[data-caption]');
+		if (cap) cap.textContent = caption;
+	}
+
+	document.addEventListener('wx:update', applyScene);
+	document.addEventListener('astro:page-load', () => {
+		applyScene();
+		const id = setInterval(applyScene, 60_000);
+		document.addEventListener('astro:before-swap', () => clearInterval(id), { once: true });
+	});
 </script>
 
 <style>
@@ -197,6 +287,23 @@ import avatarSvg from '../assets/avatar.svg?raw';
 		border-color: var(--accent);
 		color: #fff;
 	}
+	.now {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.75rem;
+		margin-top: 1.75rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--rule);
+		max-width: 32rem;
+	}
+	.now-label {
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
 	.in-1,
 	.in-2,
 	.in-3 {
@@ -215,6 +322,244 @@ import avatarSvg from '../assets/avatar.svg?raw';
 		}
 	}
 
+	/* ── Scenery ─────────────────────────────────────────── */
+	.sky {
+		position: absolute;
+		inset: -12% -14% 8%;
+		pointer-events: none;
+		z-index: 0;
+	}
+	.sky > *,
+	.umbrella,
+	.zzz {
+		opacity: 0;
+		transition: opacity 0.8s;
+	}
+	.sun {
+		position: absolute;
+		top: 0;
+		right: 2%;
+		width: 34%;
+	}
+	.sun circle {
+		fill: #f6c445;
+	}
+	.sun .rays {
+		stroke: #f6c445;
+		stroke-width: 4;
+		stroke-linecap: round;
+		transform-origin: 50px 50px;
+		animation: spin 14s linear infinite;
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	.moon {
+		position: absolute;
+		top: 2%;
+		left: 4%;
+		width: 26%;
+	}
+	.moon path {
+		fill: #f3e7b8;
+	}
+	.moon .star {
+		fill: #f3e7b8;
+		animation: twinkle 2.4s ease-in-out infinite;
+	}
+	.moon .s2 {
+		animation-delay: 0.8s;
+	}
+	.moon .s3 {
+		animation-delay: 1.6s;
+	}
+	@keyframes twinkle {
+		50% {
+			opacity: 0.2;
+		}
+	}
+	.cloud {
+		position: absolute;
+		width: 38%;
+		fill: color-mix(in srgb, var(--muted) 30%, var(--bg));
+	}
+	.c1 {
+		top: 4%;
+		left: 0;
+		animation: drift 16s ease-in-out infinite alternate;
+	}
+	.c2 {
+		top: 16%;
+		right: 0;
+		width: 28%;
+		animation: drift 12s ease-in-out infinite alternate-reverse;
+	}
+	@keyframes drift {
+		to {
+			transform: translateX(22%);
+		}
+	}
+	.rain {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+	}
+	.rain i {
+		position: absolute;
+		top: -10%;
+		left: var(--x);
+		width: 1.5px;
+		height: 14px;
+		background: color-mix(in srgb, var(--blue) 70%, transparent);
+		border-radius: 1px;
+		animation: fall var(--t) linear var(--d) infinite;
+	}
+	@keyframes fall {
+		to {
+			transform: translate(-14px, 380px);
+		}
+	}
+	.mist {
+		position: absolute;
+		inset: 20% 0 0;
+	}
+	.mist i {
+		position: absolute;
+		left: -10%;
+		width: 120%;
+		height: 14%;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--muted) 22%, transparent);
+		filter: blur(6px);
+		animation: drift 9s ease-in-out infinite alternate;
+	}
+	.mist i:nth-child(2) {
+		top: 30%;
+		animation-duration: 12s;
+	}
+	.mist i:nth-child(3) {
+		top: 60%;
+		animation-duration: 7s;
+	}
+	.flash {
+		position: absolute;
+		inset: 0;
+		background: #fff;
+		mix-blend-mode: overlay;
+	}
+	.umbrella {
+		position: absolute;
+		top: -16%;
+		left: 2%;
+		width: 92%;
+		transform: rotate(-8deg);
+		transform-origin: 50% 4%;
+		z-index: 0;
+		pointer-events: none;
+	}
+	.canopy {
+		fill: var(--accent);
+		stroke: #1a1210;
+		stroke-width: 3;
+		stroke-linejoin: round;
+	}
+	.ribs,
+	.handle {
+		fill: none;
+		stroke: #1a1210;
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+	.zzz {
+		position: absolute;
+		top: 8%;
+		right: 14%;
+		z-index: 2;
+		font-family: var(--font-mono);
+		font-weight: 600;
+		color: var(--blue);
+		pointer-events: none;
+	}
+	.zzz b {
+		position: absolute;
+		animation: snooze 3s ease-in infinite;
+		opacity: 0;
+	}
+	.zzz b:nth-child(2) {
+		animation-delay: 1s;
+		font-size: 1.2em;
+	}
+	.zzz b:nth-child(3) {
+		animation-delay: 2s;
+		font-size: 1.5em;
+	}
+	@keyframes snooze {
+		0% {
+			opacity: 0;
+			transform: translate(0, 0);
+		}
+		20% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+			transform: translate(26px, -46px);
+		}
+	}
+
+	.s-sunny .sun,
+	.s-night .moon,
+	.s-cloudy .cloud,
+	.s-rain .rain,
+	.s-rain .umbrella,
+	.s-mist .mist,
+	.s-sleep .zzz {
+		opacity: 1;
+	}
+	.s-rain .cloud {
+		opacity: 0.9;
+	}
+	.s-sleep .umbrella {
+		opacity: 0;
+	}
+	.s-storm .flash {
+		animation: flash 6s infinite;
+	}
+	@keyframes flash {
+		0%,
+		90%,
+		94%,
+		100% {
+			opacity: 0;
+		}
+		91%,
+		93% {
+			opacity: 0.8;
+		}
+	}
+	.s-sunny :global(.shades),
+	.s-hot :global(.sweat),
+	.s-sleep :global(.eyes-closed),
+	.s-sleep :global(.mouth-sleep) {
+		display: inline;
+	}
+	.s-sunny :global(.eyes),
+	.s-sleep :global(.eyes),
+	.s-sleep :global(.mouth-smile) {
+		display: none;
+	}
+	/* Asleep: head drops a little and breathing slows. */
+	.s-sleep .toon-body {
+		animation: doze 5s ease-in-out infinite;
+	}
+	@keyframes doze {
+		50% {
+			transform: rotate(-2deg) translateY(2px) scaleY(1.01);
+		}
+	}
+
 	/* Fig. 1: the toon, with drafting callouts. */
 	.figure {
 		position: relative;
@@ -224,6 +569,7 @@ import avatarSvg from '../assets/avatar.svg?raw';
 	}
 	.toon {
 		position: relative;
+		z-index: 1;
 		display: block;
 		width: 100%;
 		padding: 0;
@@ -334,11 +680,11 @@ import avatarSvg from '../assets/avatar.svg?raw';
 	}
 	.c1 {
 		left: 90%;
-		bottom: 15%;
+		top: 88%;
 	}
 	.c2 {
-		left: 66%;
-		top: 30%;
+		left: 67%;
+		top: 35%;
 	}
 	figcaption {
 		margin-top: 0.75rem;
@@ -366,8 +712,19 @@ import avatarSvg from '../assets/avatar.svg?raw';
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.toon-body,
-		.toon-body :global(.eyes) {
-			animation: none;
+		.toon-body :global(.eyes),
+		.sky *,
+		.zzz b {
+			animation: none !important;
+		}
+		.zzz b {
+			opacity: 1;
+		}
+		.zzz b:nth-child(2) {
+			transform: translate(12px, -20px);
+		}
+		.zzz b:nth-child(3) {
+			transform: translate(26px, -42px);
 		}
 	}
 </style>

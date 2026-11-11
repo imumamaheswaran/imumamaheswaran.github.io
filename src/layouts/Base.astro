@@ -6,6 +6,7 @@ import { getImage } from 'astro:assets';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import KickBuddy from '../components/KickBuddy.astro';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props {
@@ -78,6 +79,7 @@ const ogImage = image
 			<slot />
 		</main>
 		<Footer />
+		<KickBuddy />
 		<script>
 			// Fade sections in as they scroll into view ("bow in").
 			function reveal() {
