@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import PostList from '../components/PostList.astro';
+import { getPosts } from '../lib/posts';
+
+const posts = await getPosts();
+const latest = posts.slice(0, 8);
+---
+
+<Base>
+	<section class="intro">
+		<h1>Hi, I'm Umamaheswaran.</h1>
+		<p>
+			I'm a Principal Software Engineer. I write about .NET, React, software design and, lately,
+			how AI and large language models actually work. I've been writing here since 2016.
+		</p>
+		<p><a href="/about-me/">More about me →</a></p>
+	</section>
+
+	<section aria-labelledby="latest-heading">
+		<h2 id="latest-heading">Latest writing</h2>
+		<PostList posts={latest} />
+		<p class="all"><a href="/blog/">All {posts.length} posts →</a></p>
+	</section>
+</Base>
+
+<style>
+	.intro {
+		padding: 1rem 0 1.5rem;
+	}
+	.intro p {
+		font-size: 1.2rem;
+		color: var(--muted);
+		max-width: 36rem;
+	}
+	.intro p:last-child {
+		margin-bottom: 0;
+	}
+	h2 {
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+		margin: 2rem 0 0.25rem;
+	}
+	.all {
+		margin-top: 1.5rem;
+	}
+</style>

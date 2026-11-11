@@ -1,0 +1,162 @@
+{
+	"7": [
+		{
+			"id": 1,
+			"parent": null,
+			"author": "Nandha Kumar Arulanandam",
+			"url": null,
+			"date": "2016-04-13T17:56:49+00:00",
+			"html": "<p>Useful info</p>\n"
+		}
+	],
+	"104": [
+		{
+			"id": 3,
+			"parent": null,
+			"author": "Ashok",
+			"url": null,
+			"date": "2016-05-21T14:21:53+00:00",
+			"html": "<p>Aw~ Good effort. It certainly helps!</p>\n"
+		}
+	],
+	"973": [
+		{
+			"id": 2661,
+			"parent": null,
+			"author": "Gabriel Marsh",
+			"url": "https://www.gabrielmarsh.com/",
+			"date": "2025-04-13T03:12:29+00:00",
+			"html": "<p>I find The Hype Cycle very helpful for understanding how new technologies evolve.</p>\n"
+		}
+	],
+	"1361": [
+		{
+			"id": 2656,
+			"parent": null,
+			"author": "Blake",
+			"url": "https://www.blakehendricks.com/",
+			"date": "2024-01-08T08:00:30+00:00",
+			"html": "<p>Thank you forr sharing this</p>\n"
+		}
+	],
+	"1500": [
+		{
+			"id": 49,
+			"parent": null,
+			"author": "Pandiyan Murugan",
+			"url": "http://efficientuser.wordpress.com",
+			"date": "2017-05-10T16:42:01+00:00",
+			"html": "<p>Reblogged this on <a href=\"https://efficientuser.wordpress.com/2017/05/10/msbuild-2017-live-blog/\" rel=\"nofollow\">Efficient User</a>.</p>\n"
+		},
+		{
+			"id": 94,
+			"parent": null,
+			"author": "elektronik sigara",
+			"url": "https://trelektroniksigara.com",
+			"date": "2017-08-31T00:37:18+00:00",
+			"html": "<p>Your style is very unique in comparison to other folks<br />\nI&#8217;ve read stuff from. Thank you for posting when you have<br />\nthe opportunity, Guess I&#8217;ll just book mark this page.</p>\n"
+		}
+	],
+	"1752": [
+		{
+			"id": 1136,
+			"parent": null,
+			"author": "Pullaingo",
+			"url": null,
+			"date": "2019-11-01T16:04:11+00:00",
+			"html": "<p>You are brilliant!! I was stuck with my Asset not found and I didn&#8217;t know that it should be Marked as Embedded resource as its in a dll instead of resource. Great Stuff.</p>\n"
+		}
+	],
+	"1914": [
+		{
+			"id": 169,
+			"parent": null,
+			"author": "Umamaheswaran",
+			"url": "http://umamaheswaran1990.wordpress.com",
+			"date": "2017-11-28T12:42:58+00:00",
+			"html": "<p>I hope this is useful</p>\n"
+		},
+		{
+			"id": 170,
+			"parent": null,
+			"author": "Kuppurasu Nagaraj",
+			"url": "https://www.facebook.com/app_scoped_user_id/1211079195660956/",
+			"date": "2017-11-28T12:43:05+00:00",
+			"html": "<p>Nice</p>\n"
+		}
+	],
+	"2902": [
+		{
+			"id": 2653,
+			"parent": null,
+			"author": "Riken Choksi",
+			"url": null,
+			"date": "2023-12-11T08:04:28+00:00",
+			"html": "<p>Where does the log are written(I want to location where log file has been created) when we use the Exception Middleware in .NET Core Applications?</p>\n"
+		},
+		{
+			"id": 2654,
+			"parent": null,
+			"author": "Umamaheswaran",
+			"url": "http://umamaheswaran1990.wordpress.com",
+			"date": "2023-12-19T16:34:18+00:00",
+			"html": "<p>the logs are not automatically written to a specific location. Instead, the logging behavior depends on the logging configuration set up in your application. You can configure logging to write to various outputs like the console, files, or external systems. To log exceptions to a file, you typically integrate a logging framework like NLog, Serilog, or the built-in ILogger interface, and configure it to write to a file. The exact location of the log files would be specified in your logging configuration settings within the application.</p>\n"
+		}
+	],
+	"2985": [
+		{
+			"id": 2545,
+			"parent": null,
+			"author": "Pandiyan Murugan",
+			"url": "http://efficientuser.com",
+			"date": "2023-05-06T06:38:50+00:00",
+			"html": "<p>Does it have cost benefits over other cloud providers?</p>\n"
+		}
+	],
+	"3133": [
+		{
+			"id": 2576,
+			"parent": null,
+			"author": "payplandebtadvice",
+			"url": null,
+			"date": "2023-06-19T17:16:22+00:00",
+			"html": "<p>&#8230;<br />\nWow, this is an amazing blog post! I&#8217;ve been struggling to understand SOLID principles, but your explanation makes it so clear and easy to apply in my own coding. Thank you for sharing your knowledge!</p>\n"
+		},
+		{
+			"id": 2591,
+			"parent": 2576,
+			"author": "Umamaheswaran",
+			"url": "http://umamaheswaran1990.wordpress.com",
+			"date": "2023-06-20T14:44:19+00:00",
+			"html": "<p>Thank you! I&#8217;m glad my blog post helped you understand and apply SOLID principles in your coding. Your appreciation means a lot to me!</p>\n"
+		},
+		{
+			"id": 2590,
+			"parent": null,
+			"author": "Nikhil",
+			"url": null,
+			"date": "2023-06-20T18:06:25+00:00",
+			"html": "<p>Explained in a very simple manner, easy to consume for software engineers at all levels. Great work @Uma!</p>\n"
+		}
+	],
+	"3236": [
+		{
+			"id": 2658,
+			"parent": null,
+			"author": "mito",
+			"url": "http://advnpzn.github.io",
+			"date": "2024-03-05T13:10:12+00:00",
+			"html": "<p>Using car as an example is brilliant.This is what I’ve been thinking of as well.</p>\n<p>Even in the workplace, as far as I observed most people follow a step-by-step approach instead of an INCREMENTAL approach.</p>\n<p>I think for us, doing something through a step-by-step approach is what we have always been taught since school.I don’t blame step-by-step approach, there are numerous things where this is the de facto proper approach.</p>\n<p>But I wonder how we could implement agile for someone who’s work involves learning a new technology or a skill as part of the work.</p>\n<p>For e.g.</p>\n<p>If the person is an intern, and they need to implement a new microservice as part of their work to communicate with the existing micro services. We use Golang as the primary language organization wide. Now considering that the intern does not know anything about Golang, naturally he/she will try to learn the language first, then about microservices, and how the existing services in the organization work etc. and so on then will start the implementation. Now this kinda seems step-by-step right?</p>\n<p>How can someone convert these kinds of tasks to make it agile oriented?</p>\n"
+		}
+	],
+	"3318": [
+		{
+			"id": 2662,
+			"parent": null,
+			"author": "Christoph",
+			"url": "http://awesomeassertions.org",
+			"date": "2025-06-16T14:45:27+00:00",
+			"html": "<p>Thanks for highlighting some alternatives. In the meanwhile, AwesomeAssertions has established as free continuation of FluentAssertions and is actively being developed.</p>\n"
+		}
+	]
+}

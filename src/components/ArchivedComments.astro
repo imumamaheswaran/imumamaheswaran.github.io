@@ -1,0 +1,93 @@
+---
+// Comments that were left on the WordPress version of the blog, kept as a
+// read-only archive.
+import comments from '../data/comments.json';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+	wordpressId?: number;
+}
+type Comment = {
+	id: number;
+	parent: number | null;
+	author: string;
+	url: string | null;
+	date: string;
+	html: string;
+};
+const list: Comment[] =
+	(Astro.props.wordpressId && (comments as Record<string, Comment[]>)[Astro.props.wordpressId]) || [];
+const replies = (id: number | null) => list.filter((c) => c.parent === id);
+---
+
+{
+	list.length > 0 && (
+		<section aria-labelledby="comments-heading">
+			<h2 id="comments-heading">Comments</h2>
+			<p class="muted note">From the WordPress version of this blog.</p>
+			<ol>
+				{replies(null).map((c) => (
+					<li>
+						<article>
+							<p class="meta">
+								<strong>{c.url ? <a href={c.url} rel="nofollow ugc noopener">{c.author}</a> : c.author}</strong>
+								<span class="muted"> · <FormattedDate date={new Date(c.date)} /></span>
+							</p>
+							<div set:html={c.html} />
+						</article>
+						{replies(c.id).length > 0 && (
+							<ol>
+								{replies(c.id).map((r) => (
+									<li>
+										<article>
+											<p class="meta">
+												<strong>{r.author}</strong>
+												<span class="muted"> · <FormattedDate date={new Date(r.date)} /></span>
+											</p>
+											<div set:html={r.html} />
+										</article>
+									</li>
+								))}
+							</ol>
+						)}
+					</li>
+				))}
+			</ol>
+		</section>
+	)
+}
+
+<style>
+	section {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border);
+	}
+	h2 {
+		margin-top: 1rem;
+		margin-bottom: 0.25rem;
+	}
+	.note {
+		font-size: 0.9rem;
+	}
+	ol {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	ol ol {
+		margin-left: 1.25rem;
+		padding-left: 1rem;
+		border-left: 2px solid var(--border);
+	}
+	article {
+		padding: 1rem 0;
+		font-size: 1rem;
+	}
+	.meta {
+		margin-bottom: 0.4rem;
+	}
+	article :global(p:last-child) {
+		margin-bottom: 0;
+	}
+</style>

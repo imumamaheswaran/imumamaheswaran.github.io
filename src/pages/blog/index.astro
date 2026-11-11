@@ -1,0 +1,68 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostList from '../../components/PostList.astro';
+import { categoryUrl, getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+
+const byYear = new Map<number, typeof posts>();
+for (const post of posts) {
+	const y = post.data.pubDate.getUTCFullYear();
+	byYear.set(y, [...(byYear.get(y) ?? []), post]);
+}
+
+const counts = new Map<string, number>();
+for (const post of posts) for (const c of post.data.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
+const categories = [...counts.entries()]
+	.filter(([name]) => name !== 'Uncategorized')
+	.sort((a, b) => b[1] - a[1]);
+---
+
+<Base title="Writing" description="Everything I've written, newest first.">
+	<h1>Writing</h1>
+	<p class="muted">{posts.length} posts since {[...byYear.keys()].at(-1)}.</p>
+
+	<nav aria-label="Categories" class="topics">
+		{
+			categories.map(([name, n]) => (
+				<a href={categoryUrl(name)}>
+					{name} <span class="muted">{n}</span>
+				</a>
+			))
+		}
+	</nav>
+
+	{
+		[...byYear.entries()].map(([year, list]) => (
+			<section>
+				<h2>{year}</h2>
+				<PostList posts={list} showDescription={false} />
+			</section>
+		))
+	}
+</Base>
+
+<style>
+	.topics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 1.5rem 0 1rem;
+	}
+	.topics a {
+		font-size: 0.9rem;
+		padding: 0.2rem 0.7rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		text-decoration: none;
+		color: var(--text);
+	}
+	.topics a:hover {
+		border-color: var(--accent);
+	}
+	h2 {
+		margin: 2.5rem 0 0.25rem;
+		font-size: 1.25rem;
+		color: var(--muted);
+	}
+</style>

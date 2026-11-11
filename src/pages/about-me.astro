@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import { SOCIAL_LINKS } from '../consts';
+---
+
+<Base title="About" description="Principal Software Engineer, blogger, mentor and Taekwondo black belt.">
+	<h1>About</h1>
+	<p class="lede">Software Engineer, blogger, evangelist and black belt (Taekwondo).</p>
+
+	<p>
+		I'm a Principal Software Engineer with 12+ years of experience in Microsoft technologies, working
+		across the full stack. I specialise in microservices and in building solutions where the pieces fit
+		together cleanly, an idea I borrow from the fluidity of martial arts.
+	</p>
+	<p>
+		Beyond coding, I care about sharing what I learn. As a mentor, I help other developers on their
+		own journeys, and this blog is part of that.
+	</p>
+	<p>
+		When I'm not writing code, you'll find me on the mats. The discipline and focus I've built there
+		shape how I approach programming problems.
+	</p>
+	<p>
+		<a href="/blog/">Browse my writing</a> on programming, software design and technology.
+	</p>
+
+	<h2>Get in touch</h2>
+	<ul>
+		{
+			SOCIAL_LINKS.map((l) => (
+				<li>
+					<a href={l.href} rel="me noopener" target="_blank">
+						{l.label}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</Base>
+
+<style>
+	.lede {
+		font-size: 1.25rem;
+		color: var(--muted);
+	}
+</style>
