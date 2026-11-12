@@ -49,8 +49,9 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 
 	// Taekwondo belt order, earned one step of a valid email at a time.
 	const RANKS: [string, (v: string, valid: boolean) => boolean, string][] = [
-		['black', (_, ok) => ok, 'Black belt. Ready to bow in.'],
-		['red', (v) => /@[^@\s]+\.[^@\s]+$/.test(v), 'Red belt. One more technique.'],
+		// Browsers accept "name@host" as valid, so black also needs a real ending like ".com".
+		['black', (v, ok) => ok && /@[^@\s]+\.[^@\s.]{2,}$/.test(v), 'Black belt. Ready to bow in.'],
+		['red', (v) => /@[^@\s]+\.[^@\s]*$/.test(v), 'Red belt. One more technique.'],
 		['blue', (v) => /@[^@\s]+$/.test(v), 'Blue belt. Now the dot.'],
 		['green', (v) => v.includes('@'), 'Green belt. Where do you train?'],
 		['yellow', (v) => v.length > 0, 'Yellow belt. Keep going.'],
