@@ -9,6 +9,7 @@ import PostList from '../components/PostList.astro';
 import { getPosts } from '../lib/posts';
 import { SOCIAL_LINKS } from '../consts';
 import Email from '../components/Email.astro';
+import Subscribe from '../components/Subscribe.astro';
 
 const posts = await getPosts();
 const latest = posts.slice(0, 4);
@@ -32,6 +33,7 @@ const latest = posts.slice(0, 4);
 			<a class="all" href="/blog/">All {posts.length} posts →</a>
 		</div>
 		<PostList posts={latest} />
+		<Subscribe />
 	</section>
 
 	<section class="hello" aria-labelledby="hello-heading" data-reveal>

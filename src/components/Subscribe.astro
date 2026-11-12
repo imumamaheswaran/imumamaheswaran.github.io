@@ -1,0 +1,90 @@
+---
+// Email signup via Buttondown. Buttondown handles confirmation (double
+// opt-in) and unsubscribes; new posts are sent from the RSS feed.
+const USERNAME = 'umamaheswaran';
+interface Props {
+	class?: string;
+}
+const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<form
+	class:list={['subscribe', Astro.props.class]}
+	action={`https://buttondown.com/api/emails/embed-subscribe/${USERNAME}`}
+	method="post"
+	target="_blank"
+>
+	<label for={id}>Get new posts by email</label>
+	<p class="hint">No spam. Unsubscribe any time.</p>
+	<div class="row">
+		<input id={id} type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+		<input type="hidden" name="embed" value="1" />
+		<button type="submit">Subscribe</button>
+	</div>
+	<p class="alt">
+		Prefer a feed reader? <a href="/rss.xml">Subscribe via RSS</a>.
+	</p>
+</form>
+
+<style>
+	.subscribe {
+		margin-top: 3rem;
+		padding: 1.25rem 1.35rem;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--surface);
+	}
+	label {
+		display: block;
+		font-weight: 600;
+		font-size: 1.05rem;
+	}
+	.hint,
+	.alt {
+		color: var(--muted);
+		font-size: 0.9rem;
+		margin: 0.25rem 0 0;
+	}
+	.row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.85rem;
+	}
+	input[type='email'] {
+		flex: 1 1 14rem;
+		min-width: 0;
+		font: inherit;
+		font-size: 1rem;
+		padding: 0.55rem 0.75rem;
+		color: var(--text);
+		background: var(--bg);
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+	}
+	input[type='email']:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 1px;
+	}
+	button {
+		font: inherit;
+		font-weight: 600;
+		padding: 0.55rem 1.1rem;
+		color: var(--bg);
+		background: var(--accent);
+		border: 0;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: transform 0.15s var(--ease-press);
+	}
+	button:active {
+		transform: scale(0.97);
+	}
+	button:focus-visible {
+		outline: 2px solid var(--text);
+		outline-offset: 2px;
+	}
+	.alt {
+		margin-top: 0.75rem;
+	}
+</style>
