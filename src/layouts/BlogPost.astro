@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import Base from './Base.astro';
 import FormattedDate from '../components/FormattedDate.astro';
 import ArchivedComments from '../components/ArchivedComments.astro';
+import Comments from '../components/Comments.astro';
 import { type Post, categoryUrl, readingTime } from '../lib/posts';
 
 interface Props {
@@ -48,6 +49,7 @@ const showUpdated = updatedDate && updatedDate.valueOf() - pubDate.valueOf() > 7
 		</div>
 	</article>
 	<ArchivedComments wordpressId={wordpressId} />
+	<Comments />
 </Base>
 
 <style>

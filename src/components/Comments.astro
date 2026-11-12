@@ -1,0 +1,71 @@
+---
+// Live comments via Giscus: each post gets a GitHub Discussion, matched by
+// URL path. Readers sign in with GitHub to comment.
+---
+
+<section class="comments" aria-labelledby="giscus-heading">
+	<h2 id="giscus-heading">Leave a comment</h2>
+	<p class="muted note">Comments are stored in GitHub Discussions, so you'll need a GitHub account.</p>
+	<div class="giscus-mount"></div>
+</section>
+
+<script>
+	const ORIGIN = 'https://giscus.app';
+
+	// The site's explicit choice wins; otherwise follow the OS setting.
+	const currentTheme = () => {
+		const t = document.documentElement.dataset.theme;
+		return t === 'light' || t === 'dark' ? t : 'preferred_color_scheme';
+	};
+
+	function init() {
+		const mount = document.querySelector<HTMLElement>('.giscus-mount');
+		if (!mount || mount.childElementCount > 0) return;
+		const s = document.createElement('script');
+		s.src = `${ORIGIN}/client.js`;
+		s.async = true;
+		s.crossOrigin = 'anonymous';
+		Object.entries({
+			repo: 'imumamaheswaran/imumamaheswaran.github.io',
+			repoId: 'R_kgDOVqyb5A',
+			category: 'Announcements',
+			categoryId: 'DIC_kwDOVqyb5M4DK-_i',
+			mapping: 'pathname',
+			strict: '1',
+			reactionsEnabled: '1',
+			emitMetadata: '0',
+			inputPosition: 'top',
+			theme: currentTheme(),
+			lang: 'en',
+			loading: 'lazy',
+		}).forEach(([k, v]) => (s.dataset[k] = v));
+		mount.appendChild(s);
+	}
+
+	// Keep the widget in step with the dark-mode toggle.
+	new MutationObserver(() => {
+		const frame = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+		frame?.contentWindow?.postMessage({ giscus: { setConfig: { theme: currentTheme() } } }, ORIGIN);
+	}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+	document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+	.comments {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--border);
+	}
+	h2 {
+		margin-top: 1rem;
+		margin-bottom: 0.25rem;
+	}
+	.note {
+		font-size: 0.9rem;
+		margin-bottom: 1.5rem;
+	}
+	.giscus-mount {
+		min-height: 12rem;
+	}
+</style>
