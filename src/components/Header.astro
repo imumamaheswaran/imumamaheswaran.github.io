@@ -13,7 +13,13 @@ const path = Astro.url.pathname;
 	<nav class="container wide" aria-label="Main">
 		<a class="brand" href="/">
 			<img class="mark" src="/favicon.svg" width="36" height="36" alt="" />
-			<span class="brand-name">{SITE_TITLE}<span class="dot">.</span></span>
+			<span class="brand-name" data-board
+				><span class="half left">{SITE_TITLE.slice(0, Math.ceil(SITE_TITLE.length / 2))}</span><span class="half right"
+					>{SITE_TITLE.slice(Math.ceil(SITE_TITLE.length / 2))}</span
+				><span class="dot">.</span><span class="splinters" aria-hidden="true"
+					><i></i><i></i><i></i><i></i><i></i></span
+				></span
+			>
 		</a>
 		<div class="links">
 			{
@@ -95,6 +101,89 @@ const path = Astro.url.pathname;
 		});
 	}
 	document.addEventListener('astro:page-load', init);
+
+	// 격파: the full stop chops the name like a board. It cracks into a V,
+	// splinters fly, and it snaps back together. Plays once per visit on
+	// arrival, then on hover. Skipped entirely for reduced motion.
+	function boardBreak() {
+		const name = document.querySelector<HTMLElement>('[data-board]');
+		if (!name || name.dataset.wired !== undefined) return;
+		name.dataset.wired = '';
+		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+		const left = name.querySelector<HTMLElement>('.half.left')!;
+		const right = name.querySelector<HTMLElement>('.half.right')!;
+		const dot = name.querySelector<HTMLElement>('.dot')!;
+		const bits = [...name.querySelectorAll<HTMLElement>('.splinters i')];
+		let busy = false;
+
+		const strike = () => {
+			if (busy || reduced.matches || !name.offsetParent) return;
+			busy = true;
+			const seam = right.getBoundingClientRect().left;
+			name.style.setProperty('--seam', `${right.offsetLeft}px`);
+			const d = dot.getBoundingClientRect();
+			const dx = seam - (d.left + d.width / 2);
+			const T = 950;
+			const hit = 0.32;
+			const ease = 'cubic-bezier(0.2, 0.9, 0.3, 1.2)';
+
+			// Wind up above the seam, chop down, then hop home.
+			dot.animate(
+				[
+					{ transform: 'translate(0, 0)' },
+					{ transform: `translate(${dx * 0.6}px, -16px) scale(1.4)`, offset: 0.2 },
+					{ transform: `translate(${dx}px, -12px) scale(1.5)`, offset: 0.27 },
+					{ transform: `translate(${dx}px, 2px) scale(1.2)`, offset: hit, easing: 'ease-out' },
+					{ transform: `translate(${dx}px, -4px) scale(1.2)`, offset: 0.55 },
+					{ transform: 'translate(0, 0)' },
+				],
+				{ duration: T, easing: 'ease-in-out' },
+			);
+			// Each half pivots on its outer end, so the middle drops: a V.
+			const crack = (el: HTMLElement, deg: number) =>
+				el.animate(
+					[
+						{ transform: 'none', offset: 0 },
+						{ transform: 'none', offset: hit },
+						{ transform: `translateY(3px) rotate(${deg}deg)`, offset: hit + 0.06 },
+						{ transform: `translateY(2px) rotate(${deg * 0.8}deg)`, offset: 0.62 },
+						{ transform: 'none', offset: 0.85, easing: ease },
+						{ transform: 'none' },
+					],
+					{ duration: T },
+				);
+			crack(left, 7);
+			const last = crack(right, -7);
+			// Splinters burst from the seam at the moment of impact.
+			bits.forEach((b, i) => {
+				const a = (-150 + i * 30 + Math.random() * 16) * (Math.PI / 180);
+				const r = 14 + Math.random() * 10;
+				b.animate(
+					[
+						{ opacity: 0, transform: 'translate(0, 0) rotate(0deg)' },
+						{ opacity: 1, transform: 'translate(0, 0) rotate(0deg)', offset: 0.01 },
+						{
+							opacity: 0,
+							transform: `translate(${Math.cos(a) * r}px, ${Math.sin(a) * r + 10}px) rotate(${i * 70}deg)`,
+						},
+					],
+					{ duration: T * 0.5, delay: T * hit, easing: 'cubic-bezier(0.1, 0.7, 0.3, 1)', fill: 'backwards' },
+				);
+			});
+			last.finished.finally(() => setTimeout(() => (busy = false), 600));
+		};
+
+		name.closest('.brand')?.addEventListener('pointerenter', (e) => {
+			if ((e as PointerEvent).pointerType === 'mouse') strike();
+		});
+		let seen = false;
+		try {
+			seen = sessionStorage.getItem('board-broken') === '1';
+			sessionStorage.setItem('board-broken', '1');
+		} catch {}
+		if (!seen) setTimeout(strike, 700);
+	}
+	document.addEventListener('astro:page-load', boardBreak);
 </script>
 
 <style>
@@ -133,6 +222,38 @@ const path = Astro.url.pathname;
 	}
 	.dot {
 		color: var(--accent);
+	}
+	.brand-name {
+		position: relative;
+		white-space: nowrap;
+	}
+	.half,
+	.dot {
+		display: inline-block;
+	}
+	.half.left {
+		transform-origin: 0% 100%;
+	}
+	.half.right {
+		transform-origin: 100% 100%;
+	}
+	.splinters {
+		position: absolute;
+		left: var(--seam, 50%);
+		top: 55%;
+		pointer-events: none;
+	}
+	.splinters i {
+		position: absolute;
+		width: 5px;
+		height: 2px;
+		border-radius: 1px;
+		background: var(--wood);
+		opacity: 0;
+	}
+	.splinters i:nth-child(odd) {
+		background: var(--wood-dark);
+		width: 3px;
 	}
 	.links {
 		display: flex;
