@@ -39,7 +39,7 @@ Before you pick a replacement, ask whether you need a mapper at all.
 
 AutoMapper’s most common use is turning an entity into a DTO with the same property names. That is this:
 
-```
+```csharp
 public static class UserMappings
 {
     public static UserDto ToDto(this User user) => new()
@@ -70,7 +70,7 @@ The standard objection is that this does not scale to hundreds of types. That is
 
 The zero-effort answer, and legitimate for a codebase in maintenance mode.
 
-```
+```xml
 <PackageReference Include="AutoMapper" Version="[x.y.z]" />
 ```
 
@@ -78,7 +78,7 @@ Use bracket syntax to pin exactly, so no routine dependency bump walks you acros
 
 Leave a comment saying why, or a future teammate will helpfully upgrade it:
 
-```
+```xml
 <!-- Pinned: AutoMapper versions after this one require a commercial
      licence ($4,000/yr SMB). Do not upgrade. See ADR-015.
      Migration target: Mapperly. -->
@@ -92,7 +92,7 @@ Leave a comment saying why, or a future teammate will helpfully upgrade it:
 
 It has around **31 million downloads**, it is Apache 2.0, it is actively developed, and it has been adopted as the default mapper by major frameworks. Of all the alternatives, it is the one that has clearly absorbed the AutoMapper refugees.
 
-```
+```csharp
 using Riok.Mapperly.Abstractions;
 
 [Mapper]
@@ -108,7 +108,7 @@ That is it. Mapperly generates the body. Register it as a singleton, or make the
 
 Custom logic uses ordinary C#:
 
-```
+```csharp
 [Mapper]
 public partial class UserMapper
 {
@@ -135,13 +135,13 @@ For a typical service with 30–80 maps across a handful of Profile classes, bud
 
 [Mapster](https://github.com/MapsterMapper/Mapster) is MIT licensed with roughly **79 million downloads** — a larger install base than Mapperly. It compiles mapping delegates at runtime, and is substantially faster than AutoMapper for simple property-to-property work.
 
-```
+```csharp
 var dto = user.Adapt<UserDto>();
 ```
 
 Configuration is fluent and will feel familiar coming from AutoMapper:
 
-```
+```csharp
 TypeAdapterConfig<User, UserDto>
     .NewConfig()
     .Map(dest => dest.FullName, src => $"{src.FirstName} {src.LastName}");

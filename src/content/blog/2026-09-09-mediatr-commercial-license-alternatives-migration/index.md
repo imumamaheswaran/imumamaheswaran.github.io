@@ -43,7 +43,7 @@ If you use pipeline behaviours heavily, MediatR earns its place and you need a r
 
 But there is a very common pattern where a controller does this:
 
-```
+```csharp
 public async Task<IActionResult> Get(Guid id)
     => Ok(await _mediator.Send(new GetUserQuery(id)));
 ```
@@ -65,7 +65,7 @@ public async Task<IActionResult> Get(Guid id)
 
 ### Option 1: Pin to the MIT version
 
-```
+```xml
 <PackageReference Include="MediatR" Version="[x.y.z]" />
 ```
 
@@ -77,7 +77,7 @@ Pin exactly, and comment why.
 
 [Mediator](https://github.com/martinothamar/Mediator) by Martin Othamar is the closest thing to a straight swap. It implements the same pattern using a **source generator** instead of runtime reflection, and its API deliberately mirrors MediatR’s. The `Mediator.Abstractions` package has around **11 million downloads**, so this is a well-travelled path rather than an experiment.
 
-```
+```csharp
 // Registration
 services.AddMediator(options =>
 {
@@ -87,7 +87,7 @@ services.AddMediator(options =>
 
 Your handlers look almost identical:
 
-```
+```csharp
 public sealed record GetUserQuery(Guid Id) : IRequest<UserDto>;
 
 public sealed class GetUserQueryHandler : IRequestHandler<GetUserQuery, UserDto>
@@ -110,7 +110,7 @@ For a typical solution, migration is: swap the package, change `Task` to `ValueT
 
 This is the option people dismiss and should not. If you use MediatR for request/response dispatch with a couple of behaviours, **the whole thing is about fifty lines** and you will never think about its licence again.
 
-```
+```csharp
 public interface IRequest<TResponse> { }
 
 public interface IRequestHandler<TRequest, TResponse>
@@ -174,7 +174,7 @@ public sealed class Sender(IServiceProvider services) : ISender
 
 Register it:
 
-```
+```csharp
 services.AddScoped<ISender, Sender>();
 services.Scan(scan => scan          // Scrutor, or register by hand
     .FromAssemblyOf<GetUserQuery>()

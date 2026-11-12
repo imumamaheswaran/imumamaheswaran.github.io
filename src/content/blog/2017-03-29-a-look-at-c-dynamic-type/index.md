@@ -69,7 +69,7 @@ Now what would happen if you wanted to add an integer instead of string with the
  }
 ```
 
-```
+```text
 //Outputs
 //=======
 //First2

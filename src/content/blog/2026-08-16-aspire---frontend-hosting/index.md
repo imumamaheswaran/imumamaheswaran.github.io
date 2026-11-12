@@ -30,13 +30,13 @@ Add the hosting package to the AppHost project, then declare the app. Aspire 13 
 
 **`backend/RedSpear.AppHost/RedSpear.AppHost.csproj`**
 
-```
+```xml
 <PackageReference Include="Aspire.Hosting.JavaScript" />
 ```
 
 **`AppHost.cs`**
 
-```
+```csharp
 var api = builder.AddProject<Projects.RedSpear_Api>("api")
     .WithReference(database)
     .WaitFor(database)
@@ -63,7 +63,7 @@ Writing it is all Aspire can do. Nothing in Next.js reads `PORT` for `next dev`;
 
 **`apps/web/package.json`**
 
-```
+```json
 {
   "scripts": {
     "dev": "next dev -p ${PORT:-3000}",
@@ -84,7 +84,7 @@ This is the part that trips up people coming from a pure .NET Aspire background,
 
 `WithReference(api)` injects environment variables in Aspire’s service-discovery format—`services__api__http__0` and friends. The .NET service discovery libraries know how to resolve `http://api` against those. Next.js has never heard of them, and even if you taught the Node server to parse them, it wouldn’t help the part that matters: the `fetch` call running in your user’s browser, which is not on Aspire’s network at all.
 
-```
+```mermaid
 flowchart LR
     Browser["Browser<br/>User's machine"]
 
@@ -105,7 +105,7 @@ The browser-to-API path leaves the AppHost’s network and comes back in. It can
 
 Hence the explicit line. `api.GetEndpoint("http")` is an expression Aspire resolves once the API’s endpoint is allocated, and `WithEnvironment` writes the resulting absolute URL into the variable Next will inline:
 
-```
+```csharp
 .WithEnvironment("NEXT_PUBLIC_API_BASE_URL", api.GetEndpoint("http"))
 ```
 
@@ -123,7 +123,7 @@ On the App Router, that means reading the variable on the server during dynamic 
 
 **`app/layout.tsx`—runtime, not build time**
 
-```
+```tsx
 import { connection } from "next/server";
 
 export default async function RootLayout({ children }) {
@@ -140,7 +140,7 @@ Note that the variable loses its `NEXT_PUBLIC_` prefix in that version—that’
 
 A tempting line: the API needs to build absolute links back to the frontend—hosted pages, embed snippets, or email links—so read the frontend’s endpoint off the `web` resource.
 
-```
+```csharp
 // Deadlock: api waits for web's endpoint; web waits for api to be healthy.
 api.WithEnvironment("Api__FrontendBaseUrl", web.GetEndpoint("http"));
 var web = builder.AddNextJsApp(...).WaitFor(api);
@@ -150,7 +150,7 @@ Aspire has to resolve the API’s environment before it can start the API, and i
 
 Declare the public origin as a parameter instead. It’s also the more honest model: in production, the frontend’s public origin is a custom domain, which is a deployment input—not something to discover at runtime.
 
-```
+```csharp
 var frontendUrl = builder.AddParameter(
     "frontend-url",
     "http://localhost:3000");
@@ -174,7 +174,7 @@ They read similarly and do unrelated things:
 
 You usually want both, and you want the gate to mean something stronger than “the process exists”:
 
-```
+```csharp
 .WithHttpHealthCheck("/health")
 ```
 
@@ -195,7 +195,7 @@ The requirement is easy to miss because nothing complains until deploy time—an
 
 **`apps/web/next.config.ts`**
 
-```
+```typescript
 const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
@@ -217,7 +217,7 @@ Package manager selection is explicit too: `AddJavaScriptApp` configures npm, wh
 
 Aspire’s execution context tells you whether you’re running locally or generating a deployment manifest. Gate anything that shouldn’t ship:
 
-```
+```csharp
 if (builder.ExecutionContext.IsRunMode)
 {
     // A stand-in customer site, a seeded demo login, or a mock provider—

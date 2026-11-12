@@ -25,7 +25,7 @@ Imagine you’re building a web application and want to add an AI assistant. You
 
 The implementation might look something like this:
 
-```
+```javascript
 const response = await fetch("/api/ai", {
   method: "POST",
   headers: { "Content-Type": "application/json" },

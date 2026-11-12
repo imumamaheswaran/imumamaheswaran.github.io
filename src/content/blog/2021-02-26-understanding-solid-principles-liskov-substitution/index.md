@@ -26,32 +26,50 @@ The Liskov substitution principle (LSP) is a set of rules for creating inheritan
 
 Let’s look at some practical examples to understand this further. Consider we have a base class called `ShippingStrategy` and it is being inherited by `WorldWideShippingStrategy` and it contains the following method
 
-```
-decimal CalculateShippingCost(    float packageWeightInKilograms,    Size<float> packageDimensionsInInches,    RegionInfo destination)
+```csharp
+decimal CalculateShippingCost(
+    float packageWeightInKilograms,
+    Size<float> packageDimensionsInInches,
+    RegionInfo destination)
 ```
 
 The only thing that this method shares between `ShippingStrategy` and `WorldWideShippingStrategy` is its signature. The implementation could be completely different between these two classes.
 
 Let’s see the base class(`ShippingStrategy`) implementation
 
-```
-public decimal CalculateShippingCost(    float packageWeightInKilograms,    Size<float> packageDimensionsInInches,    RegionInfo destination){    if(packageWeightInKilograms <= 0f)        throw new Exception($"{nameof(packageWeightInKilograms)} must be positive and non zero");
-```
+```csharp
+public decimal CalculateShippingCost(
+    float packageWeightInKilograms,
+    Size<float> packageDimensionsInInches,
+    RegionInfo destination)
+{
+    if (packageWeightInKilograms <= 0f)
+        throw new Exception($"{nameof(packageWeightInKilograms)} must be positive and non zero");
 
-```
-     // Actual logic     return default(decimal)}
+    // Actual logic
+    return default(decimal);
+}
 ```
 
 As you can see from the above code example the function has a precondition to make sure the `packageWeightInKilograms` is always positive and non zero. Preconditions are defined as all the conditions necessary for a method to run reliably and without fault.
 
 Now let’s consider the `WorldWideShippingStrategy` implementation
 
-```
-public decimal CalculateShippingCost(    float packageWeightInKilograms,    Size<float> packageDimensionsInInches,    RegionInfo destination){    if(packageWeightInKilograms <= 0f)        throw new Exception($"{nameof(packageWeightInKilograms)} must be positive and non zero");        if(destination == null)        throw new Exception($"{nameof(destination)}, Destination must be provided")
-```
+```csharp
+public decimal CalculateShippingCost(
+    float packageWeightInKilograms,
+    Size<float> packageDimensionsInInches,
+    RegionInfo destination)
+{
+    if (packageWeightInKilograms <= 0f)
+        throw new Exception($"{nameof(packageWeightInKilograms)} must be positive and non zero");
 
-```
-    // Actual logic     return default(decimal)}
+    if (destination == null)
+        throw new Exception($"{nameof(destination)}, Destination must be provided");
+
+    // Actual logic
+    return default(decimal);
+}
 ```
 
 Now since we have added an additional precondition in this implementation if any consumer using the base type might assume that they can pass null to the destination parameter and if they try to use the `WorldWideShippingStrategy`their program would break.
