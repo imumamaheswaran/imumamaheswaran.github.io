@@ -2,11 +2,11 @@
 
 export const SITE_TITLE = 'Umamaheswaran';
 export const SITE_DESCRIPTION =
-	'Software architecture, .NET, React and AI, from a Technical Architect, engineering manager and Taekwondo black belt.';
+	'Personal notes on software architecture, .NET, React and AI, from 15 years of building things. Kept by a Technical Architect, engineering manager and Taekwondo black belt.';
 
 export const SOCIAL_LINKS = [
 	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/imumamaheswaran/' },
-	{ label: 'X / Twitter', href: 'https://twitter.com/imumamaheswaran' },
+	{ label: 'X', href: 'https://x.com/imumamaheswaran' },
 ];
 
 // Email, split so it isn't sitting whole in the page source for scrapers.

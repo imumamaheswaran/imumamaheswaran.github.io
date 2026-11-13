@@ -1,12 +1,17 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PostList from '../../components/PostList.astro';
-import { categoryUrl, getPosts } from '../../lib/posts';
+import { categoryUrl, getPosts, postUrl, readingTime } from '../../lib/posts';
 
 const posts = await getPosts();
+const [latest, ...earlier] = posts;
+const latestCats = latest.data.categories.filter((c) => c !== 'Uncategorized').slice(0, 2);
+const latestDate = latest.data.pubDate
+	.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+	.toUpperCase();
 
 const byYear = new Map<number, typeof posts>();
-for (const post of posts) {
+for (const post of earlier) {
 	const y = post.data.pubDate.getUTCFullYear();
 	byYear.set(y, [...(byYear.get(y) ?? []), post]);
 }
@@ -18,36 +23,203 @@ const categories = [...counts.entries()]
 	.sort((a, b) => b[1] - a[1]);
 ---
 
-<Base title="Writing" description="Everything I've written, newest first.">
-	<h1>Writing</h1>
-	<p class="muted">{posts.length} posts since {[...byYear.keys()].at(-1)}.</p>
+<Base title="Notes" description="Notes on building software, written as I learn. Newest first." wide>
+	<section class="intro">
+		<p class="kicker bare"><span class="n">●</span> Notes</p>
+		<h1>Notes from the drawing board.</h1>
+		<p class="lede">
+			Things I've learned building software, written down as I go. The older ones show what I knew then;
+			I'd write a few of them differently today.
+		</p>
+		<p class="meta">
+			{posts.length} notes since {[...byYear.keys()].at(-1)} · <a href="/rss.xml">Follow by RSS</a>
+		</p>
+	</section>
 
-	<nav aria-label="Categories" class="topics">
+	{/* The latest note, pinned to the board like a sheet. */}
+	<article class="latest">
+		<span class="marks" aria-hidden="true"></span>
+		<p class="flag">
+			Latest note
+			{
+				latestCats.map((c) => (
+					<Fragment>
+						<span aria-hidden="true">·</span>
+						<a href={categoryUrl(c)}>{c}</a>
+					</Fragment>
+				))
+			}
+		</p>
+		<h2><a href={postUrl(latest)}>{latest.data.title}</a></h2>
+		{latest.data.description && <p class="desc">{latest.data.description}</p>}
+		<p class="foot">
+			<span>{latestDate} · {readingTime(latest.body)} min read</span>
+			<a href={postUrl(latest)} class="read">Read the note →</a>
+		</p>
+	</article>
+
+	<div class="earlier">
+		<div class="earlier-head">
+			<h2 class="eh">Earlier</h2>
+			<nav aria-label="Categories" class="topics">
+				{
+					categories.map(([name, n]) => (
+						<a href={categoryUrl(name)}>
+							{name} <span class="muted">{n}</span>
+						</a>
+					))
+				}
+			</nav>
+		</div>
 		{
-			categories.map(([name, n]) => (
-				<a href={categoryUrl(name)}>
-					{name} <span class="muted">{n}</span>
-				</a>
+			[...byYear.entries()].map(([year, list]) => (
+				<section aria-label={String(year)}>
+					<h3 class="year">{year}</h3>
+					<PostList posts={list} showDescription={false} />
+				</section>
 			))
 		}
-	</nav>
-
-	{
-		[...byYear.entries()].map(([year, list]) => (
-			<section>
-				<h2>{year}</h2>
-				<PostList posts={list} showDescription={false} />
-			</section>
-		))
-	}
+	</div>
 </Base>
 
 <style>
+	.intro {
+		padding: 1rem 0 2.5rem;
+	}
+	h1 {
+		margin: 0 0 1.25rem;
+		font-size: clamp(2.4rem, 6.5vw, 4.5rem);
+		font-weight: 700;
+		letter-spacing: -0.05em;
+		line-height: 1;
+	}
+	.lede {
+		max-width: 38rem;
+		margin: 0 0 1rem;
+		font-size: 1.15rem;
+		color: var(--muted);
+	}
+	.meta {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.meta a {
+		color: var(--blue);
+		text-decoration: none;
+	}
+
+	/* The latest note as a sheet with crop marks. */
+	.latest {
+		position: relative;
+		max-width: 52rem;
+		margin: 0 0 4rem;
+		padding: clamp(1.5rem, 4vw, 2.5rem);
+		border: 1px solid var(--rule);
+		border-radius: 3px;
+		background: var(--bg);
+	}
+	.latest::before,
+	.latest::after,
+	.marks::before,
+	.marks::after {
+		content: '';
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border: 0 solid var(--blue);
+	}
+	.latest::before {
+		top: -6px;
+		left: -6px;
+		border-width: 2px 0 0 2px;
+	}
+	.latest::after {
+		right: -6px;
+		bottom: -6px;
+		border-width: 0 2px 2px 0;
+	}
+	.marks::before {
+		top: -6px;
+		right: -6px;
+		border-width: 2px 2px 0 0;
+	}
+	.marks::after {
+		bottom: -6px;
+		left: -6px;
+		border-width: 0 0 2px 2px;
+	}
+	.flag {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 0.75rem;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.flag a {
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.latest h2 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+		letter-spacing: -0.03em;
+	}
+	.latest h2 a {
+		color: var(--text);
+		text-decoration: none;
+	}
+	.latest h2 a:hover {
+		color: var(--accent);
+	}
+	.desc {
+		max-width: 42rem;
+		margin: 0;
+		color: var(--muted);
+		font-size: 1.05rem;
+	}
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin: 1.5rem 0 0;
+		padding-top: 1rem;
+		border-top: 1px dashed var(--rule);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.read {
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.read:hover {
+		color: var(--accent);
+	}
+
+	.earlier {
+		max-width: 52rem;
+		margin-bottom: 4rem;
+	}
+	.eh {
+		margin: 0 0 1rem;
+		font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+	}
 	.topics {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-		margin: 1.5rem 0 1rem;
+		margin: 0 0 1rem;
 	}
 	.topics a {
 		font-size: 0.9rem;
@@ -60,9 +232,11 @@ const categories = [...counts.entries()]
 	.topics a:hover {
 		border-color: var(--accent);
 	}
-	h2 {
+	.year {
 		margin: 2.5rem 0 0.25rem;
-		font-size: 1.25rem;
-		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		letter-spacing: 0.08em;
+		color: var(--accent);
 	}
 </style>

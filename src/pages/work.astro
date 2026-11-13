@@ -1,0 +1,128 @@
+---
+/** Work history in résumé order: experience, education, awards, certificates. Skills live on /toolbox/. */
+import Base from '../layouts/Base.astro';
+import Experience from '../components/Experience.astro';
+
+const awards = [
+	{ name: 'Quarterly Award', where: 'Conga', note: 'For my work on the CIM product, under the "Own It Do It" and "Desire for Knowledge" values.' },
+	{ name: 'Community Contribution', where: 'Kovai.co', note: 'Several awards for community contributions to TechMeet360 events.' },
+	{ name: 'Best Hackathon Contribution', where: 'Kovai.co', note: 'Best contributor in the company-wide hackathon to build Document360.' },
+];
+
+const certificates = [
+	{ name: 'Microsoft Certified Solutions Associate', where: 'Microsoft' },
+	{ name: 'Developing enterprise applications using .NET', where: 'Academic Council of NIIT' },
+];
+---
+
+<Base
+	title="Work"
+	description="Fifteen years of building software: Provus, Definitive Healthcare, Conga, Kovai.co and Lightcast."
+	wide
+>
+	<Experience level={1} n="01" detailed />
+
+	<section class="block" aria-labelledby="edu-h" data-reveal>
+		<p class="kicker"><span class="n">02</span> Education</p>
+		<h2 id="edu-h">Bachelor of Engineering.</h2>
+		<p class="line">
+			Sona College of Technology, Anna University · Salem <span class="dim">· 2007 – 2011 · 8.19 CGPA</span>
+		</p>
+	</section>
+
+	<section class="block" aria-labelledby="awards-h" data-reveal>
+		<p class="kicker"><span class="n">03</span> Awards</p>
+		<h2 id="awards-h">A few kind nods.</h2>
+		<ul class="list" data-stagger>
+			{
+				awards.map((a) => (
+					<li>
+						<h3>{a.name}</h3>
+						<p class="where">{a.where}</p>
+						<p class="note">{a.note}</p>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<section class="block" aria-labelledby="certs-h" data-reveal>
+		<p class="kicker"><span class="n">04</span> Certificates</p>
+		<h2 id="certs-h">On paper.</h2>
+		<ul class="list" data-stagger>
+			{
+				certificates.map((c) => (
+					<li>
+						<h3>{c.name}</h3>
+						<p class="where">{c.where}</p>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+
+	<p class="next">
+		<a href="/toolbox/">The toolbox →</a>
+		<a href="/#how-i-work">How I work →</a>
+		<a href="/bookshelf/">The bookshelf →</a>
+	</p>
+</Base>
+
+<style>
+	.block {
+		margin: 0 0 6rem;
+	}
+	h2 {
+		margin: 0 0 2rem;
+		font-size: clamp(1.8rem, 4vw, 2.6rem);
+	}
+	.line {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+	.dim {
+		color: var(--muted);
+	}
+	.list {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		gap: 1.5rem 2.5rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		max-width: 64rem;
+	}
+	.list h3 {
+		margin: 0;
+		font-size: 1.15rem;
+	}
+	.where {
+		margin: 0.2rem 0 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.note {
+		margin: 0;
+		color: var(--muted);
+	}
+	.next {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 2rem;
+		margin: 0 0 5rem;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+	.next a {
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.next a:hover {
+		color: var(--accent);
+	}
+</style>

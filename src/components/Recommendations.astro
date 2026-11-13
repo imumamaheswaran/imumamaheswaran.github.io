@@ -1,42 +1,112 @@
 ---
-/** LinkedIn recommendations: pick a name, read their letter. */
+/**
+ * LinkedIn recommendations as a breaking (격파) rack: each colleague is a
+ * wooden board hanging from the rail. Break one to read their letter, or
+ * shout "Kihap!" to break one at random.
+ */
 import { RELATIONS, recommendations } from '../data/recommendations';
 
 const items = recommendations.map((r) => ({
 	...r,
 	year: r.date.slice(0, 4),
 	rel: RELATIONS[r.relation].en,
+	from: { senior: 'from someone senior', peer: 'from a peer', junior: 'from my team' }[r.relation],
+	initials: r.name
+		.split(/\s+/)
+		.filter(Boolean)
+		.map((w, k, a) => (k === 0 || k === a.length - 1 ? w[0] : ''))
+		.join('')
+		.toUpperCase(),
+	first: r.name.split(/\s+/)[0],
 }));
+// A slight, fixed tilt for each board, so the rack looks hung by hand.
+const TILTS = [-2, 1.5, -1, 2, -1.5, 1, -2.5, 1.5, -1, 2];
+
+interface Props {
+	/** Section number shown in the kicker. */
+	n?: string;
+	/** 1 when this section is the page's main heading. */
+	level?: 1 | 2;
+}
+const { n = '03', level = 2 } = Astro.props;
+const Heading = level === 1 ? 'h1' : 'h2';
 ---
 
 <section class="recs" aria-labelledby="recs-heading" data-recs data-reveal>
-	<p class="kicker"><span class="n">03</span> Recommendations</p>
-	<h2 id="recs-heading">What colleagues say.</h2>
+	<p class="kicker"><span class="n">{n}</span> Recommendations</p>
+	<Heading id="recs-heading" class="sec-h">Kind words from colleagues.</Heading>
 
-	<div class="layout">
-		<div class="names" role="tablist" aria-label="Recommendations" aria-orientation="vertical">
+	<p class="intro">
+		Every board hides a real letter from someone I've worked with. Break one, or let the kihap choose.
+	</p>
+
+	{/* The rack: a rail on two posts, a plate, and the boards hanging on cords. */}
+	<div class="rack">
+		<div class="rail" aria-hidden="true">
+			<span class="plate"><b lang="ko">격파</b><span>{items.length} boards, break one</span></span>
+		</div>
+		<div class="boards" role="tablist" aria-label="Recommendations" aria-orientation="horizontal">
 			{
 				items.map((r, i) => (
 					<button
 						type="button"
 						role="tab"
+						class="board"
 						id={`rec-tab-${i}`}
 						aria-controls={`rec-${i}`}
 						aria-selected={i === 0 ? 'true' : 'false'}
 						tabindex={i === 0 ? 0 : -1}
 						data-tab={i}
+						title={`${r.name} · ${r.role}`}
+						style={`--tilt:${TILTS[i % TILTS.length]}deg`}
 					>
-						<span class="num">{String(i + 1).padStart(2, '0')}</span>
-						<span class="nm">{r.name}</span>
+						<span class="sr-only">{r.name}</span>
+						{['top', 'bot'].map((half) => (
+							<span class:list={['piece', half]} aria-hidden="true">
+								<span class="ini">{r.initials}</span>
+								<span class="nm">{r.first}</span>
+							</span>
+						))}
+						<span class="chips" aria-hidden="true">
+							<i />
+							<i />
+							<i />
+							<i />
+							<i />
+						</span>
 					</button>
 				))
 			}
+		</div>
+	</div>
+
+	<div class="stage">
+		{/* The kick pad: break a random board. */}
+		<div class="stand">
+			<svg class="pad" viewBox="0 0 80 124" aria-hidden="true" data-pad>
+				<path d="M40 5 C63 5 73 22 71 45 C69 66 57 79 40 79 C23 79 11 66 9 45 C7 22 17 5 40 5 Z" class="pad-face"></path>
+				<path d="M40 14 C56 14 63 26 62 44 C61 60 52 70 40 70" class="pad-seam"></path>
+				<rect x="33" y="77" width="14" height="42" rx="4" class="pad-grip"></rect>
+				<path d="M33 88 H47 M33 98 H47 M33 108 H47" class="pad-wrap"></path>
+			</svg>
+			<button type="button" class="kihap" data-kihap>
+				Kihap!
+				<small>Break a random board</small>
+			</button>
 		</div>
 
 		<div class="letters">
 			{
 				items.map((r, i) => (
 					<article class="letter" role="tabpanel" id={`rec-${i}`} aria-labelledby={`rec-tab-${i}`} hidden={i !== 0} data-letter>
+						{/* Drawn like a sheet: corner marks, a stamp, and a title block. */}
+						<span class="marks" aria-hidden="true"></span>
+						<span class="seal" aria-hidden="true">
+							<span>{r.initials}</span>
+						</span>
+						<p class="anno">
+							Board {String(i + 1).padStart(2, '0')} of {String(items.length).padStart(2, '0')} · {r.from}
+						</p>
 						<blockquote>
 							<p>{r.pull}</p>
 						</blockquote>
@@ -50,17 +120,35 @@ const items = recommendations.map((r) => ({
 								))}
 							</div>
 						</div>
-						<footer>
-							<a href={r.linkedin} target="_blank" rel="noopener noreferrer" class="who">
-								{r.name} <span aria-hidden="true">↗</span>
-								<span class="sr-only">(LinkedIn, opens in a new tab)</span>
-							</a>
-							<span class="role">{r.role}</span>
-							<span class="meta">
-								{r.rel} · {r.org ? `${r.org} · ` : ''}
-								{r.year}
-							</span>
-						</footer>
+						<ul class="stickies" aria-label="What the letter talks about">
+							{r.tags.map((t) => (
+								<li>{t}</li>
+							))}
+						</ul>
+						<dl class="titleblock">
+							<div class="tb-from">
+								<dt>From</dt>
+								<dd>
+									<a href={r.linkedin} target="_blank" rel="noopener noreferrer" class="who">
+										{r.name} <span aria-hidden="true">↗</span>
+										<span class="sr-only">(LinkedIn, opens in a new tab)</span>
+									</a>
+									<span class="role">{r.role}</span>
+								</dd>
+							</div>
+							<div>
+								<dt>Relation</dt>
+								<dd>{r.rel}</dd>
+							</div>
+							<div>
+								<dt>Org</dt>
+								<dd>{r.org ?? '—'}</dd>
+							</div>
+							<div>
+								<dt>Dated</dt>
+								<dd>{r.year}</dd>
+							</div>
+						</dl>
 					</article>
 				))
 			}
@@ -69,7 +157,7 @@ const items = recommendations.map((r) => ({
 </section>
 
 <script>
-	import { tick } from '../lib/sound';
+	import { thwack } from '../lib/sound';
 
 	function init() {
 		const root = document.querySelector<HTMLElement>('[data-recs]');
@@ -79,7 +167,7 @@ const items = recommendations.map((r) => ({
 		const letters = [...root.querySelectorAll<HTMLElement>('[data-letter]')];
 		let current = 0;
 
-		function select(i: number, focus = false) {
+		function select(i: number, focus = false, quiet = false) {
 			i = (i + tabs.length) % tabs.length;
 			tabs.forEach((t, k) => {
 				t.setAttribute('aria-selected', String(k === i));
@@ -90,9 +178,27 @@ const items = recommendations.map((r) => ({
 				l.classList.toggle('enter', k === i);
 			});
 			if (focus) tabs[i].focus();
-			if (i !== current) tick();
+			if (i !== current && !quiet) {
+				// The board breaks: splinters fly, and it thwacks.
+				tabs[i].classList.remove('hit');
+				void tabs[i].offsetWidth;
+				tabs[i].classList.add('hit');
+				thwack();
+			}
 			current = i;
 		}
+
+		// Kihap: break a different board at random, and the pad takes the hit.
+		const pad = root.querySelector<SVGElement>('[data-pad]');
+		root.querySelector('[data-kihap]')?.addEventListener('click', () => {
+			let i = current;
+			while (tabs.length > 1 && i === current) i = Math.floor(Math.random() * tabs.length);
+			pad?.classList.remove('smack');
+			void (pad as unknown as HTMLElement)?.getBoundingClientRect();
+			pad?.classList.add('smack');
+			select(i);
+			tabs[i].scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+		});
 
 		tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
 		root.querySelector('[role=tablist]')!.addEventListener('keydown', (e) => {
@@ -110,6 +216,10 @@ const items = recommendations.map((r) => ({
 				select(map[k], true);
 			}
 		});
+		// Each visit starts with a different board already broken. Quietly: no
+		// sound or splinters until someone breaks one themselves.
+		select(Math.floor(Math.random() * tabs.length), false, true);
+
 		root.querySelectorAll<HTMLButtonElement>('[data-more]').forEach((b) => {
 			b.addEventListener('click', () => {
 				const open = b.getAttribute('aria-expanded') !== 'true';
@@ -125,61 +235,348 @@ const items = recommendations.map((r) => ({
 	.recs {
 		margin: 0 0 7rem;
 	}
-	h2 {
+	.sec-h {
 		margin: 0 0 2.5rem;
 		font-size: clamp(1.9rem, 4.5vw, 3rem);
 	}
-	.layout {
-		display: grid;
-		grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-		gap: clamp(2rem, 5vw, 4rem);
-		align-items: start;
-	}
-	.names {
-		display: flex;
-		flex-direction: column;
-		border-left: 1px solid var(--rule);
-	}
-	[role='tab'] {
-		display: flex;
-		gap: 0.75rem;
-		align-items: baseline;
-		margin-left: -1px;
-		padding: 0.5rem 0 0.5rem 1rem;
-		border: 0;
-		border-left: 2px solid transparent;
-		background: none;
+	.intro {
+		max-width: 40rem;
+		margin: -1.5rem 0 3rem;
 		color: var(--muted);
-		font: inherit;
-		font-size: 0.95rem;
-		text-align: left;
-		cursor: pointer;
-		transition:
-			color 0.2s,
-			border-color 0.2s;
-	}
-	[role='tab']:hover {
-		color: var(--text);
-	}
-	[role='tab'][aria-selected='true'] {
-		border-left-color: var(--accent);
-		color: var(--text);
-		font-weight: 600;
-	}
-	[role='tab']:focus-visible {
-		outline: 2px solid var(--accent);
-		outline-offset: -2px;
-	}
-	.num {
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		font-weight: 400;
-		color: var(--faint);
-	}
-	[aria-selected='true'] .num {
-		color: var(--accent);
+		font-size: 1.05rem;
 	}
 
+	/* The rack: two posts, a rail, and boards on cords. */
+	.rack {
+		position: relative;
+		margin: 0 0 2.5rem;
+		padding: 2.6rem 0 0.75rem;
+	}
+	.rack::before,
+	.rack::after {
+		content: '';
+		position: absolute;
+		top: 2.1rem;
+		bottom: 0;
+		width: 12px;
+		border-radius: 3px;
+		background: linear-gradient(90deg, var(--wood-dark), var(--wood) 45%, var(--wood-dark));
+	}
+	.rack::before {
+		left: 0;
+	}
+	.rack::after {
+		right: 0;
+	}
+	.rail {
+		position: relative;
+		height: 14px;
+		margin: 0 -10px;
+		border-radius: 7px;
+		background: linear-gradient(180deg, var(--wood), var(--wood-dark));
+		box-shadow: 0 3px 6px -2px rgb(0 0 0 / 0.35);
+	}
+	.plate {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% + 0.5rem);
+		translate: -50% 0;
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		padding: 0.3rem 0.8rem;
+		border: 1px solid var(--rule);
+		border-radius: 3px;
+		background: var(--bg);
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.plate b {
+		font-family: var(--font-sans);
+		font-size: 1rem;
+		letter-spacing: 0.1em;
+		color: var(--text);
+	}
+	.boards {
+		display: flex;
+		justify-content: space-around;
+		gap: 0.75rem;
+		/* Room below, so a broken board's lower half isn't clipped. */
+		padding: 0 1.75rem 1rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	/* A wooden breaking board, hung by a cord. Two clipped copies make the halves. */
+	.board {
+		position: relative;
+		flex: none;
+		width: 3.7rem;
+		height: 10rem;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		transform: rotate(var(--tilt));
+		transform-origin: 50% 0;
+		transition: transform 0.35s var(--ease-press);
+	}
+	.board::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: calc(50% - 1px);
+		width: 2px;
+		height: 1.4rem;
+		background: var(--muted);
+	}
+	.board:hover {
+		transform: rotate(0deg) translateY(3px);
+	}
+	.board:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+	}
+	.piece {
+		position: absolute;
+		inset: 1.4rem 0 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.6rem;
+		padding-top: 0.7rem;
+		border: 2px solid var(--wood-dark);
+		border-radius: 4px;
+		background:
+			repeating-linear-gradient(90deg, transparent 0 6px, rgb(0 0 0 / 0.06) 6px 7px, transparent 7px 13px),
+			linear-gradient(180deg, var(--wood), color-mix(in srgb, var(--wood) 78%, var(--wood-dark)));
+		color: #3b2a14;
+		box-shadow: 0 4px 8px -4px rgb(0 0 0 / 0.4);
+		transition: transform 0.5s var(--ease-press);
+	}
+	.top {
+		clip-path: polygon(0 0, 100% 0, 100% 52%, 80% 46%, 62% 56%, 42% 47%, 22% 57%, 0 49%);
+	}
+	.bot {
+		clip-path: polygon(0 49%, 22% 57%, 42% 47%, 62% 56%, 80% 46%, 100% 52%, 100% 100%, 0 100%);
+	}
+	.ini {
+		display: grid;
+		place-items: center;
+		width: 1.8rem;
+		height: 1.8rem;
+		border: 1.5px solid var(--wood-dark);
+		border-radius: 50%;
+		background: rgb(255 255 255 / 0.35);
+		font-family: var(--font-mono);
+		font-size: 0.66rem;
+		font-weight: 700;
+	}
+	.nm {
+		writing-mode: vertical-rl;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+	/* Broken: the halves split along the crack. */
+	.board[aria-selected='true'] {
+		transform: rotate(0deg);
+	}
+	.board[aria-selected='true'] .top {
+		transform: translate(-5px, -3px) rotate(-8deg);
+	}
+	.board[aria-selected='true'] .bot {
+		transform: translate(6px, 7px) rotate(7deg);
+	}
+	.board[aria-selected='true'] .piece {
+		border-color: var(--accent);
+	}
+	.chips {
+		position: absolute;
+		left: 50%;
+		top: 58%;
+		pointer-events: none;
+	}
+	.chips i {
+		position: absolute;
+		width: 6px;
+		height: 2px;
+		border-radius: 1px;
+		background: var(--wood-dark);
+		opacity: 0;
+	}
+	.chips i:nth-child(1) {
+		--dx: -34px;
+		--dy: -18px;
+	}
+	.chips i:nth-child(2) {
+		--dx: 30px;
+		--dy: -22px;
+	}
+	.chips i:nth-child(3) {
+		--dx: -26px;
+		--dy: 16px;
+	}
+	.chips i:nth-child(4) {
+		--dx: 36px;
+		--dy: 12px;
+	}
+	.chips i:nth-child(5) {
+		--dx: 4px;
+		--dy: -30px;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.board.hit .chips i {
+			animation: chip 0.6s var(--ease-out);
+		}
+		.pad.smack {
+			animation: smack 0.45s var(--ease-press);
+		}
+	}
+	@keyframes chip {
+		0% {
+			opacity: 1;
+			transform: translate(0, 0) rotate(0deg);
+		}
+		100% {
+			opacity: 0;
+			transform: translate(var(--dx), var(--dy)) rotate(160deg);
+		}
+	}
+
+	/* The stage: the kick pad on the left, the letter on the right. */
+	.stage {
+		display: grid;
+		grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+		gap: clamp(1.5rem, 4vw, 3.5rem);
+		align-items: start;
+	}
+	.stand {
+		position: sticky;
+		top: 6rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		padding-top: 1rem;
+	}
+	.pad {
+		width: 5rem;
+		height: auto;
+		overflow: visible;
+		transform-origin: 50% 90%;
+	}
+	.pad-face {
+		fill: var(--accent);
+		stroke: #1a1210;
+		stroke-width: 2.5;
+	}
+	.pad-seam {
+		fill: none;
+		stroke: rgb(255 255 255 / 0.45);
+		stroke-width: 2;
+		stroke-dasharray: 3 3;
+	}
+	.pad-grip {
+		fill: #141518;
+		stroke: #1a1210;
+		stroke-width: 2;
+	}
+	.pad-wrap {
+		stroke: #3a3d44;
+		stroke-width: 1.5;
+	}
+	@keyframes smack {
+		30% {
+			transform: rotate(-14deg) scale(0.92);
+		}
+		65% {
+			transform: rotate(6deg);
+		}
+	}
+	.kihap {
+		display: grid;
+		gap: 0.15rem;
+		padding: 0.55rem 1.1rem;
+		border: 1.5px solid var(--text);
+		border-radius: 999px;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-align: center;
+		cursor: pointer;
+		box-shadow: 0 3px 0 var(--text);
+		transition:
+			transform 0.15s var(--ease-press),
+			box-shadow 0.15s;
+	}
+	.kihap small {
+		font-size: 0.6rem;
+		font-weight: 400;
+		letter-spacing: 0.06em;
+		color: var(--muted);
+	}
+	.kihap:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+		box-shadow: 0 3px 0 var(--accent);
+	}
+	.kihap:active {
+		transform: translateY(3px);
+		box-shadow: 0 0 0 var(--accent);
+	}
+
+	/* Each letter is a sheet on the drawing board. */
+	.letter {
+		position: relative;
+		max-width: 52rem;
+		padding: clamp(1.25rem, 3vw, 2.25rem);
+		border: 1px solid var(--rule);
+		border-radius: 3px;
+		background: color-mix(in srgb, var(--surface) 88%, transparent);
+	}
+	/* Crop marks in all four corners. */
+	.letter::before,
+	.letter::after,
+	.marks::before,
+	.marks::after {
+		content: '';
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border: 0 solid var(--blue);
+		pointer-events: none;
+	}
+	.letter::before {
+		top: -6px;
+		left: -6px;
+		border-width: 2px 0 0 2px;
+	}
+	.letter::after {
+		right: -6px;
+		bottom: -6px;
+		border-width: 0 2px 2px 0;
+	}
+	.marks::before {
+		top: -6px;
+		right: -6px;
+		border-width: 2px 2px 0 0;
+	}
+	.marks::after {
+		bottom: -6px;
+		left: -6px;
+		border-width: 0 0 2px 2px;
+	}
 	.letter.enter {
 		animation: rise 0.5s var(--ease-out);
 	}
@@ -189,6 +586,62 @@ const items = recommendations.map((r) => ({
 			transform: translateY(10px);
 		}
 	}
+	.anno {
+		margin: 0 0 1.25rem;
+		padding-right: 5rem;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--blue);
+	}
+
+	/* The writer's seal, stamped over the sheet's edge. */
+	.seal {
+		position: absolute;
+		top: -1.4rem;
+		right: clamp(1rem, 3vw, 2rem);
+		display: grid;
+		place-items: center;
+		width: 4.5rem;
+		height: 4.5rem;
+		border: 2.5px solid var(--accent);
+		border-radius: 50%;
+		background: var(--bg);
+		color: var(--accent);
+		transform: rotate(-14deg);
+		opacity: 0.9;
+	}
+	.seal::before {
+		content: '';
+		position: absolute;
+		inset: 4px;
+		border: 1px dashed var(--accent);
+		border-radius: 50%;
+	}
+	.seal span {
+		font-family: var(--font-mono);
+		font-size: 1.2rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		/* Replays every time a letter is shown. */
+		.recs:global(.in) .seal {
+			animation: stamp 0.45s 0.2s var(--ease-press) backwards;
+		}
+	}
+	@keyframes stamp {
+		from {
+			opacity: 0;
+			transform: rotate(-30deg) scale(1.8);
+		}
+		70% {
+			opacity: 0.9;
+			transform: rotate(-12deg) scale(0.94);
+		}
+	}
+
 	blockquote {
 		margin: 0;
 		padding: 0;
@@ -240,13 +693,78 @@ const items = recommendations.map((r) => ({
 		color: var(--muted);
 		font-size: 1rem;
 	}
-	footer {
+
+	/* Margin notes, on the same stickies as the event-storming sheet. */
+	.stickies {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		margin: 1.75rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.stickies li {
+		padding: 0.35rem 0.7rem;
+		border-radius: 2px;
+		background: #f7c873;
+		color: #1b1d22;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		font-weight: 500;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		box-shadow: 0 3px 6px -2px rgb(0 0 0 / 0.3);
+		transform: rotate(-1.5deg);
+		transition: transform 0.25s var(--ease-press);
+	}
+	.stickies li:nth-child(2) {
+		background: #cdbdf2;
+		transform: rotate(1.2deg);
+	}
+	.stickies li:nth-child(3) {
+		background: #f5b0c1;
+		transform: rotate(-0.8deg);
+	}
+	.stickies li:hover {
+		transform: rotate(0) translateY(-2px);
+	}
+
+	/* Title block, like the corner of a drawing. */
+	.titleblock {
+		display: grid;
+		grid-template-columns: minmax(0, 2.2fr) repeat(3, minmax(0, 1fr));
+		gap: 1px;
+		margin: 1.75rem 0 0;
+		border: 1px solid var(--rule);
+		background: var(--rule);
+	}
+	.titleblock > div {
+		padding: 0.6rem 0.8rem;
+		background: var(--bg);
+	}
+	dt {
+		margin-bottom: 0.25rem;
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	dd {
 		display: grid;
 		gap: 0.1rem;
-		margin-top: 1.75rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--rule);
-		max-width: 44rem;
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--text);
+	}
+	.tb-from dd {
+		font-family: var(--font-sans);
+		font-size: 1rem;
+		letter-spacing: 0;
+		text-transform: none;
 	}
 	.who {
 		color: var(--text);
@@ -258,36 +776,32 @@ const items = recommendations.map((r) => ({
 	}
 	.role {
 		color: var(--muted);
-		font-size: 0.92rem;
+		font-size: 0.88rem;
 	}
-	.meta {
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--faint);
+	@media (max-width: 600px) {
+		.titleblock {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.tb-from {
+			grid-column: 1 / -1;
+		}
 	}
 
 	@media (max-width: 760px) {
-		.layout {
-			grid-template-columns: 1fr;
+		.boards {
+			justify-content: flex-start;
 		}
-		.names {
+		.stage {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.stand {
+			position: static;
 			flex-direction: row;
-			overflow-x: auto;
-			border-left: 0;
-			border-bottom: 1px solid var(--rule);
-			scrollbar-width: none;
+			justify-content: flex-start;
+			padding-top: 0;
 		}
-		[role='tab'] {
-			flex: none;
-			margin: 0 0 -1px;
-			padding: 0.5rem 0.75rem;
-			border-left: 0;
-			border-bottom: 2px solid transparent;
-		}
-		[role='tab'][aria-selected='true'] {
-			border-bottom-color: var(--accent);
+		.pad {
+			width: 3rem;
 		}
 	}
 </style>

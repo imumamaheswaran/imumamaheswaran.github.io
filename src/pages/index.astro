@@ -1,14 +1,10 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.astro';
-import Architecture from '../components/Architecture.astro';
-import Experience from '../components/Experience.astro';
 import Recommendations from '../components/Recommendations.astro';
-import Bookshelf from '../components/Bookshelf.astro';
 import PostList from '../components/PostList.astro';
 import { getPosts } from '../lib/posts';
-import { SOCIAL_LINKS } from '../consts';
-import Email from '../components/Email.astro';
+import HowIWork from '../components/HowIWork.astro';
 import Subscribe from '../components/Subscribe.astro';
 
 const posts = await getPosts();
@@ -18,41 +14,22 @@ const latest = posts.slice(0, 4);
 <Base wide>
 	<Hero />
 
-	<Architecture />
-
-	<Experience />
-
-	<Recommendations />
-
-	<Bookshelf />
-
 	<section class="writing" aria-labelledby="writing-heading" data-reveal>
-		<p class="kicker"><span class="n">05</span> Writing</p>
+		<p class="kicker"><span class="n">01</span> Notes</p>
 		<div class="row">
-			<h2 id="writing-heading">Latest posts.</h2>
-			<a class="all" href="/blog/">All {posts.length} posts →</a>
+			<h2 id="writing-heading">Latest notes.</h2>
+			<a class="all" href="/blog/">All {posts.length} notes →</a>
 		</div>
-		<PostList posts={latest} />
-		<Subscribe />
+		<div class="notes">
+			<PostList posts={latest} />
+			<Subscribe layout="line" />
+		</div>
 	</section>
 
-	<section class="hello" aria-labelledby="hello-heading" data-reveal>
-		<p class="kicker"><span class="n">06</span> Contact</p>
-		<h2 id="hello-heading">Say hello.</h2>
-		<p class="mail"><Email copy class="big" /></p>
-		<ul>
-			{
-				SOCIAL_LINKS.map((l) => (
-					<li>
-						<a href={l.href} rel="me noopener" target="_blank">
-							{l.label} <span aria-hidden="true">↗</span>
-						</a>
-					</li>
-				))
-			}
-			<li><a href="/rss.xml">RSS</a></li>
-		</ul>
-	</section>
+	<HowIWork n="02" />
+
+	<Recommendations n="03" />
+
 </Base>
 
 <style>
@@ -71,7 +48,7 @@ const latest = posts.slice(0, 4);
 		margin-bottom: 2rem;
 		max-width: 52rem;
 	}
-	.writing :global(.post-list) {
+	.notes {
 		max-width: 52rem;
 	}
 	.all {
@@ -85,44 +62,5 @@ const latest = posts.slice(0, 4);
 	}
 	.all:hover {
 		color: var(--accent);
-	}
-	.hello {
-		margin: 0 0 5rem;
-	}
-	.mail {
-		margin: 1.25rem 0 0;
-	}
-	.mail :global(.big a) {
-		font-size: clamp(1.25rem, 3.5vw, 2rem);
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		color: var(--text);
-		text-decoration: none;
-		border-bottom: 2px solid var(--accent);
-	}
-	.mail :global(.big a:hover) {
-		color: var(--accent);
-	}
-	.hello ul {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem 2rem;
-		list-style: none;
-		margin: 1.5rem 0 0;
-		padding: 0;
-	}
-	.hello a {
-		font-family: var(--font-mono);
-		font-size: 0.9rem;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--text);
-		text-decoration: none;
-		border-bottom: 1px solid var(--rule);
-		padding-bottom: 0.2rem;
-	}
-	.hello a:hover {
-		color: var(--accent);
-		border-color: var(--accent);
 	}
 </style>

@@ -67,6 +67,7 @@ export const recommendations: Recommendation[] = [
 		date: '2025-03-05',
 		relation: 'junior',
 		relationNote: 'Mariselvam reported to Uma directly.',
+		org: 'Definitive Healthcare',
 		pull: 'What truly sets him apart is how he seamlessly connects technical solutions with business needs while creating a positive and collaborative team environment.',
 		tags: ['Leadership', 'Business sense', 'Mentoring'],
 		text: [
@@ -94,6 +95,7 @@ export const recommendations: Recommendation[] = [
 		date: '2019-10-23',
 		relation: 'junior',
 		relationNote: 'Archana reported to Uma directly.',
+		org: 'Kovai.co',
 		pull: 'Umamaheswaran constantly amazed me with his technical knowledge and brilliant approaches to solving problems.',
 		tags: ['Problem solving', 'Approachable', 'Leadership'],
 		text: [
@@ -107,6 +109,7 @@ export const recommendations: Recommendation[] = [
 		date: '2019-10-21',
 		relation: 'peer',
 		relationNote: 'Pandiyan worked with Uma on the same team.',
+		org: 'Lightcast',
 		pull: 'I wish every developer should get a senior person like Uma.',
 		tags: ['C# depth', 'Craft', 'Teaching'],
 		text: [
@@ -124,6 +127,7 @@ export const recommendations: Recommendation[] = [
 		date: '2019-10-19',
 		relation: 'junior',
 		relationNote: 'Suhas reported to Uma directly.',
+		org: 'Kovai.co',
 		pull: 'He was more like a friend and a great motivator.',
 		tags: ['Best practices', 'Motivation', 'Curiosity'],
 		text: [

@@ -20,12 +20,21 @@ const dims = (title: string, i: number) => ({
 	h: 9.5 + ((title.length * 7 + i * 13) % 30) / 10,
 	w: 2.1 + ((i * 5) % 4) / 10,
 });
+
+interface Props {
+	/** Section number shown in the kicker. */
+	n?: string;
+	/** 1 when this section is the page's main heading. */
+	level?: 1 | 2;
+}
+const { n = '04', level = 2 } = Astro.props;
+const Heading = level === 1 ? 'h1' : 'h2';
 ---
 
 <section id="books" class="books" aria-labelledby="books-heading" data-reveal>
 	<div class="head">
-		<p class="kicker"><span class="n">04</span> Bookshelf</p>
-		<h2 id="books-heading">Books that shaped how I build.</h2>
+		<p class="kicker"><span class="n">{n}</span> Bookshelf</p>
+		<Heading id="books-heading" class="sec-h">Books I keep going back to.</Heading>
 	</div>
 
 	<div class="featured">
@@ -78,7 +87,7 @@ const dims = (title: string, i: number) => ({
 		margin: 0 0 7rem;
 		scroll-margin-top: 5.5rem;
 	}
-	h2 {
+	.sec-h {
 		margin: 0 0 2.5rem;
 		font-size: clamp(1.9rem, 4.5vw, 3rem);
 	}

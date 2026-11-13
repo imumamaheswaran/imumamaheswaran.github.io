@@ -1,0 +1,396 @@
+---
+/**
+ * The tools I reach for, grouped like a bag being unpacked. Each says what I
+ * use it for; where I used it lives on /work/. A dot marks my current role.
+ */
+import Base from '../layouts/Base.astro';
+
+// Logos from Devicon (MIT) and Simple Icons (CC0), vendored in src/assets/tools.
+const logos = import.meta.glob<string>('../assets/tools/*.svg', { query: '?raw', import: 'default', eager: true });
+function logo(slug: string, fill?: string) {
+	let svg = logos[`../assets/tools/${slug}.svg`];
+	if (!svg) return '';
+	// Several logos reuse ids like "a"; prefix them so gradients don't collide on one page.
+	const p = `tb-${slug}-`;
+	svg = svg
+		.replace(/<title>.*?<\/title>/g, '')
+		.replace(/\sid="([^"]+)"/g, ` id="${p}$1"`)
+		.replace(/url\(#([^)]+)\)/g, `url(#${p}$1)`)
+		.replace(/href="#([^"]+)"/g, `href="#${p}$1"`)
+		.replace(/\s(width|height)="[^"]*"/g, '');
+	return svg.replace('<svg', `<svg aria-hidden="true" focusable="false"${fill ? ` fill="${fill}"` : ''}`);
+}
+
+const GLYPHS: Record<Glyph, string> = {
+	design: '<path d="M2 12 7 6l5 6-5 6Zm10 0 5-6 5 6-5 6Z"/>',
+	services:
+		'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4M7 10l3 4m7.5-4-3 4"/>',
+	layers: '<path d="m12 3 9 5-9 5-9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+	review:
+		'<rect x="4" y="3" width="12" height="16" rx="1.5"/><path d="M7 7h6M7 10.5h4"/><circle cx="16" cy="15" r="3.5"/><path d="m18.5 17.5 3 3"/>',
+	code: '<path d="m8 8-4 4 4 4m8-8 4 4-4 4"/><path d="m10 13 1.5 1.5L14 11"/>',
+};
+
+type Glyph = 'design' | 'services' | 'layers' | 'review' | 'code';
+type Tool = {
+	name: string;
+	where: string;
+	now?: boolean;
+	/** Brand colour, used to tint the card. */
+	brand: string;
+	/** A logo file in src/assets/tools (si-* are single-colour, painted with `fill`). */
+	icon?: string;
+	fill?: string;
+	/** Letters, for tools without a logo. */
+	mono?: string;
+	/** A small drawn icon, for ways of working. */
+	glyph?: Glyph;
+};
+type Group = { id: string; title: string; note: string; tools: Tool[] };
+
+const groups: Group[] = [
+	{
+		id: 'languages',
+		title: 'Languages & runtimes',
+		note: 'Where most of my hours have gone.',
+		tools: [
+			{ name: 'C#', icon: 'csharp', brand: '#68217A', where: 'My first language, and still the one I think in', now: true },
+			{ name: '.NET / .NET Core', icon: 'dotnet', brand: '#512BD4', where: 'Web APIs, background jobs and platform services', now: true },
+			{ name: 'TypeScript', icon: 'typescript', brand: '#3178C6', where: 'Types from the database to the UI', now: true },
+			{ name: 'JavaScript', icon: 'javascript', brand: '#F7DF1E', where: "Underneath every frontend I've shipped" },
+			{ name: 'Node.js', icon: 'nodejs', brand: '#5FA04E', where: 'Server-side JavaScript and build tooling' },
+		],
+	},
+	{
+		id: 'frontend',
+		title: 'Frontend',
+		note: 'Enough to build the whole thing end to end.',
+		tools: [
+			{ name: 'Next.js', icon: 'nextjs', brand: 'var(--text)', where: 'Full-stack apps, from routing to rendering', now: true },
+			{ name: 'React', icon: 'react', brand: '#61DAFB', where: 'Component-driven UIs' },
+			{ name: 'Angular', icon: 'angular', brand: '#DD0031', where: 'Large single-page apps with a lot of moving parts' },
+		],
+	},
+	{
+		id: 'apis',
+		title: 'APIs & backend',
+		note: 'The seams between systems.',
+		tools: [
+			{ name: 'ASP.NET Core', icon: 'aspnetcore', brand: '#512BD4', where: 'REST APIs with middleware, auth and versioning' },
+			{ name: 'Entity Framework', mono: 'EF', brand: '#512BD4', where: 'Data access for .NET' },
+			{ name: 'GraphQL · Hot Chocolate', icon: 'graphql', brand: '#E10098', where: 'One graph over many data sources' },
+			{ name: 'REST & Swagger', icon: 'swagger', brand: '#85EA2D', where: 'APIs documented well enough to use without asking' },
+			{ name: 'Identity Server', mono: 'IdS', brand: '#2B6CB0', where: 'Authentication and tokens for .NET services' },
+		],
+	},
+	{
+		id: 'data',
+		title: 'Data',
+		note: 'Picked per job, not per habit.',
+		tools: [
+			{ name: 'PostgreSQL', icon: 'postgresql', brand: '#4169E1', where: 'The default relational store', now: true },
+			{ name: 'SQL Server', icon: 'sqlserver', brand: '#CC2927', where: 'Relational data in the Microsoft stack' },
+			{ name: 'MongoDB', icon: 'mongodb', brand: '#47A248', where: 'Documents that don\'t fit a table' },
+			{ name: 'Elasticsearch', icon: 'elasticsearch', brand: '#00BFB3', where: 'Fast search over large, messy data' },
+			{ name: 'Redis / ElastiCache', icon: 'redis', brand: '#DC382D', where: 'Caching, and storage that has to be quick' },
+			{ name: 'Snowflake', icon: 'si-snowflake', fill: '#29B5E8', brand: '#29B5E8', where: 'Cloud data warehousing' },
+		],
+	},
+	{
+		id: 'cloud',
+		title: 'Cloud',
+		note: 'Both clouds, and moving between them.',
+		tools: [
+			{ name: 'AWS', icon: 'si-amazonwebservices', fill: '#FF9900', brand: '#FF9900', where: 'SNS, SQS, EKS, S3 and API Gateway' },
+			{ name: 'Azure', icon: 'azure', brand: '#0078D4', where: 'App Service, Functions, Logic Apps, Data Factory and Blob storage' },
+			{ name: 'Vercel', icon: 'si-vercel', fill: '#000', brand: 'var(--text)', where: 'Preview deploys for every change', now: true },
+		],
+	},
+	{
+		id: 'delivery',
+		title: 'Build & ship',
+		note: 'Getting code from a laptop to people.',
+		tools: [
+			{ name: 'Woodpecker CI', mono: 'WP', brand: '#4CAF50', where: 'Lightweight CI/CD pipelines', now: true },
+			{ name: 'Azure DevOps', icon: 'azuredevops', brand: '#0078D7', where: 'Pipelines, boards and repos in one place' },
+			{ name: 'Docker', icon: 'docker', brand: '#2496ED', where: 'Containers, from a laptop to Kubernetes' },
+			{ name: 'Kubernetes', icon: 'kubernetes', brand: '#326CE5', where: 'Running services at scale' },
+			{ name: 'Salesforce', icon: 'salesforce', brand: '#00A1E0', where: 'Apps and packages on the platform', now: true },
+		],
+	},
+	{
+		id: 'ai',
+		title: 'AI',
+		note: 'Building with models, and building alongside them.',
+		tools: [
+			{ name: 'Vercel AI SDK', icon: 'si-vercel', fill: '#000', brand: 'var(--text)', where: 'Streaming, tool calling and structured output in TypeScript', now: true },
+			{ name: 'OpenAI models', icon: 'si-openai', fill: '#000', brand: '#10A37F', where: 'Tool calling, structured outputs and semantic search', now: true },
+			{ name: 'Claude Code', icon: 'si-claude', fill: '#D97757', brand: '#D97757', where: 'An AI coding agent, inside a workflow of specs, reviews and tests', now: true },
+			{ name: 'Codex', icon: 'si-openai', fill: '#000', brand: '#10A37F', now: true, where: 'An AI coding agent in my everyday workflow' },
+			{ name: 'GitHub Copilot', icon: 'si-githubcopilot', fill: '#000', brand: 'var(--text)', now: true, where: 'AI pair programming in the editor' },
+		],
+	},
+	{
+		id: 'desk',
+		title: 'On the desk',
+		note: 'The everyday kit.',
+		tools: [{ name: 'Visual Studio', icon: 'visualstudio', brand: '#5C2D91', where: 'The home for .NET and C#' }, { name: 'VS Code', icon: 'vscode', brand: '#007ACC', where: 'TypeScript, Next.js and everything else' }, { name: 'Jira', icon: 'jira', brand: '#0052CC', where: 'Planning and tracking the work' }, { name: 'Confluence', icon: 'confluence', brand: '#2684FF', where: 'Design docs and decisions, written down' }],
+	},
+	{
+		id: 'practice',
+		title: 'Ways of working',
+		note: 'Not software, but in the bag all the same.',
+		tools: [
+			{ name: 'Design thinking', glyph: 'design', brand: 'var(--accent)', now: true, where: 'Discover, define, develop, deliver, before the architecture' },
+			{ name: 'Microservices', glyph: 'services', brand: '#0047a0', where: 'Services drawn around business capabilities' },
+			{ name: 'SOLID & design patterns', glyph: 'layers', brand: '#2f7a3b', where: 'Seams that keep code cheap to change' },
+			{ name: 'Design reviews', glyph: 'review', brand: '#e2b419', where: 'Deciding the shape before writing the code' },
+			{ name: 'Code review & mentoring', glyph: 'code', brand: '#cd2e3a', where: 'Kind, specific feedback that helps people grow' },
+		],
+	},
+];
+---
+
+<Base title="Toolbox" description="The tools I reach for, and what I use them for." wide>
+	<section class="intro">
+		<p class="kicker bare"><span class="n">●</span> Toolbox</p>
+		<h1>What's in the bag.</h1>
+		<p class="lede">
+			The tools I reach for, and what I reach for them to do. Some I use every day; others belong to earlier
+			jobs but still taught me something.
+		</p>
+		<p class="legend"><span class="pip" aria-hidden="true"></span> In use in my current role</p>
+	</section>
+
+	{
+		groups.map((g, i) => (
+			<section class="group" aria-labelledby={`tb-${g.id}`} data-reveal>
+				<div class="head">
+					<p class="num">{String(i + 1).padStart(2, '0')}</p>
+					<h2 id={`tb-${g.id}`}>{g.title}</h2>
+					<p class="note">{g.note}</p>
+				</div>
+				<ul class="tools" data-stagger>
+					{g.tools.map((t) => (
+						<li class:list={{ now: t.now }} style={`--brand:${t.brand}`}>
+							<span class:list={['badge', { glyph: t.glyph }]} aria-hidden="true">
+								{t.icon && <Fragment set:html={logo(t.icon, t.fill)} />}
+								{t.mono && <span class="mono-l">{t.mono}</span>}
+								{t.glyph && (
+									<svg
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.8"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										set:html={GLYPHS[t.glyph]}
+									/>
+								)}
+							</span>
+							<span class="text">
+								<span class="name">
+									{t.name}
+									{t.now && <span class="sr-only"> (in use now)</span>}
+								</span>
+								<span class="where">{t.where}</span>
+							</span>
+						</li>
+					))}
+				</ul>
+			</section>
+		))
+	}
+
+	<p class="next">
+		<a href="/work/">Where I've used them →</a>
+		<a href="/bookshelf/">The bookshelf →</a>
+	</p>
+</Base>
+
+<style>
+	.intro {
+		padding: 1.5rem 0 3.5rem;
+	}
+	h1 {
+		margin: 0 0 1.25rem;
+		font-size: clamp(2.4rem, 6.5vw, 5rem);
+		font-weight: 700;
+		letter-spacing: -0.05em;
+		line-height: 1;
+	}
+	.lede {
+		max-width: 38rem;
+		margin: 0 0 1.25rem;
+		font-size: 1.15rem;
+		color: var(--muted);
+	}
+	.legend {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.pip,
+	.now .name::before {
+		display: inline-block;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+	}
+
+	/* Each group: label on the left, the tools on the right. */
+	.group {
+		display: grid;
+		grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+		gap: 1.5rem clamp(2rem, 5vw, 4rem);
+		padding: 2.25rem 0;
+		border-top: 1px solid var(--rule);
+	}
+	.num {
+		margin: 0 0 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--accent);
+	}
+	h2 {
+		margin: 0 0 0.4rem;
+		font-size: 1.5rem;
+	}
+	.head .note {
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.95rem;
+	}
+	.tools {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
+		gap: 0.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	/* Each card is tinted with its tool's brand colour. */
+	.tools li {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.85rem;
+		padding: 0.85rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--rule));
+		border-radius: 12px;
+		background:
+			linear-gradient(135deg, color-mix(in srgb, var(--brand) 13%, transparent), transparent 70%),
+			var(--bg);
+		transition:
+			transform 0.25s var(--ease-press),
+			border-color 0.2s,
+			box-shadow 0.2s;
+	}
+	/* A little bow when you hover a tool. */
+	@media (prefers-reduced-motion: no-preference) {
+		.tools li:hover .badge {
+			animation: bow 0.7s var(--ease-press);
+		}
+	}
+	@keyframes bow {
+		35% {
+			transform: rotate(-14deg) translateY(3px);
+		}
+		70% {
+			transform: rotate(4deg);
+		}
+	}
+	.tools li:hover {
+		transform: translateY(-2px);
+		border-color: color-mix(in srgb, var(--brand) 65%, var(--rule));
+		box-shadow: 0 8px 24px -12px color-mix(in srgb, var(--brand) 55%, transparent);
+	}
+	/* Logos sit on a light tile, so dark marks still read in dark mode. */
+	.badge {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		padding: 0.45rem;
+		border-radius: 10px;
+		background: #fff;
+		box-shadow:
+			0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent),
+			0 2px 6px -2px rgb(0 0 0 / 0.2);
+	}
+	.badge :global(svg) {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+	.badge.glyph {
+		padding: 0.5rem;
+		color: #fff;
+		background: var(--brand);
+		box-shadow: none;
+	}
+	.mono-l {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		color: var(--brand);
+	}
+	.text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+		padding-top: 0.1rem;
+	}
+	.name {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+	.now .name::before {
+		content: '';
+		flex: none;
+		order: 2;
+	}
+	.where {
+		font-size: 0.85rem;
+		line-height: 1.45;
+		color: var(--muted);
+	}
+	.next {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 2rem;
+		margin: 2rem 0 5rem;
+		padding-top: 2rem;
+		border-top: 1px solid var(--rule);
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+	.next a {
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.next a:hover {
+		color: var(--accent);
+	}
+	@media (max-width: 760px) {
+		.group {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+</style>

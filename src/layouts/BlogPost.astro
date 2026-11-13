@@ -1,101 +1,805 @@
 ---
+/**
+ * A note, laid out like a drawing sheet: rulers along the edges, a breaking
+ * board with the reading time and date burned into it (click it to break it), the note on the left, and a sticky sidebar that
+ * ticks off sections as you read them.
+ */
 import { Image } from 'astro:assets';
+import type { MarkdownHeading } from 'astro';
 import Base from './Base.astro';
-import FormattedDate from '../components/FormattedDate.astro';
 import ArchivedComments from '../components/ArchivedComments.astro';
 import Comments from '../components/Comments.astro';
 import Subscribe from '../components/Subscribe.astro';
-import { type Post, categoryUrl, readingTime } from '../lib/posts';
+import { type Post, categoryUrl, postUrl, readingTime } from '../lib/posts';
 
 interface Props {
 	post: Post;
+	headings?: MarkdownHeading[];
+	newer?: Post;
+	older?: Post;
+	/** This note's number, counting from the first one ever written. */
+	number?: number;
 }
-const { post } = Astro.props;
+const { post, headings = [], newer, older, number } = Astro.props;
 const { title, description, pubDate, updatedDate, heroImage, categories, wordpressId } = post.data;
 const minutes = readingTime(post.body);
+// Imported WordPress excerpts are cut-off first lines; only real summaries show.
+const standfirst = description && !/(…|\.\.\.|\[…\])\s*$/.test(description) ? description : '';
+const crumbs = categories.filter((c) => c !== 'Uncategorized').slice(0, 2);
+// Tags for link previews and search: categories first, then tags. Imported
+// WordPress tags are sometimes one comma-separated string, so split, dedupe
+// (ignoring case) and keep the first eight.
+const shareTags = [...new Map(
+	[...categories, ...(post.data.tags ?? [])]
+		.flatMap((t) => t.split(','))
+		.map((t) => t.trim())
+		.filter((t) => t && t !== 'Uncategorized')
+		.map((t) => [t.toLowerCase(), t] as const),
+).values()].slice(0, 8);
+const toc = headings.filter((h) => h.depth === 2);
 const showUpdated = updatedDate && updatedDate.valueOf() - pubDate.valueOf() > 7 * 24 * 3600 * 1000;
+const boardDate = pubDate
+	.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+	.toUpperCase();
+const updated = showUpdated
+	? updatedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+	: '';
+const url = new URL(postUrl(post), Astro.site).href;
+const share = {
+	linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+	x: `https://x.com/intent/post?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}&via=imumamaheswaran`,
+};
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
-<Base title={title} description={description} image={heroImage} type="article">
-	<article>
-		<header class="post-header">
-			<p class="meta">
-				<FormattedDate date={pubDate} />
-				<span aria-hidden="true">·</span>
-				<span>{minutes} min read</span>
+<Base
+	title={title}
+	description={standfirst || description}
+	image={heroImage}
+	imageAlt={title}
+	type="article"
+	article={{ published: pubDate, modified: updatedDate, section: crumbs[0], tags: shareTags }}
+	wide
+>
+	<article class="sheet" data-sheet>
+		<span class="marks" aria-hidden="true"></span>
+		<div class="ruler" aria-hidden="true"></div>
+
+		<header class="head">
+			<p class="crumbs">
+				<a href="/blog/">Notes</a>
+				{
+					crumbs.map((c) => (
+						<Fragment>
+							<span aria-hidden="true">·</span>
+							<a href={categoryUrl(c)}>{c}</a>
+						</Fragment>
+					))
+				}
 			</p>
-			<h1>{title}</h1>
-			{
-				categories.length > 0 && (
-					<ul class="categories" aria-label="Categories">
-						{categories.map((c) => (
-							<li>
-								<a href={categoryUrl(c)}>{c}</a>
-							</li>
-						))}
-					</ul>
-				)
-			}
-			{
-				showUpdated && (
-					<p class="updated muted">
-						Updated <FormattedDate date={updatedDate} />
-					</p>
-				)
-			}
+			<h1 id="top">
+				{title}
+				<button type="button" class="copy-link" data-copy-link aria-label="Copy link to this note">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path>
+						<path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path>
+					</svg>
+					<span class="copied" data-copied aria-live="polite"></span>
+				</button>
+			</h1>
+			{standfirst && <p class="standfirst">{standfirst}</p>}
+			<p class="sr-only">
+				{minutes} minute read, published {boardDate}{updated && `, updated ${updated}`}.
+			</p>
+			{updated && <p class="updated">Revised {updated}</p>}
+
+			{/* A breaking board with the note's details burned in. Click it to
+			    break it (one of five ways, at random); it mends itself after a moment. */}
+			<button type="button" class="board" data-note-board data-break="split" aria-pressed="false" aria-label="Break the board">
+				{['l', 'r'].map((side) => (
+					<span class:list={['half', side]} aria-hidden="true">
+						<span class="mins">
+							<b>{minutes}</b> min read
+						</span>
+						<span class="meta">
+							{number ? `No. ${number} · ` : ''}
+							{boardDate}
+						</span>
+					</span>
+				))}
+				<span class="chips" aria-hidden="true">
+					<i></i><i></i><i></i><i></i><i></i><i></i>
+				</span>
+			</button>
 		</header>
+
 		{heroImage && <Image class="hero" src={heroImage} alt="" width={1344} loading="eager" />}
-		<div class="prose">
-			<slot />
+
+		<div class="cols">
+			<div class="body">
+				<div class="prose">
+					<slot />
+				</div>
+				<p class="signoff">
+					<span>— Uma</span>
+					<svg class="knot" viewBox="0 0 64 28" aria-hidden="true">
+						<rect x="2" y="7" width="60" height="9" rx="1.5"></rect>
+						<rect x="26" y="5" width="12" height="13" rx="2"></rect>
+						<path d="M29 17 L23 27 L28 27 L32 19 Z"></path>
+						<path d="M35 17 L41 27 L36 27 L32 19 Z"></path>
+					</svg>
+				</p>
+				<div class="end-signup">
+					<Subscribe layout="line" />
+				</div>
+			</div>
+
+			<aside class="side">
+				<div class="side-in">
+					<nav class="toc" aria-labelledby="toc-h">
+						<p id="toc-h" class="side-h">In this note</p>
+						<ol data-toc>
+							<li data-for="top">
+								<a href="#top"><span class="n">00</span><span class="t">{title}</span></a>
+							</li>
+							{
+								toc.map((h, i) => (
+									<li data-for={h.slug}>
+										<a href={`#${h.slug}`}>
+											<span class="n">{pad(i + 1)}</span>
+											<span class="t">{h.text}</span>
+										</a>
+									</li>
+								))
+							}
+						</ol>
+					</nav>
+
+					<div class="react-block">
+						<div>
+						<p class="side-h">Leave a mark</p>
+						<ul>
+							<li>
+								<a href="#giscus-heading" class="mk" aria-label="Comment on this note">
+									<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>
+								</a>
+							</li>
+							<li>
+								<button type="button" class="mk" data-copy-link aria-label="Copy link to this note">
+									<svg viewBox="0 0 24 24" aria-hidden="true">
+										<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path>
+										<path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path>
+									</svg>
+								</button>
+							</li>
+							<li>
+								<a href={share.linkedin} class="mk" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn (opens in a new tab)">
+									<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9v10M5 5v.01M10 19v-6a3 3 0 0 1 6 0v6M10 9v10"></path></svg>
+								</a>
+							</li>
+							<li>
+								<a href={share.x} class="mk" target="_blank" rel="noopener noreferrer" aria-label="Share on X (opens in a new tab)">
+									<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l14 16M19 4L5 20"></path></svg>
+								</a>
+							</li>
+						</ul>
+						</div>
+					</div>
+				</div>
+			</aside>
 		</div>
+
+		<div class="ruler bottom" aria-hidden="true"></div>
 	</article>
-	<Subscribe />
-	<ArchivedComments wordpressId={wordpressId} />
-	<Comments />
+
+	{
+		(newer || older) && (
+			<nav class="pager" aria-label="More notes">
+				{older ? (
+					<a class="older" href={postUrl(older)}>
+						<span class="dir">← Older note</span>
+						<span class="t">{older.data.title}</span>
+					</a>
+				) : (
+					<span />
+				)}
+				{newer && (
+					<a class="newer" href={postUrl(newer)}>
+						<span class="dir">Newer note →</span>
+						<span class="t">{newer.data.title}</span>
+					</a>
+				)}
+			</nav>
+		)
+	}
+
+	<div class="after">
+		<ArchivedComments wordpressId={wordpressId} />
+		<Comments />
+	</div>
 </Base>
 
+<script>
+	import { thwack } from '../lib/sound';
+
+	function init() {
+		const sheet = document.querySelector<HTMLElement>('[data-sheet]');
+		if (!sheet || sheet.dataset.ready) return;
+		sheet.dataset.ready = '1';
+
+		// The board: break it one of five ways, picked at random, and it mends
+		// itself a couple of seconds later. Clicking a broken board mends it now.
+		const board = sheet.querySelector<HTMLButtonElement>('[data-note-board]');
+		const BREAKS = ['split', 'snap', 'diagonal', 'fly', 'chop'];
+		let mend = 0;
+		const setBroken = (broken: boolean) => {
+			if (!board) return;
+			clearTimeout(mend);
+			board.setAttribute('aria-pressed', String(broken));
+			if (!broken) return;
+			// Never the same way twice in a row.
+			const others = BREAKS.filter((b) => b !== board.dataset.break);
+			board.dataset.break = others[Math.floor(Math.random() * others.length)];
+			board.classList.remove('hit');
+			void board.offsetWidth;
+			board.classList.add('hit');
+			thwack();
+			mend = window.setTimeout(() => setBroken(false), 2600);
+		};
+		board?.addEventListener('click', () => setBroken(board.getAttribute('aria-pressed') !== 'true'));
+		document.addEventListener('astro:before-swap', () => clearTimeout(mend), { once: true });
+
+		// Copy link, from the title or the sidebar.
+		sheet.querySelectorAll<HTMLButtonElement>('[data-copy-link]').forEach((b) => {
+			b.addEventListener('click', async () => {
+				const url = location.href.split('#')[0];
+				try {
+					await navigator.clipboard.writeText(url);
+				} catch {
+					return;
+				}
+				b.classList.add('done');
+				const msg = sheet.querySelector<HTMLElement>('[data-copied]');
+				if (msg) msg.textContent = 'Link copied';
+				setTimeout(() => {
+					b.classList.remove('done');
+					if (msg) msg.textContent = '';
+				}, 1600);
+			});
+		});
+
+		// Contents: sections you've passed are crossed off, the current one is marked.
+		const items = [...sheet.querySelectorAll<HTMLLIElement>('[data-toc] li')];
+		const targets = items.map((li) => document.getElementById(li.dataset.for!));
+		let frame = 0;
+		const update = () => {
+			frame = 0;
+			const line = innerHeight * 0.3;
+			let current = 0;
+			targets.forEach((t, i) => {
+				if (t && t.getBoundingClientRect().top < line) current = i;
+			});
+			items.forEach((li, i) => {
+				li.classList.toggle('read', i < current);
+				li.classList.toggle('current', i === current);
+				const a = li.querySelector('a')!;
+				if (i === current) a.setAttribute('aria-current', 'location');
+				else a.removeAttribute('aria-current');
+			});
+		};
+		const onScroll = () => {
+			if (!frame) frame = requestAnimationFrame(update);
+		};
+		addEventListener('scroll', onScroll, { passive: true });
+		document.addEventListener('astro:before-swap', () => removeEventListener('scroll', onScroll), { once: true });
+		update();
+	}
+	document.addEventListener('astro:page-load', init);
+</script>
+
 <style>
-	.post-header {
-		margin-bottom: 2rem;
+	/* The sheet: a drawing on the board, with crop marks and rulers. */
+	.sheet {
+		position: relative;
+		margin: 0 0 3rem;
+		border: 1px solid var(--rule);
+		border-radius: 3px;
+		background: var(--bg);
+		box-shadow: 0 30px 60px -40px rgb(0 0 0 / 0.5);
 	}
-	.meta {
-		color: var(--muted);
-		font-size: 0.95rem;
-		margin-bottom: 0.5rem;
-		display: flex;
-		gap: 0.5rem;
+	.sheet::before,
+	.sheet::after,
+	.marks::before,
+	.marks::after {
+		content: '';
+		position: absolute;
+		z-index: 1;
+		width: 16px;
+		height: 16px;
+		border: 0 solid var(--blue);
+		pointer-events: none;
 	}
-	h1 {
-		margin-bottom: 0.75rem;
+	.sheet::before {
+		top: -7px;
+		left: -7px;
+		border-width: 2px 0 0 2px;
 	}
-	.categories {
+	.sheet::after {
+		right: -7px;
+		bottom: -7px;
+		border-width: 0 2px 2px 0;
+	}
+	.marks::before {
+		top: -7px;
+		right: -7px;
+		border-width: 2px 2px 0 0;
+	}
+	.marks::after {
+		bottom: -7px;
+		left: -7px;
+		border-width: 0 0 2px 2px;
+	}
+	/* Ruler ticks along the top and bottom edges. */
+	.ruler {
+		height: 14px;
+		border-bottom: 1px solid var(--rule);
+		background:
+			repeating-linear-gradient(90deg, var(--blue) 0 1px, transparent 1px 10px) left bottom / 100% 5px no-repeat,
+			repeating-linear-gradient(90deg, var(--blue) 0 1px, transparent 1px 50px) left bottom / 100% 10px no-repeat;
+		opacity: 0.45;
+	}
+	.ruler.bottom {
+		border-top: 1px solid var(--rule);
+		border-bottom: 0;
+		background-position:
+			left top,
+			left top;
+	}
+
+	.head {
+		/* The board hangs in the corner; the head is at least as tall as it is. */
+		--board-w: clamp(9rem, 16vw, 12rem);
+		position: relative;
+		/* Pieces that fly past the sheet's edge are cut off, not scrolled to. */
+		overflow-x: clip;
+		min-height: calc(var(--board-w) * 0.4 + 4rem);
+		padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 3rem) 1.5rem;
+		padding-right: calc(var(--board-w) + clamp(2rem, 6vw, 4.5rem));
+	}
+	.crumbs {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-		list-style: none;
-		padding: 0;
-		margin: 0;
+		margin: 0 0 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--faint);
 	}
-	.categories a {
-		display: inline-block;
-		font-size: 0.85rem;
-		padding: 0.15rem 0.6rem;
-		border-radius: 999px;
-		background: var(--accent-soft);
+	.crumbs a {
+		color: var(--blue);
 		text-decoration: none;
 	}
-	.updated {
-		font-size: 0.9rem;
-		margin: 0.75rem 0 0;
+	.crumbs a:hover {
+		color: var(--accent);
 	}
+	h1 {
+		margin: 0 0 1rem;
+		font-size: clamp(2rem, 5vw, 3.1rem);
+		line-height: 1.08;
+		letter-spacing: -0.04em;
+	}
+	.copy-link {
+		position: relative;
+		display: inline-grid;
+		place-items: center;
+		width: 2rem;
+		height: 2rem;
+		margin-left: 0.4rem;
+		vertical-align: 0.35em;
+		border: 1px solid var(--rule);
+		border-radius: 7px;
+		background: var(--bg);
+		color: var(--muted);
+		cursor: pointer;
+		transition:
+			color 0.2s,
+			border-color 0.2s;
+	}
+	.copy-link:hover,
+	.copy-link.done {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	.copied {
+		position: absolute;
+		left: 50%;
+		top: calc(100% + 6px);
+		transform: translateX(-50%);
+		white-space: nowrap;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 400;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+	.standfirst {
+		max-width: 40rem;
+		margin: 0;
+		font-size: 1.2rem;
+		line-height: 1.5;
+		color: var(--muted);
+		text-wrap: pretty;
+	}
+	.updated {
+		margin: 0.75rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	/* The board, hung on the sheet's corner. Two clipped copies make the halves. */
+	.board {
+		position: absolute;
+		top: clamp(1.25rem, 3vw, 2.25rem);
+		right: clamp(1rem, 3vw, 2.5rem);
+		width: var(--board-w);
+		aspect-ratio: 5 / 2;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		transform: rotate(-4deg);
+		transition: transform 0.35s var(--ease-press);
+	}
+	.board:hover {
+		transform: rotate(-1deg) translateY(-2px);
+	}
+	.board:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+	}
+	.half {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.2rem;
+		border: 2px solid var(--wood-dark);
+		border-radius: 4px;
+		background:
+			repeating-linear-gradient(0deg, transparent 0 7px, rgb(0 0 0 / 0.06) 7px 8px, transparent 8px 15px),
+			radial-gradient(ellipse at 30% 40%, rgb(0 0 0 / 0.08) 0 6%, transparent 7%),
+			linear-gradient(160deg, var(--wood), color-mix(in srgb, var(--wood) 75%, var(--wood-dark)));
+		color: #3b2a14;
+		box-shadow: 0 10px 18px -10px rgb(0 0 0 / 0.5);
+		transition: transform 0.55s var(--ease-press);
+	}
+	/* A jagged crack straight down the grain. */
+	.l {
+		clip-path: polygon(0 0, 52% 0, 47% 18%, 54% 37%, 46% 56%, 53% 75%, 47% 100%, 0 100%);
+		transform-origin: 0 100%;
+	}
+	.r {
+		clip-path: polygon(52% 0, 100% 0, 100% 100%, 47% 100%, 53% 75%, 46% 56%, 54% 37%, 47% 18%);
+		transform-origin: 100% 100%;
+	}
+	/* One line: the big number, then "min read". */
+	.mins {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.mins b {
+		font-family: var(--font-sans);
+		font-size: 1.9rem;
+		line-height: 1;
+		letter-spacing: -0.04em;
+	}
+	.meta {
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		opacity: 0.8;
+	}
+	/* Broken, five ways, each clearly its own.
+	   Split: a crack down the grain; the halves tip outward and drop. */
+	.board[aria-pressed='true'] .l {
+		transform: translate(-16px, 14px) rotate(-22deg);
+	}
+	.board[aria-pressed='true'] .r {
+		transform: translate(16px, 14px) rotate(22deg);
+	}
+	/* Snap: a crack across the board; the top flips up and away, the bottom falls. */
+	.board[data-break='snap'] .l {
+		clip-path: polygon(0 0, 100% 0, 100% 47%, 82% 54%, 64% 45%, 45% 55%, 25% 46%, 0 54%);
+		transform-origin: 50% 0;
+	}
+	.board[data-break='snap'] .r {
+		clip-path: polygon(0 54%, 25% 46%, 45% 55%, 64% 45%, 82% 54%, 100% 47%, 100% 100%, 0 100%);
+		transform-origin: 50% 100%;
+	}
+	.board[data-break='snap'][aria-pressed='true'] .l {
+		transform: translate(-8px, -26px) rotate(-16deg);
+	}
+	.board[data-break='snap'][aria-pressed='true'] .r {
+		transform: translate(10px, 30px) rotate(10deg);
+	}
+	/* Diagonal: a slanted crack; the pieces slide far apart along it. */
+	.board[data-break='diagonal'] .l {
+		clip-path: polygon(0 0, 70% 0, 60% 22%, 50% 48%, 38% 70%, 26% 100%, 0 100%);
+	}
+	.board[data-break='diagonal'] .r {
+		clip-path: polygon(70% 0, 100% 0, 100% 100%, 26% 100%, 38% 70%, 50% 48%, 60% 22%);
+	}
+	.board[data-break='diagonal'][aria-pressed='true'] .l {
+		transform: translate(-30px, 18px) rotate(-4deg);
+	}
+	.board[data-break='diagonal'][aria-pressed='true'] .r {
+		transform: translate(30px, -18px) rotate(4deg);
+	}
+	/* Fly: both halves fly well off to the sides, spinning and fading. */
+	.board[data-break='fly'] .half {
+		transition:
+			transform 0.7s var(--ease-out),
+			opacity 0.7s var(--ease-out);
+	}
+	.board[data-break='fly'][aria-pressed='true'] .l {
+		transform: translate(-80px, 40px) rotate(-70deg);
+		opacity: 0.25;
+	}
+	.board[data-break='fly'][aria-pressed='true'] .r {
+		transform: translate(80px, 46px) rotate(75deg);
+		opacity: 0.25;
+	}
+	/* Chop: struck in the middle; it folds into a V, the crack dropping down. */
+	.board[data-break='chop'] .l {
+		transform-origin: 0 30%;
+	}
+	.board[data-break='chop'] .r {
+		transform-origin: 100% 30%;
+	}
+	.board[data-break='chop'][aria-pressed='true'] .l {
+		transform: rotate(24deg);
+	}
+	.board[data-break='chop'][aria-pressed='true'] .r {
+		transform: rotate(-24deg);
+	}
+	.chips {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		pointer-events: none;
+	}
+	.chips i {
+		position: absolute;
+		width: 7px;
+		height: 2.5px;
+		border-radius: 1px;
+		background: var(--wood-dark);
+		opacity: 0;
+	}
+	.chips i:nth-child(1) { --dx: -46px; --dy: -34px; }
+	.chips i:nth-child(2) { --dx: 40px; --dy: -40px; }
+	.chips i:nth-child(3) { --dx: -38px; --dy: 30px; }
+	.chips i:nth-child(4) { --dx: 48px; --dy: 24px; }
+	.chips i:nth-child(5) { --dx: -4px; --dy: -52px; }
+	.chips i:nth-child(6) { --dx: 6px; --dy: 46px; }
+	@media (prefers-reduced-motion: no-preference) {
+		.board.hit .chips i {
+			animation: chip 0.65s var(--ease-out);
+		}
+		.board.hit {
+			animation: jolt 0.35s var(--ease-press);
+		}
+	}
+	@keyframes chip {
+		0% {
+			opacity: 1;
+			transform: translate(0, 0) rotate(0deg);
+		}
+		100% {
+			opacity: 0;
+			transform: translate(var(--dx), var(--dy)) rotate(200deg);
+		}
+	}
+	@keyframes jolt {
+		30% {
+			translate: 0 5px;
+		}
+	}
+
 	.hero {
 		display: block;
-		width: 100%;
+		width: calc(100% - 2 * clamp(1.25rem, 4vw, 3rem));
 		height: auto;
 		aspect-ratio: 2 / 1;
+		margin: 0 auto 1rem;
 		object-fit: cover;
-		border-radius: 10px;
-		margin-bottom: 2rem;
+		border-radius: 6px;
+	}
+
+	/* The note on the left, the contents on the right. */
+	.cols {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+		border-top: 1px solid var(--rule);
+	}
+	.body {
+		min-width: 0;
+		padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 3rem) 2.5rem;
+	}
+	.prose {
+		max-width: 42rem;
+		font-size: 1.05rem;
+	}
+	.side {
+		border-left: 1px solid var(--rule);
+	}
+	/* Sticky, and never taller than the screen: the contents scroll inside
+	   it, so the score stays in reach at the bottom. */
+	.side-in {
+		position: sticky;
+		top: 5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		max-height: calc(100vh - 6rem);
+		padding: clamp(1.5rem, 4vw, 2.5rem) 1.5rem 1.5rem;
+	}
+	.toc {
+		flex: 0 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+		scrollbar-width: thin;
+	}
+	.react-block {
+		flex: none;
+		margin-top: auto;
+	}
+	.side-h {
+		margin: 0 0 0.75rem;
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.toc ol {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.toc li {
+		border-bottom: 1px dashed var(--rule);
+	}
+	.toc a {
+		display: grid;
+		grid-template-columns: 1.6rem minmax(0, 1fr);
+		gap: 0.25rem;
+		padding: 0.5rem 0;
+		color: var(--muted);
+		font-size: 0.85rem;
+		line-height: 1.35;
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+	.toc a:hover {
+		color: var(--text);
+	}
+	.toc .n {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		padding-top: 0.12rem;
+		color: var(--faint);
+	}
+	/* Passed sections are struck through, like a checklist. Text decoration
+	   (not a background) so it follows titles that wrap onto two lines. */
+	.toc .t {
+		text-decoration: line-through 1px transparent;
+		text-decoration-skip-ink: none;
+		transition:
+			text-decoration-color 0.3s,
+			color 0.2s;
+	}
+	.toc .read .t {
+		text-decoration-color: currentColor;
+		color: var(--faint);
+	}
+	.toc .current a {
+		color: var(--text);
+		font-weight: 600;
+	}
+	.toc .current .n {
+		color: var(--accent);
+	}
+	.toc .current .t {
+		text-decoration: underline 0.4em color-mix(in srgb, var(--accent) 40%, transparent);
+		text-decoration-skip-ink: none;
+		text-underline-offset: -0.15em;
+	}
+
+	.react-block ul {
+		display: flex;
+		gap: 0.6rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.mk {
+		display: grid;
+		place-items: center;
+		width: 2.2rem;
+		height: 2.2rem;
+		border: 1px solid var(--rule);
+		border-radius: 8px;
+		background: var(--bg);
+		color: var(--muted);
+		cursor: pointer;
+		box-shadow: 0 2px 0 var(--rule);
+		transition:
+			transform 0.2s var(--ease-press),
+			color 0.2s,
+			border-color 0.2s;
+	}
+	.mk svg {
+		width: 1.1rem;
+		height: 1.1rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.8;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.mk:hover,
+	.mk.done {
+		transform: translateY(-2px) rotate(-4deg);
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	/* Key lines in a note: a hatched edge and a mark. */
+	.prose :global(blockquote) {
+		position: relative;
+		margin: 2rem 0;
+		padding: 1rem 1.25rem 1rem 3.25rem;
+		border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--rule));
+		border-radius: 6px;
+		background:
+			repeating-linear-gradient(-45deg, var(--accent) 0 2px, transparent 2px 6px) left / 10px 100% no-repeat,
+			color-mix(in srgb, var(--accent) 6%, var(--bg));
+		color: var(--text);
+		font-size: 1.1rem;
+	}
+	.prose :global(blockquote)::before {
+		content: '●';
+		position: absolute;
+		left: 1.4rem;
+		top: 1.05rem;
+		color: var(--accent);
+		font-size: 0.8rem;
+	}
+	.prose :global(blockquote p) {
+		margin: 0;
+	}
+	.prose :global(h2) {
+		scroll-margin-top: 5.5rem;
+		margin-top: 2.5rem;
+	}
+	.prose :global(h3) {
+		scroll-margin-top: 5.5rem;
 	}
 	.prose :global(h2:first-child),
 	.prose :global(h3:first-child) {
@@ -103,5 +807,106 @@ const showUpdated = updatedDate && updatedDate.valueOf() - pubDate.valueOf() > 7
 	}
 	.prose :global(li) {
 		margin-bottom: 0.35em;
+	}
+
+	.end-signup {
+		max-width: 42rem;
+		margin-top: 1.5rem;
+	}
+	/* Signed off with a belt knot. */
+	.signoff {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin: 3rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+	.knot {
+		width: 3rem;
+		height: auto;
+		fill: var(--belt);
+		stroke: color-mix(in srgb, var(--gold) 60%, transparent);
+		stroke-width: 1;
+	}
+
+	/* Older and newer notes, side by side. */
+	.pager {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+		margin: 0 0 3rem;
+	}
+	.pager a {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 1rem 1.25rem;
+		border: 1px solid var(--rule);
+		border-radius: 6px;
+		background: var(--bg);
+		text-decoration: none;
+		color: var(--text);
+		transition: border-color 0.2s;
+	}
+	.pager a:hover {
+		border-color: var(--accent);
+	}
+	.pager .newer {
+		text-align: right;
+	}
+	.pager .dir {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--blue);
+	}
+	.pager .t {
+		font-weight: 600;
+		line-height: 1.3;
+	}
+	.after {
+		max-width: var(--measure);
+		margin: 0 auto;
+	}
+
+	@media (max-width: 900px) {
+		.cols {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		/* On small screens the contents come first, the score comes after the
+		   note, and nothing sticks. */
+		.side,
+		.side-in {
+			display: contents;
+		}
+		.toc {
+			order: -1;
+			padding: 1.5rem clamp(1.25rem, 4vw, 3rem);
+			border-bottom: 1px solid var(--rule);
+		}
+		.react-block {
+			order: 1;
+			padding: 1.75rem clamp(1.25rem, 4vw, 3rem) 2rem;
+			border-top: 1px solid var(--rule);
+		}
+	}
+	@media (max-width: 600px) {
+		.head {
+			--board-w: 10rem;
+			min-height: 0;
+			padding-right: clamp(1.25rem, 4vw, 3rem);
+			padding-top: calc(var(--board-w) * 0.4 + 3rem);
+		}
+		.pager {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.pager .newer {
+			text-align: left;
+		}
 	}
 </style>

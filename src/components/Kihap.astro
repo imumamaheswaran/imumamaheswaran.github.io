@@ -1,0 +1,155 @@
+---
+/**
+ * An easter egg: type "kihap" anywhere (not in a text field) and a 기합!
+ * bursts onto the screen with a thwack, and the page takes the hit.
+ * Without motion, the word still appears, just without the shake.
+ */
+---
+
+<div class="kihap-burst" aria-hidden="true" data-kihap-burst transition:persist="kihap-burst">
+	<span class="ko" lang="ko">기합!</span>
+	<span class="en">Kihap!</span>
+	<span class="ring"></span>
+</div>
+<p class="sr-only" aria-live="polite" data-kihap-live></p>
+
+<script>
+	import { thwack } from '../lib/sound';
+
+	const WORD = 'kihap';
+	let typed = '';
+	let timer = 0;
+
+	function burst() {
+		const el = document.querySelector<HTMLElement>('[data-kihap-burst]');
+		if (!el) return;
+		el.classList.remove('go');
+		void el.offsetWidth;
+		el.classList.add('go');
+		thwack();
+		const live = document.querySelector<HTMLElement>('[data-kihap-live]');
+		if (live) live.textContent = 'Kihap!';
+		const main = document.querySelector<HTMLElement>('main');
+		if (main && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			main.animate(
+				[
+					{ transform: 'translate(0, 0)' },
+					{ transform: 'translate(-6px, 3px)' },
+					{ transform: 'translate(5px, -3px)' },
+					{ transform: 'translate(-3px, 2px)' },
+					{ transform: 'translate(0, 0)' },
+				],
+				{ duration: 320, easing: 'ease-out' },
+			);
+		}
+		clearTimeout(timer);
+		timer = window.setTimeout(() => {
+			el.classList.remove('go');
+			if (live) live.textContent = '';
+		}, 1400);
+	}
+
+	if (!(window as unknown as { __kihap?: boolean }).__kihap) {
+		(window as unknown as { __kihap?: boolean }).__kihap = true;
+		document.addEventListener('keydown', (e) => {
+			const t = e.target as HTMLElement | null;
+			if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+			if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+			typed = (typed + e.key.toLowerCase()).slice(-WORD.length);
+			if (typed === WORD) {
+				typed = '';
+				burst();
+			}
+		});
+	}
+</script>
+
+<style>
+	.kihap-burst {
+		position: fixed;
+		inset: 0;
+		z-index: 50;
+		display: grid;
+		place-items: center;
+		align-content: center;
+		gap: 0.25rem;
+		pointer-events: none;
+		opacity: 0;
+		visibility: hidden;
+	}
+	.kihap-burst.go {
+		visibility: visible;
+		animation: burst-in 1.3s var(--ease-out) forwards;
+	}
+	.ko {
+		font-family: var(--font-sans);
+		font-size: clamp(4rem, 16vw, 10rem);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: -0.04em;
+		color: var(--accent);
+		text-shadow:
+			4px 4px 0 var(--text),
+			0 20px 40px rgb(0 0 0 / 0.25);
+		transform: rotate(-6deg);
+	}
+	.en {
+		font-family: var(--font-mono);
+		font-size: clamp(0.8rem, 2vw, 1.1rem);
+		font-weight: 700;
+		letter-spacing: 0.4em;
+		text-transform: uppercase;
+		color: var(--text);
+	}
+	.ring {
+		position: absolute;
+		width: 12rem;
+		height: 12rem;
+		border: 3px solid var(--accent);
+		border-radius: 50%;
+		opacity: 0;
+	}
+	.go .ring {
+		animation: ring 0.7s var(--ease-out);
+	}
+	@keyframes burst-in {
+		0% {
+			opacity: 0;
+			transform: scale(0.4);
+		}
+		18% {
+			opacity: 1;
+			transform: scale(1.12);
+		}
+		30% {
+			transform: scale(0.97);
+		}
+		75% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		100% {
+			opacity: 0;
+			transform: scale(1.05);
+		}
+	}
+	@keyframes ring {
+		0% {
+			opacity: 0.9;
+			transform: scale(0.3);
+		}
+		100% {
+			opacity: 0;
+			transform: scale(2.4);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.kihap-burst.go {
+			animation: none;
+			opacity: 1;
+		}
+		.go .ring {
+			animation: none;
+		}
+	}
+</style>

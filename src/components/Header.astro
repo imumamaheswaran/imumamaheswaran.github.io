@@ -2,20 +2,26 @@
 import { SITE_TITLE } from '../consts';
 
 const links = [
-	{ href: '/#architecture', label: 'Architecture' },
-	{ href: '/blog/', label: 'Writing' },
+	{ href: '/work/', label: 'Work' },
+	{ href: '/blog/', label: 'Notes' },
+	{ href: '/toolbox/', label: 'Toolbox' },
 	{ href: '/about-me/', label: 'About' },
 ];
 const path = Astro.url.pathname;
+const cut = Math.ceil(SITE_TITLE.length / 2);
+const leftHalf = [...SITE_TITLE.slice(0, cut)];
+const rightHalf = [...SITE_TITLE.slice(cut)];
 ---
 
 <header>
 	<nav class="container wide" aria-label="Main">
 		<a class="brand" href="/">
 			<img class="mark" src="/favicon.svg" width="36" height="36" alt="" />
-			<span class="brand-name" data-board
-				><span class="half left">{SITE_TITLE.slice(0, Math.ceil(SITE_TITLE.length / 2))}</span><span class="half right"
-					>{SITE_TITLE.slice(Math.ceil(SITE_TITLE.length / 2))}</span
+			<span class="brand-name" data-board aria-label={SITE_TITLE} role="img"
+				><span class="half left"
+					>{leftHalf.map((c) => <span class="ch">{c}</span>)}</span
+				><span class="half right"
+					>{rightHalf.map((c) => <span class="ch">{c}</span>)}</span
 				><span class="dot">.</span><span class="splinters" aria-hidden="true"
 					><i></i><i></i><i></i><i></i><i></i></span
 				></span
@@ -104,7 +110,7 @@ const path = Astro.url.pathname;
 
 	// 격파: the full stop chops the name like a board. It cracks into a V,
 	// splinters fly, and it snaps back together. Plays once per visit on
-	// arrival, then on hover. Skipped entirely for reduced motion.
+	// arrival, after the name decodes. Skipped entirely for reduced motion.
 	function boardBreak() {
 		const name = document.querySelector<HTMLElement>('[data-board]');
 		if (!name || name.dataset.wired !== undefined) return;
@@ -173,15 +179,58 @@ const path = Astro.url.pathname;
 			last.finished.finally(() => setTimeout(() => (busy = false), 600));
 		};
 
+		// Decode: each letter flickers through random glyphs, then locks into
+		// place left to right, like a terminal resolving the name.
+		const chars = [...name.querySelectorAll<HTMLElement>('.ch')];
+		const glyphs = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789#%&$@!?/<>';
+		let decoding = false;
+		const decode = () =>
+			new Promise<void>((done) => {
+				if (decoding || reduced.matches || !name.offsetParent) return done();
+				decoding = true;
+				// Pin each letter's width so random glyphs don't shove the name around.
+				for (const c of chars) {
+					c.style.width = `${c.getBoundingClientRect().width}px`;
+					c.dataset.real ??= c.textContent ?? '';
+					c.classList.add('scrambling');
+				}
+				const start = performance.now();
+				let lastSwap = 0;
+				const frame = (now: number) => {
+					const t = now - start;
+					const swap = now - lastSwap > 55;
+					if (swap) lastSwap = now;
+					let pending = 0;
+					chars.forEach((c, i) => {
+						if (!c.classList.contains('scrambling')) return;
+						if (t > 250 + i * 60) {
+							c.textContent = c.dataset.real!;
+							c.classList.remove('scrambling');
+							c.style.width = '';
+						} else {
+							pending++;
+							if (swap) c.textContent = glyphs[(Math.random() * glyphs.length) | 0];
+						}
+					});
+					if (pending) requestAnimationFrame(frame);
+					else {
+						decoding = false;
+						done();
+					}
+				};
+				requestAnimationFrame(frame);
+			});
+
 		name.closest('.brand')?.addEventListener('pointerenter', (e) => {
-			if ((e as PointerEvent).pointerType === 'mouse') strike();
+			if ((e as PointerEvent).pointerType === 'mouse' && !busy) decode();
 		});
 		let seen = false;
 		try {
 			seen = sessionStorage.getItem('board-broken') === '1';
 			sessionStorage.setItem('board-broken', '1');
 		} catch {}
-		if (!seen) setTimeout(strike, 700);
+		// First visit: decode the name, then the full stop chops it.
+		if (!seen) setTimeout(() => decode().then(() => setTimeout(strike, 150)), 300);
 	}
 	document.addEventListener('astro:page-load', boardBreak);
 </script>
@@ -216,9 +265,9 @@ const path = Astro.url.pathname;
 		border-radius: 50%;
 		transition: transform 0.5s var(--ease-press);
 	}
-	/* A small bow on hover. */
+	/* A small zoom on hover. */
 	.brand:hover .mark {
-		transform: rotate(-12deg) translateY(2px);
+		transform: scale(1.12);
 	}
 	.dot {
 		color: var(--accent);
@@ -230,6 +279,16 @@ const path = Astro.url.pathname;
 	.half,
 	.dot {
 		display: inline-block;
+	}
+	.ch {
+		display: inline-block;
+	}
+	.ch.scrambling {
+		text-align: center;
+		color: var(--accent);
+		font-family: var(--font-mono);
+		font-weight: 500;
+		opacity: 0.75;
 	}
 	.half.left {
 		transform-origin: 0% 100%;
@@ -377,8 +436,18 @@ const path = Astro.url.pathname;
 		.links {
 			gap: 1rem;
 		}
-		.links a[href='/#architecture'] {
-			display: none;
+	}
+	/* Four links and two buttons on a small phone. */
+	@media (max-width: 420px) {
+		.links {
+			gap: 0.6rem;
+		}
+		.links a {
+			font-size: 0.7rem;
+			letter-spacing: 0.02em;
+		}
+		.links .theme-toggle + .theme-toggle {
+			margin-left: -0.4rem;
 		}
 	}
 </style>
