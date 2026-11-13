@@ -1,47 +1,17 @@
 ---
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import { SOCIAL_LINKS } from '../consts';
-import Email from '../components/Email.astro';
 import portrait from '../assets/about/portrait.png';
 import { getPosts } from '../lib/posts';
-import { recommendations } from '../data/recommendations';
 
 const postCount = (await getPosts()).length;
 
-const glance = [
-	{ n: '15+', l: 'years building software' },
-	{ n: '5', l: 'companies' },
-	{ n: '5', l: 'business domains' },
-	{ n: String(postCount), l: 'posts since 2016' },
-	{ n: '1', l: 'black belt' },
-	{ n: '2', l: 'Microsoft certifications (MCSD, MCSA)' },
-];
-
-const domains = [
-	{ name: 'Pricing & quoting', where: 'Provus', note: 'How products, prices, discounts and approvals turn into a signed deal.' },
-	{ name: 'Healthcare data', where: 'Definitive Healthcare', note: 'Physician and provider data that commercial teams search and report on.' },
-	{ name: 'Revenue & incentives', where: 'Conga', note: 'Incentive plans and revenue data, kept in sync across Salesforce and the platform.' },
-	{ name: 'Integration & docs SaaS', where: 'Kovai.co', note: 'Monitoring business integrations, and knowledge bases teams write in.' },
-	{ name: 'Labour-market analytics', where: 'Lightcast', note: 'Job data aggregated from many sources and fed to customers.' },
-];
-
-const toolbox = [
-	{ group: 'Languages', items: ['C#', 'TypeScript', 'JavaScript', 'SQL'] },
-	{ group: 'Platforms', items: ['.NET', 'ASP.NET Core', 'React', 'Next.js', 'Salesforce'] },
-	{ group: 'Cloud', items: ['AWS', 'Azure', 'Azure DevOps', 'Logic Apps', 'Data Factory'] },
-	{ group: 'Data', items: ['PostgreSQL', 'Redis', 'ElastiCache', 'Blob storage'] },
-	{ group: 'AI', items: ['LLMs', 'AI-powered products', 'Claude Code'] },
-	{ group: 'Practice', items: ['System architecture', 'Microservices', 'Design reviews', 'Code review', 'CI/CD', 'Mentoring'] },
-];
-
-const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 ---
 
 <Base title="About" description="Software architect and engineering manager in India, 15+ years building platforms in .NET, React and Azure/AWS. Taekwondo black belt." wide>
 	<section class="about">
 		<p class="kicker bare"><span class="n">●</span> About</p>
-		<h1>I architect the platforms <br class="br" />that other teams build on.</h1>
+		<h1>I build platforms other teams <br class="br" />build on, and take notes.</h1>
 
 		<div class="layout">
 			<div class="story">
@@ -49,16 +19,11 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 					I'm a <strong>Technical Architect and Engineering Manager</strong> working remotely from India, with <strong>15+ years</strong> building platforms in .NET, React and Azure/AWS.
 				</p>
 				<p>
-					At Provus I <strong>architected and built CPQ Express</strong>, a platform for pricing and
-					quoting. Before that I <strong>moved critical services to AWS</strong> at Definitive Healthcare,
-					ran a <strong>data platform answering 95% of queries in under 200 ms</strong> at Conga, and led
-					the team that shipped <strong>Atomic Scope and Document360</strong> at Kovai.co.
+					I started out writing data jobs and APIs at Lightcast in 2011. That's why I'm comfortable both <strong>drawing the boxes and writing the code inside them</strong>.
+					Since then I've worked across
+					five businesses, from labour-market data to pricing and quoting; the whole story is on the work page.
 				</p>
-				<p>
-					I started out writing data jobs and APIs at Lightcast. That's why I'm comfortable both <strong>drawing the boxes and writing the code inside them</strong>. I hold MCSD and MCSA
-					certifications.
-				</p>
-				<p class="jump"><a href="#contact">Get in touch ↓</a></p>
+				<p class="jump"><a href="/work/">My work →</a> <a href="/toolbox/">The toolbox →</a> <a href="#say-hello">Say hello ↓</a></p>
 			</div>
 
 			<figure class="portrait">
@@ -84,61 +49,10 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 		</div>
 	</section>
 
-	<section class="glance" aria-label="At a glance" data-reveal>
-		<ul data-stagger>
-			{
-				glance.map((g) => (
-					<li>
-						<span class="num">{g.n}</span>
-						<span class="lab">{g.l}</span>
-					</li>
-				))
-			}
-		</ul>
-	</section>
-
-	<section class="block" aria-labelledby="domains-h" data-reveal>
-		<p class="kicker"><span class="n">01</span> Domains</p>
-		<h2 id="domains-h">I learn the business, not just the stack.</h2>
-		<ol class="domains" data-stagger>
-			{
-				domains.map((d, i) => (
-					<li>
-						<span class="idx">{String(i + 1).padStart(2, '0')}</span>
-						<div>
-							<h3>{d.name}</h3>
-							<p class="where">{d.where}</p>
-						</div>
-						<p class="note">{d.note}</p>
-					</li>
-				))
-			}
-		</ol>
-	</section>
-
-	<section class="block" aria-labelledby="tools-h" data-reveal>
-		<p class="kicker"><span class="n">02</span> Toolbox</p>
-		<h2 id="tools-h">What I build with.</h2>
-		<dl class="tools" data-stagger>
-			{
-				toolbox.map((t) => (
-					<div>
-						<dt>{t.group}</dt>
-						<dd>
-							{t.items.map((it) => (
-								<span>{it}</span>
-							))}
-						</dd>
-					</div>
-				))
-			}
-		</dl>
-	</section>
-
 	<section class="block split" aria-labelledby="off-h" data-reveal>
 		<div>
-			<p class="kicker"><span class="n">03</span> Off the keyboard</p>
-			<h2 id="off-h">Black belt, mentor, writer.</h2>
+			<p class="kicker"><span class="n">01</span> Off the keyboard</p>
+			<h2 id="off-h">Taekwondo, mentoring, notes.</h2>
 		</div>
 		<div class="off">
 			<p>
@@ -151,50 +65,12 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 				one in the room.
 			</p>
 			<p>
-				<strong>Writing.</strong> I've written here since 2016: {postCount} posts on .NET, React, software
-				design and, lately, how AI and LLMs actually work. <a href="/blog/">Read them →</a>
+				<strong>Notes.</strong> I've kept notes here since 2016: {postCount} of them on .NET, React, software
+				design and, lately, how AI and LLMs actually work. Some have aged better than others. <a href="/blog/">Read them →</a>
 			</p>
 		</div>
 	</section>
 
-	<section class="block split" aria-labelledby="now-h" data-reveal>
-		<div>
-			<p class="kicker"><span class="n">04</span> Now</p>
-			<h2 id="now-h">What I'm doing now.</h2>
-		</div>
-		<ul class="now">
-			<li>Architecting <strong>CPQ Express</strong> at Provus, and leading the engineers who build it.</li>
-			<li>Building <strong>AI-powered features</strong> with the guardrails they need in production.</li>
-			<li>Writing about <strong>.NET dependencies</strong> and <strong>LLMs</strong>, and training.</li>
-		</ul>
-	</section>
-
-	<figure class="quote" data-reveal>
-		<blockquote>
-			<p>{quote.pull}</p>
-		</blockquote>
-		<figcaption>
-			<a href={quote.linkedin} target="_blank" rel="noopener noreferrer">{quote.name} ↗</a>
-			<span>{quote.role}</span>
-			<a class="more" href="/#recs-heading">More recommendations →</a>
-		</figcaption>
-	</figure>
-
-	<section id="contact" class="block contact" aria-labelledby="contact-h" data-reveal>
-		<p class="kicker"><span class="n">05</span> Contact</p>
-		<h2 id="contact-h">Say hello.</h2>
-		<p class="mail"><Email copy /></p>
-		<p class="links">
-			{
-				SOCIAL_LINKS.map((l) => (
-					<a href={l.href} rel="me noopener" target="_blank">
-						{l.label} ↗
-					</a>
-				))
-			}
-			<a href="/rss.xml">RSS</a>
-		</p>
-	</section>
 </Base>
 
 <style>
@@ -241,6 +117,11 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 		line-height: 1.5;
 		letter-spacing: -0.015em;
 	}
+	.jump {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+	}
 	.jump a {
 		font-family: var(--font-mono);
 		font-size: 0.8rem;
@@ -248,38 +129,6 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 		text-transform: uppercase;
 		color: var(--blue);
 		text-decoration: none;
-	}
-
-	/* At a glance */
-	.glance {
-		margin: 2rem 0 6rem;
-		padding: 1.5rem 0;
-		border-block: 1px solid var(--rule);
-	}
-	.glance ul {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-		gap: 1.5rem 2rem;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-	.glance li {
-		display: grid;
-		gap: 0.2rem;
-	}
-	.glance .num {
-		font-size: clamp(2rem, 4vw, 2.75rem);
-		font-weight: 700;
-		letter-spacing: -0.04em;
-		line-height: 1;
-	}
-	.glance .lab {
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--muted);
 	}
 
 	/* Sections */
@@ -300,176 +149,16 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 		margin-bottom: 0;
 	}
 
-	/* Domains: one row each, ruled like a schedule. */
-	.domains {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-		border-top: 1px solid var(--rule);
-	}
-	.domains li {
-		display: grid;
-		grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1.4fr);
-		gap: 1rem 2rem;
-		align-items: baseline;
-		padding: 1.25rem 0;
-		border-bottom: 1px solid var(--border);
-	}
-	.idx {
-		font-family: var(--font-mono);
-		font-size: 0.75rem;
-		color: var(--accent);
-	}
-	.domains h3 {
-		margin: 0;
-		font-size: 1.2rem;
-	}
-	.where {
-		margin: 0.15rem 0 0;
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: var(--blue);
-	}
-	.note {
-		margin: 0;
-		color: var(--muted);
-		font-size: 1rem;
-	}
-
-	/* Toolbox */
-	.tools {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-		gap: 1.75rem 3rem;
-		margin: 0;
-	}
-	.tools dt {
-		margin-bottom: 0.6rem;
-		padding-bottom: 0.4rem;
-		border-bottom: 1px solid var(--rule);
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		color: var(--accent);
-	}
-	.tools dd {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem 1rem;
-		margin: 0;
-		font-size: 1rem;
-	}
-
 	/* Off the keyboard + now */
-	.off p,
-	.now li {
+	.off p {
 		margin: 0 0 1.1rem;
 		color: var(--muted);
 		font-size: 1.05rem;
 		line-height: 1.7;
 	}
-	.off strong,
-	.now strong {
+	.off strong {
 		color: var(--text);
 		font-weight: 600;
-	}
-	.now {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-	.now li {
-		position: relative;
-		padding-left: 1.4rem;
-	}
-	.now li::before {
-		content: '→';
-		position: absolute;
-		left: 0;
-		color: var(--accent);
-	}
-
-	/* Pull quote */
-	.quote {
-		margin: 0 0 6rem;
-		padding: 2.5rem 0;
-		border-block: 1px solid var(--rule);
-	}
-	.quote blockquote {
-		margin: 0;
-		padding: 0;
-		border: 0;
-		color: var(--text);
-	}
-	.quote blockquote p {
-		margin: 0;
-		max-width: 30ch;
-		font-size: clamp(1.6rem, 4vw, 2.6rem);
-		font-weight: 600;
-		line-height: 1.2;
-		letter-spacing: -0.03em;
-	}
-	.quote blockquote p::before {
-		content: '“';
-		color: var(--accent);
-	}
-	.quote blockquote p::after {
-		content: '”';
-		color: var(--accent);
-	}
-	.quote figcaption {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem 1.25rem;
-		margin-top: 1.25rem;
-		font-size: 0.95rem;
-		color: var(--muted);
-	}
-	.quote figcaption a {
-		color: var(--text);
-		font-weight: 600;
-		text-decoration: none;
-	}
-	.quote .more {
-		margin-left: auto;
-		font-family: var(--font-mono);
-		font-size: 0.78rem;
-		font-weight: 400;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--blue) !important;
-	}
-
-	/* Contact */
-	.contact .mail {
-		margin: 0 0 1.5rem;
-	}
-	.contact .mail :global(a) {
-		font-size: clamp(1.25rem, 3.5vw, 2rem);
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		color: var(--text);
-		text-decoration: none;
-		border-bottom: 2px solid var(--accent);
-	}
-	.links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem 1.75rem;
-	}
-	.links a {
-		font-family: var(--font-mono);
-		font-size: 0.8rem;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		color: var(--text);
-		text-decoration: none;
-	}
-	.links a:hover {
-		color: var(--accent);
 	}
 
 	/* Cut-out portrait on a hand-brushed disc. */
@@ -524,12 +213,6 @@ const quote = recommendations.find((r) => r.name === 'Nikhil Tayal')!;
 		.layout,
 		.split {
 			grid-template-columns: 1fr;
-		}
-		.domains li {
-			grid-template-columns: 2.5rem minmax(0, 1fr);
-		}
-		.domains .note {
-			grid-column: 2;
 		}
 		.portrait {
 			grid-row: 1;

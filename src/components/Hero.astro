@@ -21,10 +21,10 @@ import Weather from './Weather.astro';
 			<span class="dim-line"></span>
 		</div>
 		<p class="title in-2">Software Architect <span>/ Engineering Manager</span></p>
-		<p class="lede in-2">I start with the business, then design the platforms and code that serve it.</p>
+		<p class="lede in-2">Notes from fifteen years of building software: what worked, what didn't, and what I'm still figuring out.</p>
 		<div class="actions in-3">
-			<a class="btn primary" href="#architecture">How I architect</a>
-			<a class="btn" href="/blog/">Read my writing</a>
+			<a class="btn primary" href="#how-i-work">How I work</a>
+			<a class="btn" href="/blog/">Read the notes</a>
 		</div>
 		<div class="now in-3">
 			<span class="now-label">Right now</span>
@@ -425,6 +425,12 @@ import Weather from './Weather.astro';
 		position: absolute;
 		inset: 20% 0 0;
 	}
+	/* On phones the sky reaches past the screen edge; keep it from adding a sideways scroll. */
+	@media (max-width: 600px) {
+		.hero {
+			overflow-x: clip;
+		}
+	}
 	.mist i {
 		position: absolute;
 		left: -10%;
@@ -607,12 +613,13 @@ import Weather from './Weather.astro';
 			transform: scaleY(0.1);
 		}
 	}
+	/* Hover: a gentle zoom in. */
 	.toon:hover .toon-body {
-		animation: bow 0.9s var(--ease-out);
+		animation: zoom-in 0.6s var(--ease-out) forwards;
 	}
-	@keyframes bow {
-		40% {
-			transform: rotate(-4deg) translateY(4px);
+	@keyframes zoom-in {
+		to {
+			transform: scale(1.04);
 		}
 	}
 	.toon.pop .toon-body {
@@ -689,7 +696,7 @@ import Weather from './Weather.astro';
 	}
 	.c2 {
 		left: 67%;
-		top: 35%;
+		top: 30%;
 	}
 	figcaption {
 		margin-top: 0.75rem;

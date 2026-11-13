@@ -5,18 +5,25 @@
 const USERNAME = 'umamaheswaran';
 interface Props {
 	class?: string;
+	/**
+	 * "row" is a card; "line" is one slim, borderless line under a list or a
+	 * note; "stack" is one narrow column.
+	 */
+	layout?: 'row' | 'line' | 'stack';
 }
+const { layout = 'row' } = Astro.props;
 const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
 <form
-	class:list={['subscribe', Astro.props.class]}
+	class:list={['subscribe', { stack: layout === 'stack', line: layout === 'line' }, Astro.props.class]}
 	action={`https://buttondown.com/api/emails/embed-subscribe/${USERNAME}`}
 	method="post"
 	target="_blank"
 	data-subscribe
 	data-rank="none"
 >
+	{/* One row: the belt and a line on the left, the email and button on the right. */}
 	<div class="head">
 		<svg class="belt" viewBox="0 0 64 28" aria-hidden="true">
 			<rect class="band" x="2" y="7" width="60" height="9" rx="1.5"></rect>
@@ -26,10 +33,7 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 		</svg>
 		<div>
 			<label for={id}>Join the dojang.</label>
-			<p class="hint">
-				New posts, straight to your inbox. No spam: a black belt never fights dirty. Leave whenever you like, and
-				we'll still bow.
-			</p>
+			<p class="hint">New notes by email. No spam; leave anytime.</p>
 		</div>
 	</div>
 	<div class="row">
@@ -37,11 +41,8 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 		<input type="hidden" name="embed" value="1" />
 		<button type="submit">Bow in</button>
 	</div>
-	<p class="rank" aria-hidden="true" data-rank-label>No belt yet. Type your email to start training.</p>
+	<p class="rank" aria-hidden="true" data-rank-label></p>
 	<p class="done" role="status" data-done></p>
-	<p class="alt">
-		Prefer a feed reader? <a href="/rss.xml">Subscribe via RSS</a>.
-	</p>
 </form>
 
 <script>
@@ -55,7 +56,7 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 		['blue', (v) => /@[^@\s]+$/.test(v), 'Blue belt. Now the dot.'],
 		['green', (v) => v.includes('@'), 'Green belt. Where do you train?'],
 		['yellow', (v) => v.length > 0, 'Yellow belt. Keep going.'],
-		['none', () => true, 'No belt yet. Type your email to start training.'],
+		['none', () => true, ''],
 	];
 
 	function init() {
@@ -87,8 +88,12 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 
 <style>
 	.subscribe {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+		align-items: center;
+		gap: 0.5rem 1.5rem;
 		margin-top: 3rem;
-		padding: 1.25rem 1.35rem;
+		padding: 0.9rem 1.1rem;
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		background: var(--surface);
@@ -114,13 +119,12 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 
 	.head {
 		display: flex;
-		gap: 0.9rem;
-		align-items: flex-start;
+		gap: 0.75rem;
+		align-items: center;
 	}
 	.belt {
 		flex: none;
-		width: 3.25rem;
-		margin-top: 0.15rem;
+		width: 2.75rem;
 	}
 	.band {
 		fill: var(--belt-color);
@@ -142,27 +146,24 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 	label {
 		display: block;
 		font-weight: 600;
-		font-size: 1.1rem;
+		font-size: 1rem;
 	}
 	.hint,
-	.alt,
 	.rank {
 		color: var(--muted);
-		font-size: 0.9rem;
-		margin: 0.25rem 0 0;
+		font-size: 0.82rem;
+		margin: 0.1rem 0 0;
 	}
 	.row {
 		display: flex;
-		flex-wrap: wrap;
 		gap: 0.5rem;
-		margin-top: 0.9rem;
 	}
 	input[type='email'] {
-		flex: 1 1 14rem;
+		flex: 1 1 10rem;
 		min-width: 0;
 		font: inherit;
 		font-size: 1rem;
-		padding: 0.55rem 0.75rem;
+		padding: 0.45rem 0.7rem;
 		color: var(--text);
 		background: var(--bg);
 		border: 1px solid var(--rule);
@@ -175,7 +176,7 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 	button {
 		font: inherit;
 		font-weight: 600;
-		padding: 0.55rem 1.1rem;
+		padding: 0.45rem 1rem;
 		color: var(--bg);
 		background: var(--accent);
 		border: 0;
@@ -190,24 +191,74 @@ const id = `bd-email-${Math.random().toString(36).slice(2, 8)}`;
 		outline: 2px solid var(--text);
 		outline-offset: 2px;
 	}
+	/* The belt rank shows only once someone starts typing. */
 	.rank {
+		grid-column: 2;
 		font-family: var(--font-mono);
-		font-size: 0.8rem;
-		margin-top: 0.5rem;
+		font-size: 0.75rem;
+		margin: 0;
 	}
+	.rank:empty,
 	.done:empty {
 		display: none;
 	}
 	.done {
-		margin: 0.6rem 0 0;
+		grid-column: 1 / -1;
+		margin: 0;
 		font-weight: 600;
 		color: var(--accent);
 	}
 	.subscribe[data-sent] .rank {
 		display: none;
 	}
-	.alt {
-		margin-top: 0.75rem;
+	/* Line: no card, just a dashed rule above and everything on one line. */
+	.subscribe.line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.6rem 1.25rem;
+		margin-top: 1.5rem;
+		padding: 1rem 0 0;
+		border: 0;
+		border-top: 1px dashed var(--rule);
+		border-radius: 0;
+		background: none;
+	}
+	.line .head {
+		flex: 0 1 auto;
+	}
+	.line .head > div {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.1rem 0.6rem;
+	}
+	.line .row {
+		flex: 1 1 18rem;
+	}
+	.line .rank,
+	.line .done {
+		flex-basis: 100%;
+	}
+	/* Stacked: a small card, one column, sized to its content. */
+	.subscribe.stack {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.75rem;
+		margin-top: 0;
+	}
+	.stack .rank {
+		grid-column: 1;
+	}
+	.stack input[type='email'] {
+		flex-basis: 0;
+	}
+	@media (max-width: 640px) {
+		.subscribe {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.rank {
+			grid-column: 1;
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {

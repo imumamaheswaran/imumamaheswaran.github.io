@@ -1,0 +1,294 @@
+---
+/**
+ * How I work: five short principles in a bento grid, drawn like the rest of
+ * the site: one ruled frame with crop marks, cells divided by hairlines,
+ * blue line icons and mono labels. Two cells on top, three below.
+ */
+import { stages } from '../data/how-i-work';
+
+interface Props {
+	/** Section number shown in the kicker. */
+	n?: string;
+}
+const { n = '02' } = Astro.props;
+
+// A small line icon for each cell, keyed by principle.
+const TILE: Record<string, { icon: string }> = {
+	business: { icon: '<path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/><path d="M15 8h3v3"/>' },
+	design: { icon: '<path d="M2 12 7 6l5 6-5 6Zm10 0 5-6 5 6-5 6Z"/>' },
+	product: {
+		icon: '<path d="M4.5 12a7.5 7.5 0 0 1 13.2-4.9M19.5 12a7.5 7.5 0 0 1-13.2 4.9"/><path d="M18 3.5v4h-4M6 20.5v-4h4"/>',
+	},
+	code: { icon: '<path d="m8 8-4 4 4 4m8-8 4 4-4 4"/><path d="m13.5 6-3 12"/>' },
+	team: {
+		icon: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14.5 20a4.5 4.5 0 0 1 6.5-4"/>',
+	},
+};
+---
+
+<section id="how-i-work" class="how" aria-labelledby="how-heading" data-reveal>
+	<p class="kicker"><span class="n">{n}</span> Approach</p>
+	<h2 id="how-heading">How I work.</h2>
+
+	<div class="frame">
+	<span class="marks" aria-hidden="true"></span>
+	<ol class="bento" data-stagger>
+		{
+			stages.map((s, i) => {
+				const t = TILE[s.id] ?? TILE.business;
+				return (
+					<li class:list={['tile', `t-${s.id}`]}>
+						<div class="top">
+							<span class="icon" aria-hidden="true">
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									set:html={t.icon}
+								/>
+							</span>
+							<span class="num">
+								<b>{String(i + 1).padStart(2, '0')}</b> {s.tab}
+							</span>
+						</div>
+						<div class="text">
+							<h3>{s.title}</h3>
+							<p class="body">{s.body}</p>
+							{s.books.length > 0 && (
+								<p class="books">
+									Shaped by{' '}
+									{s.books.map((b, k) => (
+										<Fragment>
+											<a href="/bookshelf/">{b}</a>
+											{k < s.books.length - 1 ? ', ' : ''}
+										</Fragment>
+									))}
+								</p>
+							)}
+						</div>
+					</li>
+				);
+			})
+		}
+	</ol>
+	</div>
+</section>
+
+<style>
+	.how {
+		margin: 0 0 7rem;
+		scroll-margin-top: 5.5rem;
+	}
+	h2 {
+		margin: 0 0 2.5rem;
+		font-size: clamp(1.9rem, 4.5vw, 3rem);
+	}
+
+	/* One ruled frame with crop marks, like a sheet on the drawing board. */
+	.frame {
+		position: relative;
+	}
+	.frame::before,
+	.frame::after,
+	.marks::before,
+	.marks::after {
+		content: '';
+		position: absolute;
+		z-index: 1;
+		width: 14px;
+		height: 14px;
+		border: 0 solid var(--blue);
+		pointer-events: none;
+	}
+	.frame::before {
+		top: -6px;
+		left: -6px;
+		border-width: 2px 0 0 2px;
+	}
+	.frame::after {
+		right: -6px;
+		bottom: -6px;
+		border-width: 0 2px 2px 0;
+	}
+	.marks::before {
+		top: -6px;
+		right: -6px;
+		border-width: 2px 2px 0 0;
+	}
+	.marks::after {
+		bottom: -6px;
+		left: -6px;
+		border-width: 0 0 2px 2px;
+	}
+
+	/* The bento: six columns, cells divided by hairlines (the gap shows the rule). */
+	.bento {
+		display: grid;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		gap: 1px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--rule);
+		border-radius: 3px;
+		background: var(--rule);
+	}
+	/* Two cells on top, three below. */
+	.t-business,
+	.t-design {
+		grid-column: span 3;
+	}
+	.t-product,
+	.t-code,
+	.t-team {
+		grid-column: span 2;
+	}
+	.tile {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		padding: clamp(1.1rem, 2vw, 1.4rem) clamp(1.1rem, 2.2vw, 1.5rem);
+		background: var(--bg);
+		transition: background-color 0.25s;
+	}
+	.tile:hover {
+		background: color-mix(in srgb, var(--blue) 4%, var(--bg));
+	}
+	.top {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	/* Icons drawn in blue line, in a dashed box. */
+	.icon {
+		display: grid;
+		place-items: center;
+		width: 2.1rem;
+		height: 2.1rem;
+		border: 1px dashed color-mix(in srgb, var(--blue) 60%, transparent);
+		border-radius: 2px;
+		color: var(--blue);
+	}
+	.icon svg {
+		width: 1.15rem;
+		height: 1.15rem;
+	}
+	.num {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+	.num b {
+		font-weight: 500;
+		color: var(--accent);
+	}
+	.text {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+	h3 {
+		margin: 0 0 0.6rem;
+		font-size: 1.25rem;
+		letter-spacing: -0.02em;
+		line-height: 1.25;
+		text-wrap: balance;
+	}
+	.body {
+		margin: 0 0 0.9rem;
+		color: var(--muted);
+		font-size: 0.95rem;
+		line-height: 1.55;
+	}
+	.books {
+		margin: auto 0 0;
+		padding-top: 0.75rem;
+		border-top: 1px dashed var(--rule);
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		letter-spacing: 0.04em;
+		color: var(--faint);
+	}
+	.books a {
+		color: var(--blue);
+		text-decoration: none;
+	}
+	.books a:hover {
+		color: var(--accent);
+	}
+
+	.t-business h3,
+	.t-design h3 {
+		font-size: clamp(1.3rem, 2.2vw, 1.55rem);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		/* The crop marks snap in from outside when the section arrives. */
+		.frame::before,
+		.frame::after,
+		.marks::before,
+		.marks::after {
+			transition:
+				translate 0.6s var(--ease-press) 0.2s,
+				opacity 0.4s 0.2s;
+		}
+		:global(.js) .how:not(:global(.in)) .frame::before {
+			translate: -12px -12px;
+			opacity: 0;
+		}
+		:global(.js) .how:not(:global(.in)) .frame::after {
+			translate: 12px 12px;
+			opacity: 0;
+		}
+		:global(.js) .how:not(:global(.in)) .marks::before {
+			translate: 12px -12px;
+			opacity: 0;
+		}
+		:global(.js) .how:not(:global(.in)) .marks::after {
+			translate: -12px 12px;
+			opacity: 0;
+		}
+		/* Hover a cell and its icon redraws itself, line by line. */
+		.tile:hover .icon :global(path),
+		.tile:hover .icon :global(circle) {
+			stroke-dasharray: 70;
+			animation: redraw 0.8s var(--ease-out);
+		}
+	}
+	@keyframes redraw {
+		from {
+			stroke-dashoffset: 70;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.bento {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.t-business,
+		.t-design,
+		.t-product,
+		.t-code {
+			grid-column: span 1;
+		}
+		.t-team {
+			grid-column: 1 / -1;
+		}
+	}
+	@media (max-width: 600px) {
+		.bento {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.tile {
+			grid-column: 1 / -1 !important;
+		}
+	}
+</style>
