@@ -1,9 +1,10 @@
 ---
 /**
- * Toon Uma in 3D, full body, doing airborne Taekwondo techniques. Every so
- * often he leaps in from the left or right edge, strikes, and leaps back out
- * the same side. Spins and turns happen in real 3D (Three.js, toon-shaded with
- * ink outlines to match the site's drawings).
+ * Uma in 3D, full body, doing airborne Taekwondo techniques. Every so often
+ * he leaps in from the left or right edge, strikes, and leaps back out the
+ * same side. Spins and turns happen in real 3D (Three.js, physically based
+ * materials, soft self-shadowing), with elbows that fold into a guard, fists,
+ * and a head that stays level through the move.
  *
  * Three.js only loads the first time he appears, so it costs nothing on page
  * load. Decorative: hidden from screen readers, never takes clicks, and
@@ -15,23 +16,24 @@
 
 <script>
 	import { whoosh } from '../lib/sound';
-	import { addToonLights, buildToon } from '../lib/toon3d';
+	import { buildToon, setupStage } from '../lib/toon3d';
 
 	// A pose: body roll (r) and turn (y) in degrees, and each joint's swing in
 	// the side-on plane, like the old 2D drawing: thighs (tf/tb), shins (sf/sb)
-	// and arms (af/ab), front and back. 0 points straight down.
-	type Pose = { r: number; y: number; tf: number; sf: number; tb: number; sb: number; af: number; ab: number };
+	// and arms (af/ab), front and back. 0 points straight down. Elbows (ef/eb)
+	// bend forward from straight (0).
+	type Pose = { r: number; y: number; tf: number; sf: number; tb: number; sb: number; af: number; ab: number; ef: number; eb: number };
 	type Key = Partial<Pose> & { at: number };
 
 	// In the air between moves: knees tucked, guard up.
-	const TUCK: Pose = { r: -8, y: 0, tf: -70, sf: 110, tb: -20, sb: 120, af: -120, ab: -60 };
+	const TUCK: Pose = { r: -8, y: 0, tf: -70, sf: 110, tb: -20, sb: 120, af: -60, ab: -30, ef: 115, eb: 120 };
 
 	// Every technique is airborne. Keys run 0..1 over the moment of the move.
 	// `y` turns the whole body, so spins really spin.
 	const MOVES: { name: string; keys: Key[] }[] = [
 		{
 			name: 'Flying side kick',
-			keys: [{ at: 0 }, { at: 0.35, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 0.75, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.35, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -100, ab: 20, ef: 20, eb: 110 }, { at: 0.75, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -100, ab: 20, ef: 20, eb: 110 }, { at: 1 }],
 		},
 		{
 			name: 'Jumping front kick',
@@ -43,19 +45,19 @@
 		},
 		{
 			name: '360 spin kick',
-			keys: [{ at: 0 }, { at: 0.25, y: 120, tf: -95, sf: 0 }, { at: 0.5, y: 240, tf: -100, sf: 0, af: -140 }, { at: 0.75, y: 330, tf: -95, sf: 0 }, { at: 1, y: 360 }],
+			keys: [{ at: 0 }, { at: 0.25, y: 120, tf: -95, sf: 0 }, { at: 0.5, y: 240, tf: -100, sf: 0, af: -100, ef: 40 }, { at: 0.75, y: 330, tf: -95, sf: 0 }, { at: 1, y: 360 }],
 		},
 		{
 			name: 'Jumping spinning kick',
-			keys: [{ at: 0 }, { at: 0.3, y: 140, r: -10 }, { at: 0.52, y: 270, r: -20, tf: -100, sf: 100 }, { at: 0.66, y: 330, r: -22, tf: -100, sf: 0, af: -130 }, { at: 0.82, y: 360, tf: -100, sf: 0, r: -22 }, { at: 1, y: 360 }],
+			keys: [{ at: 0 }, { at: 0.3, y: 140, r: -10 }, { at: 0.52, y: 270, r: -20, tf: -100, sf: 100 }, { at: 0.66, y: 330, r: -22, tf: -100, sf: 0, af: -90, ef: 50 }, { at: 0.82, y: 360, tf: -100, sf: 0, r: -22 }, { at: 1, y: 360 }],
 		},
 		{
 			name: 'Jumping punch',
-			keys: [{ at: 0 }, { at: 0.3, y: 20, af: -90, ab: 40, r: -4 }, { at: 0.42, y: -15, af: -40, ab: -90 }, { at: 0.56, y: 20, af: -90, ab: 40 }, { at: 0.7, y: -15, af: -40, ab: -90 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.3, y: 20, af: -90, ef: 5, ab: 20, eb: 130, r: -4 }, { at: 0.42, y: -15, af: 20, ef: 130, ab: -90, eb: 5 }, { at: 0.56, y: 20, af: -90, ef: 5, ab: 20, eb: 130 }, { at: 0.7, y: -15, af: 20, ef: 130, ab: -90, eb: 5 }, { at: 1 }],
 		},
 		{
 			name: 'Butterfly kick',
-			keys: [{ at: 0 }, { at: 0.5, r: -200, y: 160, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 0.9, r: -360, y: 340, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 1, r: -368, y: 360 }],
+			keys: [{ at: 0 }, { at: 0.5, r: -200, y: 160, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120, ef: 20, eb: 20 }, { at: 0.9, r: -360, y: 340, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120, ef: 20, eb: 20 }, { at: 1, r: -368, y: 360 }],
 		},
 	];
 
@@ -97,7 +99,7 @@
 		return rigPromise;
 	}
 
-	function buildRig(THREE: typeof import('three'), size: number): Rig | null {
+	async function buildRig(THREE: typeof import('three'), size: number): Promise<Rig | null> {
 		const canvas = document.createElement('canvas');
 		let renderer: import('three').WebGLRenderer;
 		try {
@@ -113,9 +115,12 @@
 		// A three-quarter view, a little from above, so depth reads.
 		camera.position.set(0.95, 0.45, 2.85);
 		camera.lookAt(0, 0.12, 0);
-		addToonLights(THREE, scene);
+		await setupStage(THREE, renderer, scene, { shadowSize: 512 });
 		const t = buildToon(THREE, { legs: true });
 		scene.add(t.body);
+		// Fists closed for the whole fight.
+		t.front.hand(1);
+		t.back.hand(1);
 
 		const rad = THREE.MathUtils.degToRad;
 		return {
@@ -129,6 +134,11 @@
 				t.back.knee!.rotation.z = -rad(p.sb);
 				t.front.arm.rotation.z = -rad(p.af);
 				t.back.arm.rotation.z = -rad(p.ab);
+				t.front.elbow.rotation.z = rad(p.ef);
+				t.back.elbow.rotation.z = rad(p.eb);
+				// The head stays level through small rolls, eyes on the target.
+				const roll = Math.max(-30, Math.min(30, p.r));
+				t.head.rotation.z = rad(roll) * 0.45;
 				// Belt tails flutter in the air.
 				const now = performance.now() / 1000;
 				t.tails.forEach((tail, i) => (tail.rotation.z = 0.5 + Math.sin(now * 14 + i * 1.7) * 0.35));
