@@ -1,123 +1,140 @@
 ---
 /**
- * Toon Uma, full body, doing airborne Taekwondo techniques. Every so often he
- * leaps in from the left or right edge, strikes, and leaps back out the same
- * side.
- * Decorative: hidden from screen readers, never takes clicks, and switched off
- * when the visitor prefers reduced motion.
+ * Toon Uma in 3D, full body, doing airborne Taekwondo techniques. Every so
+ * often he leaps in from the left or right edge, strikes, and leaps back out
+ * the same side. Spins and turns happen in real 3D (Three.js, toon-shaded with
+ * ink outlines to match the site's drawings).
+ *
+ * Three.js only loads the first time he appears, so it costs nothing on page
+ * load. Decorative: hidden from screen readers, never takes clicks, and
+ * switched off when the visitor prefers reduced motion or WebGL isn't there.
  */
-const fighter = `
-<svg viewBox="0 0 120 170" class="kb-svg">
-  <g data-part="body">
-    <g data-part="ab"><line class="o" x1="60" y1="56" x2="60" y2="80"/><line class="sleeve back" x1="60" y1="56" x2="60" y2="80"/><circle class="fist" cx="60" cy="84" r="4.5"/></g>
-    <g data-part="tb"><line class="o leg" x1="60" y1="94" x2="60" y2="124"/><line class="pants back" x1="60" y1="94" x2="60" y2="124"/>
-      <g data-part="sb"><line class="o leg" x1="60" y1="124" x2="60" y2="151"/><line class="pants back" x1="60" y1="124" x2="60" y2="151"/><ellipse class="foot" cx="64" cy="155" rx="7" ry="3.5"/></g>
-    </g>
-    <rect class="skin" x="56" y="43" width="8" height="9"/>
-    <path class="jacket" d="M47 54 C52 49 68 49 73 54 L71 96 L49 96 Z"/>
-    <path class="collar" d="M54 51 L66 74 M66 51 L56 67"/>
-    <rect class="belt" x="47" y="86" width="26" height="7"/>
-    <rect class="belt" x="57" y="84.5" width="7" height="10" rx="1"/>
-    <path class="tails" d="M59 94 L55 106 M62 94 L67 105"/>
-    <g data-part="head">
-      <circle class="skin face" cx="61" cy="31" r="13"/>
-      <path class="beard" d="M49 35 C52 46 68 47 73 35 C69 41 55 42 49 35 Z"/>
-      <path class="hair" d="M47 33 C44 18 56 11 67 13 C76 13 82 19 79 28 C83 30 83 35 77 33 C74 24 64 21 56 25 C52 27 49 31 48 35 Z"/>
-      <path class="hair" d="M70 15 L86 12 L77 22 Z"/>
-      <path class="brow" d="M57 27 L62 26.5 M66 26.5 L71 27.5"/>
-      <circle class="eye" cx="60" cy="31" r="1.6"/><circle class="eye" cx="68" cy="31" r="1.6"/>
-      <path class="hair" d="M60 37.5 C63 36 67 36 69 37.5 C66 38.5 63 38.5 60 37.5 Z"/>
-      <path class="mouth" d="M61 40.5 Q65 42.5 68 40.5"/>
-    </g>
-    <g data-part="tf"><line class="o leg" x1="60" y1="94" x2="60" y2="124"/><line class="pants" x1="60" y1="94" x2="60" y2="124"/>
-      <g data-part="sf"><line class="o leg" x1="60" y1="124" x2="60" y2="151"/><line class="pants" x1="60" y1="124" x2="60" y2="151"/><ellipse class="foot" cx="64" cy="155" rx="7" ry="3.5"/></g>
-    </g>
-    <g data-part="af"><line class="o" x1="60" y1="56" x2="60" y2="80"/><line class="sleeve" x1="60" y1="56" x2="60" y2="80"/><circle class="fist" cx="60" cy="84" r="4.5"/></g>
-  </g>
-</svg>`;
 ---
 
-<div class="kb-layer" aria-hidden="true" transition:persist="kick-buddy">
-	<template id="kb-fighter" set:html={fighter} />
-</div>
+<div class="kb-layer" aria-hidden="true" transition:persist="kick-buddy"></div>
 
 <script>
 	import { whoosh } from '../lib/sound';
+	import { addToonLights, buildToon } from '../lib/toon3d';
 
-	type Pose = { r: number; s: number; tf: number; sf: number; tb: number; sb: number; af: number; ab: number };
+	// A pose: body roll (r) and turn (y) in degrees, and each joint's swing in
+	// the side-on plane, like the old 2D drawing: thighs (tf/tb), shins (sf/sb)
+	// and arms (af/ab), front and back. 0 points straight down.
+	type Pose = { r: number; y: number; tf: number; sf: number; tb: number; sb: number; af: number; ab: number };
 	type Key = Partial<Pose> & { at: number };
 
 	// In the air between moves: knees tucked, guard up.
-	const TUCK: Pose = { r: -8, s: 1, tf: -70, sf: 110, tb: -20, sb: 120, af: -120, ab: -60 };
+	const TUCK: Pose = { r: -8, y: 0, tf: -70, sf: 110, tb: -20, sb: 120, af: -120, ab: -60 };
 
 	// Every technique is airborne. Keys run 0..1 over the moment of the move.
+	// `y` turns the whole body, so spins really spin.
 	const MOVES: { name: string; keys: Key[] }[] = [
 		{
 			name: 'Flying side kick',
-			keys: [{ at: 0 }, { at: 0.35, r: -28, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 0.75, r: -28, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.35, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 0.75, r: -28, y: -30, tf: -100, sf: 0, tb: -40, sb: 115, af: -135, ab: 30 }, { at: 1 }],
 		},
 		{
 			name: 'Jumping front kick',
-			keys: [{ at: 0 }, { at: 0.35, r: -6, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 0.75, r: -6, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.35, r: -6, y: 35, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 0.75, r: -6, y: 35, tf: -92, sf: 0, af: -30, ab: -20 }, { at: 1 }],
 		},
 		{
 			name: 'Jumping back kick',
-			keys: [{ at: 0 }, { at: 0.3, s: -1 }, { at: 0.5, s: -1, r: 14, tf: 92, sf: 0, af: -40, ab: -100 }, { at: 0.78, s: -1, r: 14, tf: 92, sf: 0, af: -40, ab: -100 }, { at: 1, s: -1 }],
+			keys: [{ at: 0 }, { at: 0.3, y: 180 }, { at: 0.5, y: 180, r: -14, tf: -92, sf: 0, af: -40, ab: -100 }, { at: 0.78, y: 180, r: -14, tf: -92, sf: 0, af: -40, ab: -100 }, { at: 1, y: 180 }],
 		},
 		{
 			name: '360 spin kick',
-			keys: [{ at: 0 }, { at: 0.25, s: -1, tf: -95, sf: 0 }, { at: 0.5, s: 1, tf: -100, sf: 0, af: -140 }, { at: 0.75, s: -1, tf: -95, sf: 0 }, { at: 1, s: 1 }],
+			keys: [{ at: 0 }, { at: 0.25, y: 120, tf: -95, sf: 0 }, { at: 0.5, y: 240, tf: -100, sf: 0, af: -140 }, { at: 0.75, y: 330, tf: -95, sf: 0 }, { at: 1, y: 360 }],
 		},
 		{
 			name: 'Jumping spinning kick',
-			keys: [{ at: 0 }, { at: 0.3, s: -1, r: -10 }, { at: 0.52, s: 1, r: -20, tf: -100, sf: 100 }, { at: 0.66, s: 1, r: -22, tf: -100, sf: 0, af: -130 }, { at: 0.82, tf: -100, sf: 0, r: -22 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.3, y: 140, r: -10 }, { at: 0.52, y: 270, r: -20, tf: -100, sf: 100 }, { at: 0.66, y: 330, r: -22, tf: -100, sf: 0, af: -130 }, { at: 0.82, y: 360, tf: -100, sf: 0, r: -22 }, { at: 1, y: 360 }],
 		},
 		{
 			name: 'Jumping punch',
-			keys: [{ at: 0 }, { at: 0.3, af: -90, ab: 40, r: -4 }, { at: 0.42, af: -40, ab: -90 }, { at: 0.56, af: -90, ab: 40 }, { at: 0.7, af: -40, ab: -90 }, { at: 1 }],
+			keys: [{ at: 0 }, { at: 0.3, y: 20, af: -90, ab: 40, r: -4 }, { at: 0.42, y: -15, af: -40, ab: -90 }, { at: 0.56, y: 20, af: -90, ab: 40 }, { at: 0.7, y: -15, af: -40, ab: -90 }, { at: 1 }],
 		},
 		{
 			name: 'Butterfly kick',
-			keys: [{ at: 0 }, { at: 0.5, r: -200, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 0.9, r: -360, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 1, r: -368 }],
+			keys: [{ at: 0 }, { at: 0.5, r: -200, y: 160, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 0.9, r: -360, y: 340, tf: -60, sf: 0, tb: 70, sb: 0, af: -150, ab: 120 }, { at: 1, r: -368, y: 360 }],
 		},
 	];
 
-	const PARTS = ['body', 'tf', 'sf', 'tb', 'sb', 'af', 'ab'] as const;
-
 	// Fly in tucked, do the move, fly out tucked. `from`/`to` say where the
-	// move sits in the whole animation.
+	// move sits in the whole animation. Full turns keep their final angle so
+	// they don't unwind on the way out.
 	function sequence(move: Key[], from = 0.32, to = 0.74): Key[] {
 		const span = to - from;
 		const last = move.at(-1)!;
-		// A full rotation (butterfly) keeps its final angle so it doesn't unwind.
-		const end: Key = last.r !== undefined ? { at: 1, r: last.r } : { at: 1 };
+		const end: Key = { at: 1, ...(last.r !== undefined ? { r: last.r } : {}), ...(Math.abs(last.y ?? 0) >= 360 ? { y: last.y } : {}) };
 		return [{ at: 0 }, { at: from }, ...move.slice(1, -1).map((k) => ({ ...k, at: from + k.at * span })), { ...last, at: to }, end];
 	}
 
-	function play(el: Element, keys: Key[], ms: number) {
-		const out: Record<string, Keyframe[]> = {};
-		for (const p of PARTS) out[p] = [];
-		for (const k of keys) {
-			const pose = { ...TUCK, ...k };
-			out.body.push({ offset: k.at, transform: `rotate(${pose.r}deg) scaleX(${pose.s})` });
-			for (const p of ['tf', 'sf', 'tb', 'sb', 'af', 'ab'] as const) out[p].push({ offset: k.at, transform: `rotate(${pose[p]}deg)` });
-		}
-		return PARTS.map((p) =>
-			el.querySelector(`[data-part="${p}"]`)!.animate(out[p], { duration: ms, easing: 'ease-in-out', fill: 'forwards' }),
-		);
+	// The pose at time t (0..1): eased between the surrounding keys.
+	const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
+	function poseAt(keys: Key[], t: number): Pose {
+		let i = 0;
+		while (i < keys.length - 2 && t > keys[i + 1].at) i++;
+		const a = { ...TUCK, ...keys[i] };
+		const b = { ...TUCK, ...keys[i + 1] };
+		const span = keys[i + 1].at - keys[i].at || 1;
+		const k = ease(Math.min(1, Math.max(0, (t - keys[i].at) / span)));
+		const out = {} as Pose;
+		for (const p of Object.keys(TUCK) as (keyof Pose)[]) out[p] = a[p] + (b[p] - a[p]) * k;
+		return out;
 	}
 
-	function makeFighter(size: number) {
-		const tpl = document.getElementById('kb-fighter') as HTMLTemplateElement | null;
-		if (!tpl) return null;
-		const wrap = document.createElement('div');
-		wrap.className = 'kb';
-		wrap.style.setProperty('--size', `${size}px`);
-		wrap.append(tpl.content.cloneNode(true));
-		const bubble = document.createElement('span');
-		bubble.className = 'kb-bubble';
-		wrap.append(bubble);
-		return { wrap, bubble };
+	// ── The 3D fighter, built once and reused for every visit ──
+	type Rig = {
+		render: (pose: Pose, face: number) => void;
+		canvas: HTMLCanvasElement;
+	};
+	let rigPromise: Promise<Rig | null> | null = null;
+
+	function loadRig(size: number): Promise<Rig | null> {
+		rigPromise ??= import('three')
+			.then((THREE) => buildRig(THREE, size))
+			.catch(() => null);
+		return rigPromise;
+	}
+
+	function buildRig(THREE: typeof import('three'), size: number): Rig | null {
+		const canvas = document.createElement('canvas');
+		let renderer: import('three').WebGLRenderer;
+		try {
+			renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+		} catch {
+			return null;
+		}
+		renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+		renderer.setSize(size, size, false);
+
+		const scene = new THREE.Scene();
+		const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 20);
+		// A three-quarter view, a little from above, so depth reads.
+		camera.position.set(0.95, 0.45, 2.85);
+		camera.lookAt(0, 0.12, 0);
+		addToonLights(THREE, scene);
+		const t = buildToon(THREE, { legs: true });
+		scene.add(t.body);
+
+		const rad = THREE.MathUtils.degToRad;
+		return {
+			canvas,
+			render(p, face) {
+				// Facing left is a half turn; everything else is the pose.
+				t.body.rotation.set(0, rad(p.y) + (face < 0 ? Math.PI : 0), -rad(p.r), 'YXZ');
+				t.front.hip!.rotation.z = -rad(p.tf);
+				t.front.knee!.rotation.z = -rad(p.sf);
+				t.back.hip!.rotation.z = -rad(p.tb);
+				t.back.knee!.rotation.z = -rad(p.sb);
+				t.front.arm.rotation.z = -rad(p.af);
+				t.back.arm.rotation.z = -rad(p.ab);
+				// Belt tails flutter in the air.
+				const now = performance.now() / 1000;
+				t.tails.forEach((tail, i) => (tail.rotation.z = 0.5 + Math.sin(now * 14 + i * 1.7) * 0.35));
+				renderer.render(scene, camera);
+			},
+		};
 	}
 
 	// Shuffle-bag so every move comes up before any repeats.
@@ -128,26 +145,44 @@ const fighter = `
 	}
 
 	const rand = (a: number, b: number) => a + Math.random() * (b - a);
+	const CANVAS = 180;
 
-	async function perform(size: number, face: number, path: Keyframe[], ms: number, from?: number, to?: number) {
+	async function perform(face: number, path: Keyframe[], ms: number, size: number) {
 		const layer = document.querySelector<HTMLElement>('.kb-layer');
-		const f = layer && makeFighter(size);
-		if (!layer || !f) return;
-		const { wrap, bubble } = f;
-		wrap.style.setProperty('--face', String(face));
+		const rig = layer && (await loadRig(CANVAS));
+		if (!layer || !rig) return;
 		const move = nextMove();
+		const keys = sequence(move.keys);
+
+		const wrap = document.createElement('div');
+		wrap.className = 'kb';
+		wrap.style.setProperty('--size', `${size}px`);
+		wrap.append(rig.canvas);
+		const bubble = document.createElement('span');
+		bubble.className = 'kb-bubble';
+		wrap.append(bubble);
 		layer.append(wrap);
-		const keys = sequence(move.keys, from, to);
-		const parts = play(wrap, keys, ms);
+
 		const flight = wrap.animate(path, { duration: ms, easing: 'linear', fill: 'forwards' });
-		const at = (from ?? 0.32) * ms;
 		setTimeout(() => {
 			bubble.textContent = move.name + '!';
 			wrap.classList.add('talk');
 			whoosh();
-		}, at);
-		setTimeout(() => wrap.classList.remove('talk'), (to ?? 0.74) * ms + 250);
-		await Promise.all([flight.finished, ...parts.map((p) => p.finished)]);
+		}, 0.32 * ms);
+		setTimeout(() => wrap.classList.remove('talk'), 0.74 * ms + 250);
+
+		// Pose and draw every frame until the flight lands.
+		const start = performance.now();
+		await new Promise<void>((done) => {
+			const frame = (now: number) => {
+				const t = Math.min(1, (now - start) / ms);
+				rig.render(poseAt(keys, t), face);
+				if (t < 1) requestAnimationFrame(frame);
+				else done();
+			};
+			requestAnimationFrame(frame);
+		});
+		await flight.finished.catch(() => {});
 		wrap.remove();
 	}
 
@@ -159,12 +194,12 @@ const fighter = `
 		visiting = true;
 		const w = window.innerWidth;
 		const h = window.innerHeight;
-		const size = Math.min(110, Math.max(76, w * 0.08));
+		const size = Math.min(170, Math.max(110, w * 0.11));
 		const fromLeft = Math.random() < 0.5;
 		const reach = Math.min(w * 0.22, 260);
 		const off = fromLeft ? -size - 40 : w + 40;
 		const tx = fromLeft ? rand(24, reach) : w - size - rand(24, reach);
-		const ty = rand(0.18, 0.7) * h;
+		const ty = rand(0.15, 0.62) * h;
 		const face = fromLeft ? 1 : -1;
 		const at = (x: number, y: number) => `translate(${x}px, ${y}px)`;
 		const path: Keyframe[] = [
@@ -175,8 +210,11 @@ const fighter = `
 			{ offset: 0.88, transform: at((off + tx) / 2, ty - 50) },
 			{ offset: 1, transform: at(off, ty + 40) },
 		];
-		await perform(size, face, path, 3400);
-		visiting = false;
+		try {
+			await perform(face, path, 3600, size);
+		} finally {
+			visiting = false;
+		}
 	}
 
 	function schedule() {
@@ -187,6 +225,8 @@ const fighter = `
 	}
 
 	if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+		// In development, `__kickBuddy()` in the console brings him in now.
+		if (import.meta.env.DEV) (window as unknown as { __kickBuddy?: () => void }).__kickBuddy = visit;
 		setTimeout(async () => {
 			await visit();
 			schedule();
@@ -208,102 +248,16 @@ const fighter = `
 		top: 0;
 		width: var(--size);
 	}
-	.kb-svg {
+	.kb canvas {
 		display: block;
 		width: 100%;
 		height: auto;
-		overflow: visible;
-		transform: scaleX(var(--face, 1));
-	}
-	.kb-svg [data-part] {
-		transform-box: view-box;
-	}
-	.kb-svg [data-part='body'],
-	.kb-svg [data-part='tf'],
-	.kb-svg [data-part='tb'] {
-		transform-origin: 60px 94px;
-	}
-	.kb-svg [data-part='sf'],
-	.kb-svg [data-part='sb'] {
-		transform-origin: 60px 124px;
-	}
-	.kb-svg [data-part='af'],
-	.kb-svg [data-part='ab'] {
-		transform-origin: 60px 56px;
-	}
-	.kb-svg .o {
-		stroke: #1a1210;
-		stroke-width: 12;
-		stroke-linecap: round;
-	}
-	.kb-svg .o.leg {
-		stroke-width: 13;
-	}
-	.kb-svg .pants,
-	.kb-svg .sleeve {
-		stroke: #f7f7f4;
-		stroke-width: 9;
-		stroke-linecap: round;
-	}
-	.kb-svg .pants {
-		stroke-width: 10;
-	}
-	.kb-svg .back {
-		stroke: #dcdcd6;
-	}
-	.kb-svg .fist,
-	.kb-svg .foot,
-	.kb-svg .skin {
-		fill: #8d5a3b;
-		stroke: #1a1210;
-		stroke-width: 1.5;
-	}
-	.kb-svg .face {
-		stroke-width: 2;
-	}
-	.kb-svg .jacket {
-		fill: #f7f7f4;
-		stroke: #1a1210;
-		stroke-width: 2;
-		stroke-linejoin: round;
-	}
-	.kb-svg .collar {
-		stroke: #111;
-		stroke-width: 4;
-		fill: none;
-	}
-	.kb-svg .belt {
-		fill: #111;
-	}
-	.kb-svg .tails {
-		stroke: #111;
-		stroke-width: 3;
-		stroke-linecap: round;
-	}
-	.kb-svg .hair {
-		fill: #16100d;
-	}
-	.kb-svg .beard {
-		fill: #16100d;
-		opacity: 0.35;
-	}
-	.kb-svg .brow {
-		stroke: #16100d;
-		stroke-width: 2;
-		stroke-linecap: round;
-	}
-	.kb-svg .eye {
-		fill: #16100d;
-	}
-	.kb-svg .mouth {
-		fill: none;
-		stroke: #1a1210;
-		stroke-width: 1.4;
-		stroke-linecap: round;
+		aspect-ratio: 1;
+		filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.25));
 	}
 	.kb-bubble {
 		position: absolute;
-		bottom: 100%;
+		bottom: 92%;
 		left: 50%;
 		translate: -50% 0;
 		padding: 0.25rem 0.55rem;
@@ -323,9 +277,5 @@ const fighter = `
 	.kb.talk .kb-bubble {
 		opacity: 1;
 		transform: none;
-	}
-	.kb.tiny .kb-bubble {
-		font-size: 0.62rem;
-		padding: 0.1rem 0.35rem;
 	}
 </style>
