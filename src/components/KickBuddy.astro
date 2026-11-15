@@ -142,6 +142,7 @@
 				// Belt tails flutter in the air.
 				const now = performance.now() / 1000;
 				t.tails.forEach((tail, i) => (tail.rotation.z = 0.5 + Math.sin(now * 14 + i * 1.7) * 0.35));
+				t.settle();
 				renderer.render(scene, camera);
 			},
 		};

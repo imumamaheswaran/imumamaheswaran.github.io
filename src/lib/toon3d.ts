@@ -9,6 +9,10 @@
  * - Physically based materials: fabric with sheen and a woven bump, skin with
  *   a warm sheen and pores, wet eyes with a painted iris and a clear coat,
  *   hair and stubble as alpha-tested shells with strand detail.
+ *
+ * The likeness follows a photo of Uma: a round, broad face with full cheeks,
+ * thick dark hair swept up and over, a trimmed beard that's dense on the chin
+ * and jaw, a full moustache, a broad nose, and a stocky build.
  * - Joints where a body has them: shoulders, elbows, hips, knees, and hands
  *   with jointed fingers that relax or close into a fist.
  * - Image-based lighting, a soft key light with self-shadowing, and a cool rim.
@@ -40,6 +44,8 @@ export type Toon = {
 	sweat: T.Group;
 	tails: T.Group[];
 	hair: T.Group;
+	/** Call after posing the legs: the jacket's skirt follows the thighs. */
+	settle: () => void;
 };
 
 /** Height of the head's centre above the hips. */
@@ -111,8 +117,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		false,
 		[6, 6],
 	);
-	// Hair: strands that run along the sphere's meridians (front to back), with
-	// silver strands on his left side (u between 0 and 0.5).
+	// Hair: strands that run along the sphere's meridians (front to back).
 	const hairW = detail ? 512 : 256;
 	const hairColor = canvasTex(
 		hairW,
@@ -122,10 +127,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 			g.fillRect(0, 0, hairW, hairW / 2);
 			for (let i = 0; i < hairW * 3; i++) {
 				const u = rnd();
-				const silver = u > 0.12 && u < 0.42 && rnd() < 0.22;
-				const v = silver ? 150 + rnd() * 90 : 40 + rnd() * 90;
-				g.strokeStyle = silver ? `rgba(${v},${v},${v + 8},0.9)` : `rgba(${v},${v},${v},0.5)`;
-				g.lineWidth = silver ? 0.8 : 1;
+				const v = 40 + rnd() * 90;
+				g.strokeStyle = `rgba(${v},${v},${v},0.5)`;
 				g.beginPath();
 				const x = u * hairW;
 				const y = rnd() * hairW * 0.5;
@@ -176,7 +179,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		512,
 		256,
 		(g) => {
-			g.fillStyle = '#f1ebe4';
+			g.fillStyle = '#e4d9cf';
 			g.fillRect(0, 0, 512, 256);
 			// Veins and a pinkish edge, away from the front.
 			const edge = g.createRadialGradient(256, 128, 60, 256, 128, 240);
@@ -193,7 +196,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 				g.stroke();
 			}
 			// Iris: 0.52 rad across the radius, 81.5 px per radian.
-			const R = 42;
+			const R = 46;
 			const iris = g.createRadialGradient(256, 128, 6, 256, 128, R);
 			iris.addColorStop(0, '#2a160a');
 			iris.addColorStop(0.35, '#5a3218');
@@ -238,7 +241,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		collar: fabric(0x111214, 0.4),
 		belt: fabric(0x0d0e10, 0.5),
 		skin: new THREE.MeshPhysicalMaterial({
-			color: 0x8e5a3d,
+			color: 0xa26a48,
 			roughness: 0.55,
 			sheen: 0.35,
 			sheenRoughness: 0.55,
@@ -266,7 +269,6 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 			side: THREE.DoubleSide,
 		}),
 		lock: new THREE.MeshPhysicalMaterial({ color: 0x15110e, roughness: 0.45, sheen: 1, sheenRoughness: 0.3, sheenColor: new THREE.Color(0x7a6c60), bumpMap: hairBump, bumpScale: 0.5 }),
-		silver: new THREE.MeshPhysicalMaterial({ color: 0x7d8086, roughness: 0.45, sheen: 0.6, sheenColor: new THREE.Color(0xc8ccd2) }),
 		stubble: new THREE.MeshStandardMaterial({ color: 0x1f1712, roughness: 0.85, alphaMap: speckle(0.8), alphaTest: 0.5, vertexColors: true }),
 		lens: new THREE.MeshPhysicalMaterial({ color: 0x0b0e13, roughness: 0.05, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0 }),
 		frame: new THREE.MeshStandardMaterial({ color: 0x18191c, roughness: 0.35, metalness: 0.6 }),
@@ -340,19 +342,18 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 
 	// ── Torso: a lathed jacket with a chest and waist, flattened front to back ──
 	const PROFILE: [number, number][] = [
-		[0.148, -0.21],
-		[0.146, -0.12],
-		[0.144, 0.0],
-		[0.138, 0.12],
-		[0.148, 0.26],
-		[0.156, 0.36],
-		[0.154, 0.44],
-		[0.136, 0.5],
-		[0.112, 0.535],
-		[0.07, 0.575],
-		[0.046, 0.59],
+		[0.157, -0.02],
+		[0.156, 0.12],
+		[0.162, 0.26],
+		[0.166, 0.36],
+		[0.163, 0.44],
+		[0.145, 0.5],
+		[0.12, 0.535],
+		[0.076, 0.572],
+		[0.05, 0.585],
 	];
-	const DEPTH = 0.78;
+	// Stocky: a deep chest and a little belly under the jacket.
+	const DEPTH = 0.82;
 	// How far the jacket's front surface is from the spine at height y.
 	const frontX = (y: number) => {
 		for (let i = 0; i < PROFILE.length - 1; i++) {
@@ -367,6 +368,32 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const jacket = mesh(folds(lathe(PROFILE, detail ? 72 : seg), 0.005), M.gi);
 	jacket.scale.set(DEPTH, 1, 1);
 	torso.add(jacket);
+	// The skirt of the jacket, below the belt. It's its own mesh so it can
+	// flap up out of the way when a thigh swings forward or back, instead of
+	// the leg punching through a rigid tube.
+	const skirtGeo = folds(
+		lathe(
+			[
+				[0.163, -0.15],
+				[0.16, -0.08],
+				[0.157, -0.02],
+				[0.157, 0.01],
+			],
+			detail ? 72 : seg,
+		),
+		0.004,
+		1,
+	);
+	skirtGeo.scale(DEPTH, 1, 1);
+	const skirtRest = Float32Array.from(skirtGeo.attributes.position.array as Float32Array);
+	torso.add(mesh(skirtGeo, M.gi));
+	// The seat of the trousers, on the pelvis, so the back reads as a body
+	// rather than a hollow when the legs swing.
+	for (const s of [1, -1]) {
+		const seat = at(mesh(sphere(0.068), M.gi), -0.045, -0.045, s * 0.058);
+		seat.scale.set(0.95, 1, 0.9);
+		torso.add(seat);
+	}
 
 	// The black collar: a flat band from behind the neck, over each shoulder,
 	// down the chest to the V, the left lapel crossing over the right.
@@ -445,8 +472,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const belt = new THREE.Group();
 	belt.scale.set(DEPTH, 1, 1);
 	torso.add(belt);
-	belt.add(at(mesh(new THREE.CylinderGeometry(0.147, 0.146, 0.038, seg, 1, true), M.belt), 0, 0.08, 0));
-	belt.add(at(mesh(new THREE.CylinderGeometry(0.149, 0.148, 0.038, seg, 1, true), M.belt), 0, 0.042, 0));
+	belt.add(at(mesh(new THREE.CylinderGeometry(0.161, 0.16, 0.038, seg, 1, true), M.belt), 0, 0.08, 0));
+	belt.add(at(mesh(new THREE.CylinderGeometry(0.163, 0.162, 0.038, seg, 1, true), M.belt), 0, 0.042, 0));
 	const knotX = frontX(0.06) + 0.012;
 	const knot = at(new THREE.Group(), knotX, 0.062, 0);
 	torso.add(knot);
@@ -469,7 +496,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	}
 
 	// ── Neck ──
-	const neck = at(mesh(new THREE.CylinderGeometry(0.041, 0.048, 0.14, seg), M.skin), -0.008, 0.625, 0);
+	const neck = at(mesh(new THREE.CylinderGeometry(0.047, 0.054, 0.13, seg), M.skin), -0.008, 0.62, 0);
 	neck.rotation.z = -0.12;
 	torso.add(neck);
 
@@ -486,26 +513,27 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		bump(0.88, 0.1, 0.42, 0.006, -0.008), // eye sockets
 		bump(0.88, 0.1, -0.42, 0.006, -0.008),
 		bump(0.95, 0.15, 0, 0.004, -0.003), // root of the nose
-		bump(0.6, -0.1, 0.76, 0.02, 0.006), // cheekbones
-		bump(0.6, -0.1, -0.76, 0.02, 0.006),
+		bump(0.6, -0.1, 0.76, 0.03, 0.004), // soft cheekbones
+		bump(0.6, -0.1, -0.76, 0.03, 0.004),
 		bump(0.85, -0.45, 0, 0.03, 0.007), // muzzle
-		bump(0.72, -0.7, 0, 0.012, 0.01), // chin
-		bump(0.05, -0.6, 0.78, 0.02, 0.004), // jaw angles
-		bump(0.05, -0.6, -0.78, 0.02, 0.004),
-		bump(0.6, -0.4, 0.68, 0.012, -0.003), // hollows under the cheekbones
-		bump(0.6, -0.4, -0.68, 0.012, -0.003),
+		bump(0.72, -0.72, 0, 0.03, 0.007), // a broad, rounded chin
+		bump(0.05, -0.6, 0.78, 0.03, 0.006), // full jaw
+		bump(0.05, -0.6, -0.78, 0.03, 0.006),
+		bump(0.6, -0.35, 0.7, 0.03, 0.005), // full cheeks
+		bump(0.6, -0.35, -0.7, 0.03, 0.005),
 		bump(0.35, 0.35, 0.85, 0.02, -0.003), // temples
 		bump(0.35, 0.35, -0.85, 0.02, -0.003),
 		bump(-0.9, 0.15, 0, 0.05, 0.006), // back of the skull
 	];
 	// The surface point of the head in direction n (a unit vector).
 	const headAt = (n: T.Vector3) => {
-		let x = n.x * 0.094;
-		const y = n.y * 0.108;
-		let z = n.z * 0.074;
+		// A round, broad face: wide for its height, with a full jaw.
+		let x = n.x * 0.093;
+		const y = n.y * 0.105;
+		let z = n.z * 0.082;
 		if (n.y < 0) {
 			const k = (-n.y) ** 1.5;
-			z *= 1 - 0.3 * k;
+			z *= 1 - 0.1 * k;
 			x *= 1 - (n.x < 0 ? 0.4 : 0.06) * k;
 		}
 		let d = 0;
@@ -571,28 +599,30 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const noseGeo = sculpt(sphere(1, 28, 20), (p) => {
 		const n = p.clone().normalize();
 		const lower = Math.max(0, -n.y);
-		const x = n.x * 0.011 + (1 - n.y) * 0.0075 + Math.exp(-(1 - n.dot(N(1, -0.55, 0))) / 0.08) * 0.007;
-		const y = n.y * 0.024;
-		const z = n.z * (0.0068 + 0.0105 * lower ** 1.1) + Math.sign(n.z) * Math.exp(-(1 - Math.abs(n.dot(N(0.15, -0.7, 0.7)))) / 0.05) * 0.0035;
+		// A short bridge and a broad, rounded tip with wide nostril wings.
+		const x = n.x * 0.011 + (1 - n.y) * 0.0068 + Math.exp(-(1 - n.dot(N(1, -0.5, 0))) / 0.12) * 0.008;
+		const y = n.y * 0.022;
+		const z = n.z * (0.0075 + 0.0145 * lower ** 1.1) + Math.sign(n.z) * Math.exp(-(1 - Math.abs(n.dot(N(0.15, -0.7, 0.7)))) / 0.06) * 0.005;
 		return V(x, y, z);
 	});
 	const nose = at(mesh(noseGeo, M.skin), headAt(N(1, 0.02, 0)).x - 0.013, -0.006, 0);
 	head.add(nose);
 	for (const s of [1, -1]) {
-		const nostril = at(mesh(sphere(1, 10, 8), M.nostril), nose.position.x + 0.012, -0.03, s * 0.0065);
-		nostril.scale.set(0.006, 0.0022, 0.0035);
+		const nostril = at(mesh(sphere(1, 10, 8), M.nostril), nose.position.x + 0.012, -0.0285, s * 0.0085);
+		nostril.scale.set(0.006, 0.0024, 0.0042);
 		head.add(nostril);
 	}
 
 	// Eyes: wet eyeballs that can look around, under lids that blink.
 	const eyes: T.Group[] = [];
 	const lids: T.Mesh[] = [];
-	const EYE_R = 0.0118;
-	const LID_OPEN = -0.18;
+	const EYE_R = 0.0133;
+	// Lids sit low over the iris: relaxed, smiling eyes.
+	const LID_OPEN = 0.0;
 	const LID_SHUT = 0.85;
 	for (const side of [1, -1]) {
 		const socket = headAt(N(0.88, 0.1, side * 0.42));
-		const centre = V(socket.x - EYE_R * 0.8, 0.011, side * 0.031);
+		const centre = V(socket.x - EYE_R * 0.8, 0.009, side * 0.034);
 		const eye = at(new THREE.Group(), centre.x, centre.y, centre.z);
 		// The texture's centre (the iris) maps to the sphere's +x.
 		eye.add(mesh(sphere(EYE_R, 32, 20), M.eye));
@@ -606,7 +636,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		lids.push(lid);
 		// Lower lid, fixed.
 		const lower = mesh(new THREE.SphereGeometry(EYE_R * 1.1, 28, 10, 0, Math.PI * 2, Math.PI * 0.72, Math.PI * 0.28), M.skin);
-		lower.rotation.z = -0.35;
+		lower.rotation.z = -0.08; // raised, as in a smile
 		lidPivot.add(lower);
 		// The crease above the lid.
 		const crease = mesh(new THREE.TorusGeometry(EYE_R * 1.15, 0.0012, 4, 16, Math.PI * 0.7), M.nostril);
@@ -625,16 +655,16 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	head.add(brows);
 	// Short hairs, laid along the arch and angled outwards, denser at the inner end.
 	for (const side of [1, -1]) {
-		const hairs = detail ? 46 : 14;
+		const hairs = detail ? 64 : 16;
 		for (let i = 0; i < hairs; i++) {
 			const f = (i / hairs) ** 0.85;
-			const z = 0.13 + f * 0.53;
-			const y = 0.3 + Math.sin(f * Math.PI) * 0.045 - f * 0.02 + (rnd() - 0.5) * (0.05 - f * 0.03);
+			const z = 0.11 + f * 0.53;
+			const y = 0.255 + Math.sin(f * Math.PI) * 0.03 - f * 0.02 + (rnd() - 0.5) * (0.045 - f * 0.03);
 			const n0 = N(0.86, y - 0.012, side * z);
 			const n1 = N(0.86, y + 0.008, side * (z + 0.05 + rnd() * 0.02));
 			const nm = n0.clone().add(n1).normalize();
 			const pts = [n0, nm, n1].map((n, k) => headAt(n).addScaledVector(n, 0.0012 + (k === 1 ? 0.0012 : 0)));
-			brows.add(strand(pts, 0.0011 + (1 - f) * 0.0005, M.lock));
+			brows.add(strand(pts, 0.0013 + (1 - f) * 0.0006, M.lock));
 		}
 	}
 
@@ -642,9 +672,9 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const mouth = new THREE.Group();
 	head.add(mouth);
 	const onFace = (y: number, z: number, out = 0.001) => headAt(N(0.87, y, z)).addScaledVector(N(0.87, y, z), out);
-	mouth.add(strand([onFace(-0.47, -0.3), onFace(-0.46, -0.12), onFace(-0.455, 0), onFace(-0.46, 0.12), onFace(-0.47, 0.3)], 0.0026, M.lip, false));
-	mouth.add(strand([onFace(-0.51, -0.27, 0.0015), onFace(-0.52, -0.14, 0.0025), onFace(-0.523, 0, 0.003), onFace(-0.52, 0.14, 0.0025), onFace(-0.51, 0.27, 0.0015)], 0.0034, M.lip, false));
-	mouth.add(strand([onFace(-0.478, -0.31), onFace(-0.488, -0.1), onFace(-0.49, 0), onFace(-0.488, 0.1), onFace(-0.478, 0.31)], 0.0012, M.mouthDark, false));
+	mouth.add(strand([onFace(-0.455, -0.3), onFace(-0.46, -0.12), onFace(-0.458, 0), onFace(-0.46, 0.12), onFace(-0.455, 0.3)], 0.0026, M.lip, false));
+	mouth.add(strand([onFace(-0.49, -0.27, 0.0015), onFace(-0.515, -0.14, 0.0028), onFace(-0.52, 0, 0.0033), onFace(-0.515, 0.14, 0.0028), onFace(-0.49, 0.27, 0.0015)], 0.0034, M.lip, false));
+	mouth.add(strand([onFace(-0.462, -0.32), onFace(-0.482, -0.12), onFace(-0.486, 0), onFace(-0.482, 0.12), onFace(-0.462, 0.32)], 0.0012, M.mouthDark, false));
 	const mouthSleep = at(new THREE.Group(), 0, 0, 0);
 	const opening = at(mesh(sphere(1, 12, 8), M.mouthDark), onFace(-0.49, 0).x - 0.001, onFace(-0.49, 0).y, 0);
 	opening.scale.set(0.003, 0.0045, 0.008);
@@ -652,16 +682,26 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	mouthSleep.visible = false;
 	head.add(mouthSleep);
 
-	// Stubble: a short beard over the jaw, chin and upper lip, clear of the lips.
+	// A short, trimmed beard: dense on the chin and along the jaw, thin on the
+	// cheeks, a full moustache that runs down to the corners of the mouth, and
+	// light sideburns joining it to the hair. Clear of the lips.
 	const beardCover = (n: T.Vector3) => {
-		const line = 0.12 - 0.62 * Math.max(0, n.x);
-		let c = smooth(line + 0.05, line - 0.05, n.y) * smooth(-0.3, 0.0, n.x);
-		const tache = n.x > 0.6 && Math.abs(n.z) < 0.36 && n.y > -0.462 && n.y < -0.32 ? smooth(-0.32, -0.36, n.y) * smooth(0.36, 0.26, Math.abs(n.z)) : 0;
-		c = Math.max(c, tache);
-		const dy = (n.y + 0.5) / 0.045;
-		const dz = n.z / 0.36;
+		const az = Math.abs(n.z);
+		const line = -0.16 - 0.36 * Math.max(0, n.x);
+		const jaw = smooth(line + 0.05, line - 0.05, n.y) * smooth(-0.3, 0.0, n.x);
+		const dense = 0.6 + 0.38 * smooth(0.3, 0.8, n.x) * smooth(-0.45, -0.7, n.y);
+		let c = jaw * dense;
+		// Sideburns.
+		if (n.x > 0.02 && n.x < 0.3 && az > 0.78) c = Math.max(c, 0.62 * smooth(0.15, 0.0, n.y));
+		// Moustache, with its ends drooping to the corners of the mouth.
+		const drop = smooth(0.22, 0.4, az) * 0.08;
+		const top = -0.3 - 0.035 * (1 - smooth(0.02, 0.16, az)) - 0.05 * smooth(0.25, 0.42, az);
+		if (n.x > 0.55 && az < 0.44 && n.y > -0.47 - drop && n.y < top + 0.02) c = Math.max(c, 0.92 * smooth(top + 0.02, top - 0.03, n.y) * smooth(0.44, 0.33, az));
+		// Lips stay bare.
+		const dy = (n.y + 0.49) / 0.04;
+		const dz = n.z / 0.31;
 		if (n.x > 0.6 && dy * dy + dz * dz < 1) c = 0;
-		return c * 0.95;
+		return c;
 	};
 	head.add(shell(() => 0.0024, beardCover, M.stubble));
 
@@ -671,12 +711,14 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const hairline = (n: T.Vector3) => {
 		let t = n.x >= 0 ? 0.18 + 0.34 * smooth(0.1, 0.85, n.x) : 0.18 - 0.62 * smooth(0, 0.8, -n.x);
 		if (n.x > 0.02 && n.x < 0.3 && Math.abs(n.z) > 0.82) t = -0.08; // sideburns
-		if (n.dot(N(-0.05, 0.0, Math.sign(n.z))) > 0.96) t = 0.4; // clear of the ears
+		if (n.dot(N(-0.05, 0.0, Math.sign(n.z))) > 0.96) t = 0.16; // just over the tops of the ears
 		return t;
 	};
-	const hairThick = (n: T.Vector3) => 0.004 + 0.011 * Math.max(0, n.y) ** 0.8 + Math.exp(-(1 - n.dot(N(0.6, 0.75, -0.15))) / 0.06) * 0.008;
+	// Thick and full on top, shorter at the sides.
+	const hairThick = (n: T.Vector3) => 0.006 + 0.02 * Math.max(0, n.y) ** 0.7 + Math.exp(-(1 - n.dot(N(0.5, 0.85, -0.1))) / 0.07) * 0.016;
 	hair.add(shell(hairThick, (n) => smooth(hairline(n) - 0.02, hairline(n) + 0.07, n.y), M.hair));
-	// Locks sweep from the crown, forward and over to his left, lifting at the front.
+	// Locks sweep up from the crown, forward and over to his left, tousled,
+	// with the forehead left clear.
 	const lockCount = detail ? 60 : 16;
 	for (let i = 0; i < lockCount; i++) {
 		const f = i / (lockCount - 1);
@@ -684,13 +726,12 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		const path = [
 			N(-0.55, 0.82, z0 * 0.8),
 			N(-0.1, 1.0, z0 * 0.92),
-			N(0.4, 0.92, z0 + 0.12),
-			N(0.72, 0.66, z0 + 0.26),
-			N(0.82, 0.54, z0 + 0.36 + (rnd() - 0.5) * 0.06),
+			N(0.4, 0.92 + (rnd() - 0.5) * 0.1, z0 + 0.12 + (rnd() - 0.5) * 0.08),
+			N(0.72, 0.68 + (rnd() - 0.5) * 0.08, z0 + 0.26 + (rnd() - 0.5) * 0.1),
+			N(0.84, 0.56 + (rnd() - 0.5) * 0.06, z0 + 0.4 + (rnd() - 0.5) * 0.1),
 		];
-		const pts = path.map((n, k) => headAt(n).addScaledVector(n, hairThick(n) - 0.001 + (k === 3 ? 0.004 : 0) + rnd() * 0.0015));
-		const silver = detail && f > 0.55 && rnd() < 0.25;
-		hair.add(strand(pts, silver ? 0.0028 : 0.0045 + rnd() * 0.0025, silver ? M.silver : M.lock));
+		const pts = path.map((n, k) => headAt(n).addScaledVector(n, hairThick(n) - 0.002 + (k === 2 || k === 3 ? 0.005 : k === 4 ? 0.007 : 0) + rnd() * 0.003));
+		hair.add(strand(pts, 0.0045 + rnd() * 0.0025, M.lock));
 	}
 
 	// ── Sunglasses (sunny) and a bead of sweat (hot) ──
@@ -792,8 +833,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	};
 	const leg = (z: number, side: number) => {
 		const hip = at(new THREE.Group(), 0, 0.02, z);
-		hip.add(mesh(folds(lathe([[0.072, -0.4], [0.076, -0.3], [0.082, -0.12], [0.086, 0.04]], seg), 0.004, side), M.gi));
-		hip.add(at(mesh(sphere(0.086), M.gi), 0, 0.03, 0));
+		hip.add(mesh(folds(lathe([[0.072, -0.4], [0.076, -0.3], [0.079, -0.12], [0.074, 0.02]], seg), 0.004, side), M.gi));
+		hip.add(at(mesh(sphere(0.07), M.gi), 0, 0.0, 0));
 		const knee = at(new THREE.Group(), 0, -0.39, 0);
 		hip.add(knee);
 		knee.add(mesh(sphere(0.067), M.gi));
@@ -820,8 +861,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		return { hip, knee };
 	};
 	// Front limbs sit nearer the camera (+z), back limbs further.
-	const front: Limb = { ...(legs ? leg(0.082, 1) : {}), ...arm(0.176, 1) };
-	const back: Limb = { ...(legs ? leg(-0.082, -1) : {}), ...arm(-0.176, -1) };
+	const front: Limb = { ...(legs ? leg(0.084, 1) : {}), ...arm(0.188, 1) };
+	const back: Limb = { ...(legs ? leg(-0.084, -1) : {}), ...arm(-0.188, -1) };
 
 	// Everything casts and catches shadows, except the thin shells.
 	body.traverse((o) => {
@@ -833,7 +874,38 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		}
 	});
 
-	return { body, head, torso, front, back, eyes, blink, brows, mouth, mouthSleep, shades, sweat, tails, hair };
+	// Lift the skirt where a thigh pushes it: each vertex rotates about the
+	// waist towards the thigh, more the lower it hangs and the closer it is to
+	// that leg.
+	const settle = () => {
+		const pos = skirtGeo.attributes.position;
+		const legsNow = [front, back].filter((l) => l.hip).map((l) => ({ a: l.hip!.rotation.z, z: l.hip!.position.z }));
+		for (let i = 0; i < pos.count; i++) {
+			const x = skirtRest[i * 3];
+			const y = skirtRest[i * 3 + 1];
+			const z = skirtRest[i * 3 + 2];
+			let a = 0;
+			for (const l of legsNow) {
+				const wz = Math.exp(-(((z - l.z) / 0.11) ** 2));
+				// Forward swing pushes the front, backward the back; the sides follow a little.
+				const facing = l.a > 0 ? Math.max(0, x) / 0.13 : Math.max(0, -x) / 0.13;
+				const push = Math.sign(l.a) * Math.max(0, Math.abs(l.a) - 0.3) * 0.9;
+				// The panel on the other side only follows at the sides, not the middle.
+				const k = wz * Math.min(1, facing + 0.25 * (1 - Math.min(1, Math.abs(x) / 0.13)));
+				if (Math.abs(push * k) > Math.abs(a)) a = push * k;
+			}
+			const px = x * 0.5;
+			const rx = x - px;
+			const ry = y - 0.01;
+			const c = Math.cos(a);
+			const sn = Math.sin(a);
+			pos.setXYZ(i, px + rx * c - ry * sn, 0.01 + rx * sn + ry * c, z);
+		}
+		pos.needsUpdate = true;
+		skirtGeo.computeVertexNormals();
+	};
+
+	return { body, head, torso, front, back, eyes, blink, brows, mouth, mouthSleep, shades, sweat, tails, hair, settle };
 }
 
 /**
