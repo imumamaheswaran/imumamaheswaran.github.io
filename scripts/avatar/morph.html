@@ -1,0 +1,21 @@
+<!doctype html><html><body><script src="makehuman.js"></script>
+<script>
+window.morph = async (mods)=>{
+  const res = await (await fetch('data/resources.json')).json();
+  res.baseUrl='data/'; res.proxies=[];
+  const human = new makehuman.Human(res);
+  await human.loadModel(); await human.loadTargets();
+  const missing=[];
+  for (const [k,v] of Object.entries(mods)) { const m=human.modifiers.children[k]; if(!m){missing.push(k);continue} m.setValue(v); }
+  // also re-run dependent macro updates
+  for (const [k,v] of Object.entries(mods)) { const m=human.modifiers.children[k]; if(m) m.setValue(v); }
+  const t=human.targets, m3=human.geometry.vertices.length*3, n=human.morphTargetInfluences.length;
+  const inf=human.morphTargetInfluences, td=t.targetData, d=new Float32Array(m3);
+  for(let j=0;j<n;j++){ const w=inf[j]; if(!w) continue; const o=j*m3; for(let i=0;i<m3;i++){ const x=td[o+i]; if(x) d[i]+=x*w; } }
+  const ref=t.referenceVertices, out=new Array(m3);
+  for(let i=0;i<ref.length;i++){ out[i*3]=+(ref[i].x+d[i*3]*1e-3).toFixed(5); out[i*3+1]=+(ref[i].y+d[i*3+1]*1e-3).toFixed(5); out[i*3+2]=+(ref[i].z+d[i*3+2]*1e-3).toFixed(5); }
+  const active={}; inf.forEach((w,j)=>{ if(w) active[j]=w });
+  return {missing, nActive:Object.keys(active).length, verts: out};
+};
+window.ready=true;
+</script></body></html>

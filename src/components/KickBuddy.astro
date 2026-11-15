@@ -2,12 +2,12 @@
 /**
  * Uma in 3D, full body, doing airborne Taekwondo techniques. Every so often
  * he leaps in from the left or right edge, strikes, and leaps back out the
- * same side. Spins and turns happen in real 3D (Three.js, physically based
- * materials, soft self-shadowing), with elbows that fold into a guard, fists,
- * and a head that stays level through the move.
+ * same side. He's the same rigged model as the hero (see lib/avatar3d.ts),
+ * posed bone by bone: spins and turns happen in real 3D, with elbows that
+ * fold into a guard, fists, and a head that stays level through the move.
  *
- * Three.js only loads the first time he appears, so it costs nothing on page
- * load. Decorative: hidden from screen readers, never takes clicks, and
+ * Three.js and the model only load the first time he appears (the hero has
+ * usually fetched the model already), so it costs nothing on page load. Decorative: hidden from screen readers, never takes clicks, and
  * switched off when the visitor prefers reduced motion or WebGL isn't there.
  */
 ---
@@ -16,7 +16,7 @@
 
 <script>
 	import { whoosh } from '../lib/sound';
-	import { buildToon, setupStage } from '../lib/toon3d';
+	import { loadAvatar, setupStage } from '../lib/avatar3d';
 
 	// A pose: body roll (r) and turn (y) in degrees, and each joint's swing in
 	// the side-on plane, like the old 2D drawing: thighs (tf/tb), shins (sf/sb)
@@ -116,33 +116,38 @@
 		camera.position.set(0.95, 0.45, 2.85);
 		camera.lookAt(0, 0.12, 0);
 		await setupStage(THREE, renderer, scene, { shadowSize: 512 });
-		const t = buildToon(THREE, { legs: true, face: '/images/uma-face.jpg' });
-		scene.add(t.body);
+		const a = await loadAvatar(THREE);
+		// Sized and placed like the drawing he replaces: hips at the origin.
+		a.root.scale.setScalar(0.8);
+		a.root.position.y = -0.04;
+		scene.add(a.root);
 		// Fists closed for the whole fight.
-		t.front.hand(1);
-		t.back.hand(1);
+		a.hand('L', 1);
+		a.hand('R', 1);
+		const head = a.bone('head');
 
 		const rad = THREE.MathUtils.degToRad;
+		const v = new THREE.Vector3();
+		// A direction in the side-on plane: 0 points straight down, positive
+		// swings forward. `out` keeps limbs off the body.
+		const swing = (deg: number, out: number) => v.set(out, -Math.cos(rad(deg)), Math.sin(rad(deg)));
+		// The near side (towards the camera) is his right when he faces right.
+		const limbs = (side: 'L' | 'R', s: number, tf: number, sf: number, af: number, ef: number) => {
+			a.aim('thigh', side, swing(-tf, s * 0.1));
+			a.aim('shin', side, swing(-tf - sf, s * 0.08));
+			a.aim('arm', side, swing(-af, s * 0.32));
+			a.aim('forearm', side, swing(-af + ef, s * 0.12));
+		};
 		return {
 			canvas,
 			render(p, face) {
-				// Facing left is a half turn; everything else is the pose.
-				t.body.rotation.set(0, rad(p.y) + (face < 0 ? Math.PI : 0), -rad(p.r), 'YXZ');
-				t.front.hip!.rotation.z = -rad(p.tf);
-				t.front.knee!.rotation.z = -rad(p.sf);
-				t.back.hip!.rotation.z = -rad(p.tb);
-				t.back.knee!.rotation.z = -rad(p.sb);
-				t.front.arm.rotation.z = -rad(p.af);
-				t.back.arm.rotation.z = -rad(p.ab);
-				t.front.elbow.rotation.z = rad(p.ef);
-				t.back.elbow.rotation.z = rad(p.eb);
+				// He faces +z; a quarter turn faces him right, three quarters left.
+				a.root.rotation.set(rad(p.r), rad(p.y) + (face < 0 ? -Math.PI / 2 : Math.PI / 2), 0, 'YXZ');
+				limbs('R', -1, p.tf, p.sf, p.af, p.ef);
+				limbs('L', 1, p.tb, p.sb, p.ab, p.eb);
 				// The head stays level through small rolls, eyes on the target.
 				const roll = Math.max(-30, Math.min(30, p.r));
-				t.head.rotation.z = rad(roll) * 0.45;
-				// Belt tails flutter in the air.
-				const now = performance.now() / 1000;
-				t.tails.forEach((tail, i) => (tail.rotation.z = 0.5 + Math.sin(now * 14 + i * 1.7) * 0.35));
-				t.settle();
+				head.rotation.x = -rad(roll) * 0.45;
 				renderer.render(scene, camera);
 			},
 		};

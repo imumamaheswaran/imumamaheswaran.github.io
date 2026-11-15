@@ -1,6 +1,7 @@
 /**
- * The hero figure, in 3D. Swaps in over the SVG drawing once Three.js has
- * loaded, in the same box, so the callouts still point at the head and belt.
+ * The hero figure, in 3D. Swaps in over the SVG drawing once Three.js and the
+ * model have loaded, in the same box, so the callouts still point at the head
+ * and belt.
  *
  * Alive: he breathes (chest and shoulders), shifts his weight, blinks, darts
  * his eyes about, turns a little to follow the pointer, leans in when you
@@ -8,7 +9,7 @@
  * s-sunny, s-hot) close his eyes, put on shades or add a bead of sweat. With
  * reduced motion he stays still and only redraws on change.
  */
-import { HEAD_Y, buildToon, setupStage } from './toon3d';
+import { loadAvatar, setupStage } from './avatar3d';
 
 export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 	if (toon.dataset.three) return;
@@ -30,23 +31,39 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 	const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 	const scene = new THREE.Scene();
-	// Framed from just above the hair to below the belt, like the drawing.
+	// Framed from just above the hair to below the belt, like the drawing:
+	// the head sits a fifth of the way down and the belt four fifths.
 	const camera = new THREE.PerspectiveCamera(26, 320 / 410, 0.1, 20);
-	const LOOK = new THREE.Vector3(0, 0.38, 0);
-	camera.position.set(0, 0.5, 2.45);
+	const LOOK = new THREE.Vector3(0, 0.44, 0);
+	camera.position.set(0, 0.56, 2.35);
 	camera.lookAt(LOOK);
 	await setupStage(THREE, renderer, scene, { shadowSize: 1024 });
 
-	const t = buildToon(THREE, { legs: false, detail: true, face: '/images/uma-face.jpg' });
-	scene.add(t.body);
-	// Arms hang at the sides, a touch out from the body, elbows soft.
-	const ARM_OUT = 0.035;
-	t.front.arm.rotation.set(-ARM_OUT, 0, 0.04);
-	t.back.arm.rotation.set(ARM_OUT, 0, 0.04);
-	t.front.hand(0.12);
-	t.back.hand(0.12);
-	// The model faces +x; turn it to face the camera.
-	const FACE = -Math.PI / 2;
+	let a: Awaited<ReturnType<typeof loadAvatar>>;
+	try {
+		a = await loadAvatar(THREE);
+	} catch {
+		delete toon.dataset.three;
+		renderer.dispose();
+		return;
+	}
+	scene.add(a.root);
+	const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+	// Arms hang at the sides, clear of the jacket, elbows soft, hands relaxed.
+	const hang = (sway: number) => {
+		a.aim('arm', 'L', V(0.21 + sway, -1, 0.02));
+		a.aim('forearm', 'L', V(0.13 + sway, -1, 0.12));
+		a.aim('arm', 'R', V(-0.21 + sway, -1, 0.02));
+		a.aim('forearm', 'R', V(-0.13 + sway, -1, 0.12));
+	};
+	hang(0);
+	a.hand('L', 0.25);
+	a.hand('R', 0.25);
+	const neck = a.bone('neck02');
+	const head = a.bone('head');
+	const chest = a.bone('spine02');
+	const clavL = a.bone('clavicle.L');
+	const clavR = a.bone('clavicle.R');
 
 	const size = () => {
 		const r = holder.getBoundingClientRect();
@@ -64,9 +81,8 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 		flags.sleep = fig.classList.contains('s-sleep');
 		flags.shades = fig.classList.contains('s-sunny') || fig.classList.contains('s-hot');
 		flags.sweat = fig.classList.contains('s-hot');
-		t.mouthSleep.visible = flags.sleep;
-		t.shades.visible = flags.shades && !flags.sleep;
-		t.sweat.visible = flags.sweat && !flags.sleep;
+		a.shades.visible = flags.shades && !flags.sleep;
+		a.sweat.visible = flags.sweat && !flags.sleep;
 		if (still) draw(performance.now());
 	};
 
@@ -87,9 +103,6 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 	toon.addEventListener('pointerleave', () => (hovering = false));
 	let hopAt = -1e9;
 	toon.addEventListener('click', () => (hopAt = performance.now()));
-	const BROWS_Y = t.brows.position.y;
-	const SHOULDER_Y = t.front.arm.position.y;
-	const HAIR_Y = t.hair.position.y;
 
 	// ── Animate ──
 	let yaw = 0;
@@ -111,19 +124,19 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 		pitch += (followPitch - pitch) * k;
 		// Small, slow drift so he never holds perfectly still.
 		const drift = still ? 0 : Math.sin(s * 0.37) * 0.02 + Math.sin(s * 0.91 + 1) * 0.01;
-		t.body.rotation.y = FACE + yaw * 0.45;
-		t.head.rotation.y = yaw * 0.55 + drift;
-		// Head nods about the model's z: down when asleep, after the pointer otherwise.
-		t.head.rotation.z = flags.sleep ? -0.3 + Math.sin(s * 0.8) * 0.025 : -pitch + drift * 0.5;
-		t.head.rotation.x = still ? 0 : Math.sin(s * 0.29) * 0.025;
+		a.root.rotation.y = yaw * 0.4;
+		neck.rotation.set(pitch * 0.3, yaw * 0.25, 0);
+		// Head nods down when asleep, after the pointer otherwise.
+		const nod = flags.sleep ? 0.32 + Math.sin(s * 0.8) * 0.025 : pitch * 0.7 + drift * 0.5;
+		head.rotation.set(nod, yaw * 0.35 + drift, still ? 0 : Math.sin(s * 0.29) * 0.025, 'YXZ');
 		// Weight shifts from foot to foot: a slow sideways lean.
-		t.body.rotation.x = still ? 0 : Math.sin(s * 0.33) * 0.012;
+		a.root.rotation.z = still ? 0 : Math.sin(s * 0.33) * 0.012;
 
-		// Breathing: the chest swells and the shoulders rise. Slow and deep when asleep.
+		// Breathing: the chest lifts and the shoulders rise. Slow and deep when asleep.
 		const breath = still ? 0 : Math.sin(s * (flags.sleep ? 1.1 : 1.7)) * (flags.sleep ? 1 : 0.6);
-		t.torso.scale.set(1 + breath * 0.012, 1 + breath * 0.006, 1 + breath * 0.008);
-		t.front.arm.position.y = t.back.arm.position.y = SHOULDER_Y + breath * 0.004;
-		t.head.position.y = HEAD_Y + breath * 0.004;
+		chest.rotation.x = -breath * 0.012;
+		clavL.rotation.z = breath * 0.025;
+		clavR.rotation.z = -breath * 0.025;
 
 		// Blink every few seconds: a quick close and a slower open.
 		if (flags.sleep) lid = 1;
@@ -133,7 +146,7 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 			lid = b < 0 ? 0 : b < 70 ? b / 70 : b < 180 ? 1 - (b - 70) / 110 : 0;
 			if (b >= 180) blinkAt = now + 2200 + Math.random() * 4000;
 		}
-		t.blink(lid);
+		a.blink(lid);
 
 		// Eyes lead the head towards the pointer, with little saccades on top.
 		if (!still && now > saccadeAt) {
@@ -142,32 +155,20 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 			saccadeAt = now + 600 + Math.random() * 1800;
 		}
 		const gy = yaw * 0.6 + glance.y;
-		const gz = -pitch * 1.2 + glance.z;
+		const gz = pitch * 1.2 + glance.z;
 		gaze.y += (gy - gaze.y) * (still ? 1 : 0.35);
 		gaze.z += (gz - gaze.z) * (still ? 1 : 0.35);
-		for (const eye of t.eyes) eye.rotation.set(0, gaze.y, gaze.z);
+		a.gaze(gaze.y, gaze.z);
 
-		// Click: a little hop, a wider smile, and the hair bounces after.
+		// Click: a little hop and a wider smile. Otherwise a relaxed one, like the photo.
 		const hop = (now - hopAt) / 450;
 		const hopping = hop >= 0 && hop < 1 && !still;
-		t.body.position.y = hopping ? Math.sin(hop * Math.PI) * 0.06 : 0;
-		t.hair.position.y = HAIR_Y + (hopping ? -Math.sin(hop * Math.PI * 2) * 0.003 : 0);
+		a.root.position.y = hopping ? Math.sin(hop * Math.PI) * 0.06 : 0;
 		const grin = (now - hopAt) / 1400;
-		const smile = grin >= 0 && grin < 1 ? 1 + Math.sin(grin * Math.PI) * 0.18 : 1;
-		t.mouth.scale.set(1, 1, smile);
+		a.smile(flags.sleep ? 0 : 0.5 + (grin >= 0 && grin < 1 ? Math.sin(grin * Math.PI) * 0.35 : 0));
 
-		// Brows lift a touch when you hover.
-		t.brows.position.y = BROWS_Y + (hovering && !flags.sleep ? 0.003 : 0);
-
-		// Arms and belt tails sway with the breath.
-		if (!still) {
-			const sway = Math.sin(s * 1.1);
-			t.front.arm.rotation.z = 0.04 + sway * 0.015;
-			t.back.arm.rotation.z = 0.04 - sway * 0.015;
-			t.front.elbow.rotation.z = 0.14 + sway * 0.02;
-			t.back.elbow.rotation.z = 0.14 - sway * 0.02;
-			t.tails.forEach((tail, i) => (tail.rotation.z = Math.sin(s * 1.4 + i) * 0.04));
-		}
+		// Arms sway with the breath.
+		if (!still) hang(Math.sin(s * 1.1) * 0.02);
 
 		// Hover: lean in (a gentle zoom).
 		const fovTarget = hovering && !still ? 23 : 26;
