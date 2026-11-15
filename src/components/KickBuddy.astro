@@ -116,7 +116,7 @@
 		camera.position.set(0.95, 0.45, 2.85);
 		camera.lookAt(0, 0.12, 0);
 		await setupStage(THREE, renderer, scene, { shadowSize: 512 });
-		const t = buildToon(THREE, { legs: true });
+		const t = buildToon(THREE, { legs: true, face: '/images/uma-face.jpg' });
 		scene.add(t.body);
 		// Fists closed for the whole fight.
 		t.front.hand(1);

@@ -51,8 +51,19 @@ export type Toon = {
 /** Height of the head's centre above the hips. */
 export const HEAD_Y = 0.725;
 
-export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean } = {}): Toon {
+/**
+ * Where Uma's face sits in the reference photo (public/images/uma-face.jpg,
+ * a 340×400 crop). Measured by hand: the pupils, mouth and chin line up with
+ * the model's eyes (z = ±0.034, y = 0.009), mouth and chin. The head in the
+ * photo is tilted 8° (his right eye higher), so the mapping rotates too.
+ */
+const FACE_PHOTO = { cx: 169, cy: 165, sx: 1440, sy: 1572, tilt: 0.14, w: 340, h: 400, ex: 160, ey: 224, rx: 116, ry: 144 };
+
+export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean; face?: string } = {}): Toon {
 	const { legs = true, detail = false } = opts;
+	// With a face photo, the front of the head wears the real face, and the
+	// modelled eyes, brows, lips and nostrils step aside for it.
+	const photo = !!opts.face;
 	const seg = detail ? 40 : 24;
 	const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 	const N = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).normalize();
@@ -241,11 +252,11 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		collar: fabric(0x111214, 0.4),
 		belt: fabric(0x0d0e10, 0.5),
 		skin: new THREE.MeshPhysicalMaterial({
-			color: 0xa26a48,
+			color: photo ? 0xa87252 : 0xa06e52,
 			roughness: 0.55,
 			sheen: 0.35,
 			sheenRoughness: 0.55,
-			sheenColor: new THREE.Color(0x9a4c38),
+			sheenColor: new THREE.Color(0x8c5c4a),
 			emissive: new THREE.Color(0x140603),
 			bumpMap: pores,
 			bumpScale: 0.15,
@@ -255,20 +266,20 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		nostril: new THREE.MeshStandardMaterial({ color: 0x3a1d12, roughness: 0.9 }),
 		eye: new THREE.MeshPhysicalMaterial({ map: eyeTex, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.03 }),
 		hair: new THREE.MeshPhysicalMaterial({
-			color: 0x1a1512,
+			color: 0x110d0b,
 			map: hairColor,
 			bumpMap: hairBump,
 			bumpScale: 1,
-			roughness: 0.5,
+			roughness: 0.62,
 			sheen: 1,
-			sheenRoughness: 0.35,
+			sheenRoughness: 0.45,
 			sheenColor: new THREE.Color(0x6e6258),
 			alphaMap: fillNoise(0.5),
 			alphaTest: 0.45,
 			vertexColors: true,
 			side: THREE.DoubleSide,
 		}),
-		lock: new THREE.MeshPhysicalMaterial({ color: 0x15110e, roughness: 0.45, sheen: 1, sheenRoughness: 0.3, sheenColor: new THREE.Color(0x7a6c60), bumpMap: hairBump, bumpScale: 0.5 }),
+		lock: new THREE.MeshPhysicalMaterial({ color: 0x0f0c0a, roughness: 0.62, sheen: 0.4, sheenRoughness: 0.5, sheenColor: new THREE.Color(0x3e3630) }),
 		stubble: new THREE.MeshStandardMaterial({ color: 0x1f1712, roughness: 0.85, alphaMap: speckle(0.8), alphaTest: 0.5, vertexColors: true }),
 		lens: new THREE.MeshPhysicalMaterial({ color: 0x0b0e13, roughness: 0.05, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0 }),
 		frame: new THREE.MeshStandardMaterial({ color: 0x18191c, roughness: 0.35, metalness: 0.6 }),
@@ -315,10 +326,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	};
 	const lathe = (profile: [number, number][], segs = seg) => new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), segs);
 	// A strand along a curve that tapers to a point at the end.
-	const strand = (pts: T.Vector3[], r: number, mat: T.Material, taper = true) => {
+	const strand = (pts: T.Vector3[], r: number, mat: T.Material, taper = true, tSeg = detail ? 28 : 14, rSeg = detail ? 8 : 5) => {
 		const curve = new THREE.CatmullRomCurve3(pts);
-		const tSeg = detail ? 28 : 14;
-		const rSeg = detail ? 8 : 5;
 		const geo = new THREE.TubeGeometry(curve, tSeg, r, rSeg, false);
 		if (taper) {
 			const pos = geo.attributes.position;
@@ -336,6 +345,39 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 			geo.computeVertexNormals();
 		}
 		return mesh(geo, mat);
+	};
+
+	// Join many small geometries (same attributes, indexed) into one, so
+	// hundreds of hair tufts cost a single draw call.
+	const mergeGeos = (geos: T.BufferGeometry[]) => {
+		let vCount = 0;
+		let iCount = 0;
+		for (const g of geos) {
+			vCount += g.attributes.position.count;
+			iCount += g.index!.count;
+		}
+		const pos = new Float32Array(vCount * 3);
+		const nor = new Float32Array(vCount * 3);
+		const uv = new Float32Array(vCount * 2);
+		const idx = new Uint32Array(iCount);
+		let v = 0;
+		let o = 0;
+		for (const g of geos) {
+			pos.set(g.attributes.position.array as Float32Array, v * 3);
+			nor.set(g.attributes.normal.array as Float32Array, v * 3);
+			uv.set(g.attributes.uv.array as Float32Array, v * 2);
+			const gi = g.index!.array;
+			for (let i = 0; i < gi.length; i++) idx[o + i] = gi[i] + v;
+			v += g.attributes.position.count;
+			o += gi.length;
+			g.dispose();
+		}
+		const out = new THREE.BufferGeometry();
+		out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+		out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+		out.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+		out.setIndex(new THREE.BufferAttribute(idx, 1));
+		return out;
 	};
 
 	const body = new THREE.Group();
@@ -510,8 +552,8 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		bump(0.92, 0.3, 0, 0.015, 0.004), // brow ridge
 		bump(0.85, 0.3, 0.38, 0.01, 0.005),
 		bump(0.85, 0.3, -0.38, 0.01, 0.005),
-		bump(0.88, 0.1, 0.42, 0.006, -0.008), // eye sockets
-		bump(0.88, 0.1, -0.42, 0.006, -0.008),
+		bump(0.88, 0.1, 0.42, 0.006, photo ? -0.003 : -0.008), // eye sockets
+		bump(0.88, 0.1, -0.42, 0.006, photo ? -0.003 : -0.008),
 		bump(0.95, 0.15, 0, 0.004, -0.003), // root of the nose
 		bump(0.6, -0.1, 0.76, 0.03, 0.004), // soft cheekbones
 		bump(0.6, -0.1, -0.76, 0.03, 0.004),
@@ -524,6 +566,9 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		bump(0.35, 0.35, 0.85, 0.02, -0.003), // temples
 		bump(0.35, 0.35, -0.85, 0.02, -0.003),
 		bump(-0.9, 0.15, 0, 0.05, 0.006), // back of the skull
+		// With the photo, the nose is part of the head's surface, so the photo's
+		// own nose sits on it without a seam.
+		...(photo ? [bump(0.97, -0.1, 0, 0.006, 0.011), bump(0.95, 0.05, 0, 0.003, 0.004)] : []),
 	];
 	// The surface point of the head in direction n (a unit vector).
 	const headAt = (n: T.Vector3) => {
@@ -562,6 +607,48 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const face = M.skin.clone();
 	face.vertexColors = true;
 	head.add(mesh(skullGeo, face));
+
+	// ── The photo face: project the photo straight onto the front of the head
+	//    (like a slide projector), fading out towards the sides. ──
+	// Photo pixel for a head-local point, and how much of the photo to show there.
+	const photoAt = (p: T.Vector3) => {
+		const F = FACE_PHOTO;
+		const X = F.sx * p.z;
+		const Y = F.sy * (0.009 - p.y);
+		const c = Math.cos(F.tilt);
+		const sn = Math.sin(F.tilt);
+		const px = F.cx + X * c - Y * sn;
+		const py = F.cy + X * sn + Y * c;
+		const r = Math.hypot((px - F.ex) / F.rx, (py - F.ey) / F.ry);
+		return { u: px / F.w, v: 1 - py / F.h, inside: smooth(1, 0.72, r) };
+	};
+	let photoMat: T.MeshStandardMaterial | null = null;
+	const photoMask = (n: T.Vector3) => (photo ? photoAt(headAt(n)).inside * smooth(0.2, 0.5, n.x) : 0);
+	if (photo) {
+		const tex = new THREE.TextureLoader().load(opts.face!);
+		tex.colorSpace = THREE.SRGBColorSpace;
+		tex.anisotropy = 4;
+		photoMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+		const geo = skullGeo.clone();
+		const pos = geo.attributes.position;
+		const nor = geo.attributes.normal;
+		const uv = geo.attributes.uv;
+		const col = new Float32Array(pos.count * 4);
+		const p = new THREE.Vector3();
+		const nn = new THREE.Vector3();
+		for (let i = 0; i < pos.count; i++) {
+			p.fromBufferAttribute(pos, i);
+			nn.fromBufferAttribute(nor, i);
+			const f = photoAt(p);
+			uv.setXY(i, f.u, f.v);
+			col.set([1, 1, 1, f.inside * smooth(0.15, 0.45, nn.x)], i * 4);
+			pos.setXYZ(i, p.x + nn.x * 0.0003, p.y + nn.y * 0.0003, p.z + nn.z * 0.0003);
+		}
+		geo.setAttribute('color', new THREE.BufferAttribute(col, 4));
+		const overlay = mesh(geo, photoMat);
+		overlay.renderOrder = 1;
+		head.add(overlay);
+	}
 	// A shell over the head (or part of it): thickness and coverage by direction.
 	const shell = (thick: (n: T.Vector3) => number, cover: (n: T.Vector3) => number, mat: T.Material, segs = headSeg) => {
 		const geo = sphere(1, segs, Math.round(segs * 0.75));
@@ -607,7 +694,9 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	});
 	const nose = at(mesh(noseGeo, M.skin), headAt(N(1, 0.02, 0)).x - 0.013, -0.006, 0);
 	head.add(nose);
-	for (const s of [1, -1]) {
+	// With the photo, the nose is sculpted into the head instead (see BUMPS).
+	nose.visible = !photo;
+	for (const s of photo ? [] : [1, -1]) {
 		const nostril = at(mesh(sphere(1, 10, 8), M.nostril), nose.position.x + 0.012, -0.0285, s * 0.0085);
 		nostril.scale.set(0.006, 0.0024, 0.0042);
 		head.add(nostril);
@@ -620,7 +709,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	// Lids sit low over the iris: relaxed, smiling eyes.
 	const LID_OPEN = 0.0;
 	const LID_SHUT = 0.85;
-	for (const side of [1, -1]) {
+	for (const side of photo ? [] : [1, -1]) {
 		const socket = headAt(N(0.88, 0.1, side * 0.42));
 		const centre = V(socket.x - EYE_R * 0.8, 0.009, side * 0.034);
 		const eye = at(new THREE.Group(), centre.x, centre.y, centre.z);
@@ -654,7 +743,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	const brows = new THREE.Group();
 	head.add(brows);
 	// Short hairs, laid along the arch and angled outwards, denser at the inner end.
-	for (const side of [1, -1]) {
+	for (const side of photo ? [] : [1, -1]) {
 		const hairs = detail ? 64 : 16;
 		for (let i = 0; i < hairs; i++) {
 			const f = (i / hairs) ** 0.85;
@@ -671,6 +760,7 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	// Lips: a fuller lower lip, the line between them, and the corners.
 	const mouth = new THREE.Group();
 	head.add(mouth);
+	mouth.visible = !photo;
 	const onFace = (y: number, z: number, out = 0.001) => headAt(N(0.87, y, z)).addScaledVector(N(0.87, y, z), out);
 	mouth.add(strand([onFace(-0.455, -0.3), onFace(-0.46, -0.12), onFace(-0.458, 0), onFace(-0.46, 0.12), onFace(-0.455, 0.3)], 0.0026, M.lip, false));
 	mouth.add(strand([onFace(-0.49, -0.27, 0.0015), onFace(-0.515, -0.14, 0.0028), onFace(-0.52, 0, 0.0033), onFace(-0.515, 0.14, 0.0028), onFace(-0.49, 0.27, 0.0015)], 0.0034, M.lip, false));
@@ -701,41 +791,78 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 		const dy = (n.y + 0.49) / 0.04;
 		const dz = n.z / 0.31;
 		if (n.x > 0.6 && dy * dy + dz * dz < 1) c = 0;
-		return c;
+		// Where the photo shows his own beard, the modelled one fades out.
+		return c * (1 - photoMask(n));
 	};
 	head.add(shell(() => 0.0024, beardCover, M.stubble));
 
-	// ── Hair: a shell cut to a hairline, then swept locks on top ──
+	// ── Hair: thick, black, slightly wavy, short at the sides, with natural
+	//    volume on top and a soft sweep over to his left. A shell gives the
+	//    mass; hundreds of short wavy tufts on it give the texture. ──
 	const hair = new THREE.Group();
 	head.add(hair);
 	const hairline = (n: T.Vector3) => {
-		let t = n.x >= 0 ? 0.18 + 0.34 * smooth(0.1, 0.85, n.x) : 0.18 - 0.62 * smooth(0, 0.8, -n.x);
+		let t = n.x >= 0 ? 0.2 + 0.32 * smooth(0.1, 0.85, n.x) : 0.2 - 0.64 * smooth(0, 0.8, -n.x);
+		// The hairline dips a little at the temples and rounds over the forehead.
+		t += 0.04 * smooth(0.1, 0.35, Math.abs(n.z)) * smooth(0.6, 0.9, n.x);
 		if (n.x > 0.02 && n.x < 0.3 && Math.abs(n.z) > 0.82) t = -0.08; // sideburns
 		if (n.dot(N(-0.05, 0.0, Math.sign(n.z))) > 0.96) t = 0.16; // just over the tops of the ears
 		return t;
 	};
-	// Thick and full on top, shorter at the sides.
-	const hairThick = (n: T.Vector3) => 0.006 + 0.02 * Math.max(0, n.y) ** 0.7 + Math.exp(-(1 - n.dot(N(0.5, 0.85, -0.1))) / 0.07) * 0.016;
-	hair.add(shell(hairThick, (n) => smooth(hairline(n) - 0.02, hairline(n) + 0.07, n.y), M.hair));
-	// Locks sweep up from the crown, forward and over to his left, tousled,
-	// with the forehead left clear.
-	const lockCount = detail ? 60 : 16;
-	for (let i = 0; i < lockCount; i++) {
-		const f = i / (lockCount - 1);
-		const z0 = -0.62 + f * 1.0 + (rnd() - 0.5) * 0.05;
-		const path = [
-			N(-0.55, 0.82, z0 * 0.8),
-			N(-0.1, 1.0, z0 * 0.92),
-			N(0.4, 0.92 + (rnd() - 0.5) * 0.1, z0 + 0.12 + (rnd() - 0.5) * 0.08),
-			N(0.72, 0.68 + (rnd() - 0.5) * 0.08, z0 + 0.26 + (rnd() - 0.5) * 0.1),
-			N(0.84, 0.56 + (rnd() - 0.5) * 0.06, z0 + 0.4 + (rnd() - 0.5) * 0.1),
-		];
-		const pts = path.map((n, k) => headAt(n).addScaledVector(n, hairThick(n) - 0.002 + (k === 2 || k === 3 ? 0.005 : k === 4 ? 0.007 : 0) + rnd() * 0.003));
-		hair.add(strand(pts, 0.0045 + rnd() * 0.0025, M.lock));
+	const hairCover = (n: T.Vector3) => smooth(hairline(n) - 0.02, hairline(n) + 0.07, n.y);
+	// Full and rounded on top, close at the sides and back.
+	const hairThick = (n: T.Vector3) =>
+		0.005 + 0.021 * Math.max(0, n.y) ** 0.8 * smooth(-0.6, 0.1, n.x) + Math.exp(-(1 - n.dot(N(0.45, 0.85, 0.15))) / 0.08) * 0.011;
+	hair.add(shell(hairThick, hairCover, M.hair));
+	// Tufts grow out from the crown, run forward over the top and bend over to
+	// his left, with a soft wave; at the front a few fall onto the forehead on
+	// his right, the way the hair falls in the photo.
+	const crown = N(-0.55, 0.82, -0.12);
+	const tufts: T.BufferGeometry[] = [];
+	const tuftCount = detail ? 650 : 110;
+	const tn = new THREE.Vector3();
+	for (let i = 0, tries = 0; i < tuftCount && tries < tuftCount * 20; tries++) {
+		tn.set(rnd() * 2 - 1, rnd() * 1.2 - 0.2, rnd() * 2 - 1).normalize();
+		if (hairCover(tn) < 0.85 || tn.y < 0.02) continue;
+		i++;
+		const n0 = tn.clone();
+		// Growth direction: away from the crown, turning towards the front and his left on top.
+		const away = n0.clone().sub(crown);
+		// Over the top it runs forward; towards the front it turns sideways to his
+		// left and lifts, so the forehead stays clear.
+		const front = smooth(0.35, 0.75, n0.x);
+		const sweep = V(1 - 0.8 * front, 0.15 + 0.3 * front, 0.55 * smooth(0.2, 0.7, n0.y) + 0.9 * front);
+		const dir = away.multiplyScalar(0.6).add(sweep.multiplyScalar(0.4 + 0.4 * smooth(0.3, 0.9, n0.y)));
+		dir.addScaledVector(n0, -dir.dot(n0)).normalize();
+		dir.add(V(rnd() - 0.5, (rnd() - 0.5) * 0.4, rnd() - 0.5).multiplyScalar(0.18)).normalize();
+		const len = (0.3 + rnd() * 0.2) * (0.5 + 0.6 * smooth(0, 0.7, n0.y));
+		const pts: T.Vector3[] = [];
+		const steps = 5;
+		const wave = (rnd() * 2 - 1) * 0.0014;
+		const phase = rnd() * Math.PI * 2;
+		for (let k = 0; k <= steps; k++) {
+			const t = k / steps;
+			const n = n0.clone().addScaledVector(dir, len * t);
+			// A small lock at the front on his right falls onto the forehead;
+			// everything else stops at the hairline.
+			const fringe = n0.x > 0.6 && n0.z < -0.12 && n0.z > -0.4;
+			if (fringe) n.y -= t * t * 0.06;
+			n.normalize();
+			if (!fringe && k > 1 && hairCover(n) < 0.6) break;
+			const lift = hairThick(n) * (0.82 + 0.22 * Math.sin(t * Math.PI)) + Math.sin(t * Math.PI * 2 + phase) * wave;
+			// Sideways wiggle, so the tufts aren't ruler-straight.
+			const side = new THREE.Vector3().crossVectors(n, dir).normalize();
+			pts.push(headAt(n).addScaledVector(n, lift).addScaledVector(side, Math.sin(t * Math.PI * 1.5 + phase) * 0.0012));
+		}
+		if (pts.length < 3) continue;
+		tufts.push(strand(pts, 0.0022 + rnd() * 0.0018, M.lock, true, detail ? 12 : 8, detail ? 5 : 4).geometry);
 	}
+	hair.add(mesh(mergeGeos(tufts), M.lock));
 
 	// ── Sunglasses (sunny) and a bead of sweat (hot) ──
 	const shades = new THREE.Group();
+	// Where the eyes sit (the same with or without the modelled eyeballs).
+	const eyeX = headAt(N(0.88, 0.1, 0.42)).x - 0.0133 * 0.8;
 	const lensShape = new THREE.Shape();
 	const lw = 0.024;
 	const lh = 0.017;
@@ -751,14 +878,14 @@ export function buildToon(THREE: Three, opts: { legs?: boolean; detail?: boolean
 	lensShape.quadraticCurveTo(-lw, -lh, -lw + lr, -lh);
 	const lensGeo = new THREE.ExtrudeGeometry(lensShape, { depth: 0.002, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.0012, bevelSegments: 2 });
 	for (const side of [1, -1]) {
-		const lens = at(mesh(lensGeo, M.lens), eyes[side > 0 ? 0 : 1].position.x + 0.017, 0.012, side * 0.032);
+		const lens = at(mesh(lensGeo, M.lens), eyeX + 0.017, 0.012, side * 0.032);
 		lens.rotation.y = Math.PI / 2 + side * 0.12;
 		shades.add(lens);
 		const arm = at(mesh(new THREE.BoxGeometry(0.1, 0.004, 0.003), M.frame), 0.045, 0.02, side * 0.078);
 		arm.rotation.y = side * 0.04;
 		shades.add(arm);
 	}
-	shades.add(at(mesh(new THREE.BoxGeometry(0.004, 0.004, 0.018), M.frame), eyes[0].position.x + 0.02, 0.022, 0));
+	shades.add(at(mesh(new THREE.BoxGeometry(0.004, 0.004, 0.018), M.frame), eyeX + 0.02, 0.022, 0));
 	shades.visible = false;
 	head.add(shades);
 	const sweat = new THREE.Group();

@@ -37,7 +37,7 @@ export async function startHero3D(toon: HTMLElement, fig: HTMLElement) {
 	camera.lookAt(LOOK);
 	await setupStage(THREE, renderer, scene, { shadowSize: 1024 });
 
-	const t = buildToon(THREE, { legs: false, detail: true });
+	const t = buildToon(THREE, { legs: false, detail: true, face: '/images/uma-face.jpg' });
 	scene.add(t.body);
 	// Arms hang at the sides, a touch out from the body, elbows soft.
 	const ARM_OUT = 0.035;
