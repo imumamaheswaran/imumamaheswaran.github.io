@@ -52,6 +52,8 @@ This compression is surprisingly lossless. Turning text into codes and back repr
 
 **Stage 2: generate the levels, not the tokens.** A normal transformer is trained to generate those codes, coarse to fine. It predicts **all the codes in a level at once**, then moves to the next level. Then the stage-1 decoder turns the final stack back into text.
 
+![Each level of concept codes is generated in one parallel step, with more codes at every level](./ncm-levels.svg)
+
 The key consequence: the number of passes is set by the **number of levels**, not by the length of the text. In the summarization experiment, NCM produced each summary in **8 passes**. The autoregressive baseline needed 64.
 
 ## What the numbers say
