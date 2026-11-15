@@ -18,10 +18,6 @@ export default defineConfig({
 			wrap: false,
 		},
 	},
-	vite: {
-		// Three.js (the 3D kick buddy) is one big chunk, loaded only when he appears.
-		build: { chunkSizeWarningLimit: 800 },
-	},
 	fonts: [
 		{
 			provider: fontProviders.google(),
