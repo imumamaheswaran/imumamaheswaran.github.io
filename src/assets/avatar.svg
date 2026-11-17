@@ -1,88 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 50 320 410" width="320" height="410" class="toon-svg">
 <style>.tu-acc{display:none}</style>
 <g transform="translate(60 60)">
-<defs>
-  <!-- stubble: a fine stipple, like the short beard in the portrait -->
-  <pattern id="toon-stubble" width="3.2" height="3.2" patternUnits="userSpaceOnUse">
-    <circle cx="0.8" cy="0.8" r="0.45" fill="#1a1210"/>
-    <circle cx="2.4" cy="2.3" r="0.4" fill="#1a1210"/>
-  </pattern>
-</defs>
 <g stroke="#1a1210" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-  <!-- neck, in shadow under the jaw -->
-  <path d="M80 148 C81 170 79 186 72 196 L128 196 C121 186 119 170 120 148 Z" fill="#a8653a"/>
+  <!-- neck: short and solid, in shadow under the jaw -->
+  <path d="M76 150 C78 172 76 186 68 196 L132 196 C124 186 122 172 124 150 Z" fill="#9c6446"/>
   <!-- ears -->
-  <path d="M59 108 C49 104 47 118 50 126 C52 132 57 134 61 132 Z" fill="#c27c4c"/>
-  <path d="M141 108 C151 104 153 118 150 126 C148 132 143 134 139 132 Z" fill="#c27c4c"/>
-  <!-- face: an oval with a defined jaw -->
-  <path d="M60 94 C60 64 140 64 140 94 L140 122 C139 150 122 174 100 177 C78 174 61 150 60 122 Z" fill="#c27c4c"/>
+  <path d="M56 106 C45 101 42 117 45 126 C47 133 53 136 58 133 Z" fill="#b77e5c"/>
+  <path d="M144 106 C155 101 158 117 155 126 C153 133 147 136 142 133 Z" fill="#b77e5c"/>
+  <!-- face: round and full, broad cheeks, a soft rounded chin -->
+  <path d="M55 98 C54 62 146 62 145 98 C148 112 148 126 144 138 C138 162 122 178 100 180 C78 178 62 162 56 138 C52 126 52 112 55 98 Z" fill="#b77e5c"/>
 </g>
-<path d="M53 116 C55 119 56 123 55 127 M147 116 C145 119 144 123 145 127" fill="none" stroke="#8a4e2a" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M49 114 C51 118 52 122 51 127 M151 114 C149 118 148 122 149 127" fill="none" stroke="#8a4f30" stroke-width="1.6" stroke-linecap="round"/>
 <!-- soft shading on the cheeks and under the jaw -->
-<path d="M61 124 C64 148 80 170 100 175 C84 166 70 150 66 128 Z" fill="#a8653a" opacity="0.35"/>
-<path d="M139 124 C136 148 120 170 100 175 C116 166 130 150 134 128 Z" fill="#a8653a" opacity="0.35"/>
-<!-- short stubble beard along the jaw and chin, joined to the moustache -->
-<path d="M61 120 C62 150 80 175 100 177 C120 175 138 150 139 120 C135 138 128 148 121 150 C114 147 107 148 100 149 C93 148 86 147 79 150 C72 148 65 138 61 120 Z" fill="url(#toon-stubble)" opacity="0.55"/>
-<path d="M61 120 C62 150 80 175 100 177 C120 175 138 150 139 120 C135 138 128 148 121 150 C114 147 107 148 100 149 C93 148 86 147 79 150 C72 148 65 138 61 120 Z" fill="#1a1210" opacity="0.14"/>
-<path d="M88 158 C92 170 108 170 112 158 C106 162 94 162 88 158 Z" fill="#1a1210" opacity="0.25"/>
-<!-- hair: a low base with a high hairline, then long locks layered over it,
-     each pointing the way the hair falls: swept to the viewer's left on top,
-     hanging and flicking outward at the sides -->
-<g fill="#1c1a1d" stroke="#1a1210" stroke-width="2.6" stroke-linejoin="round">
-  <path d="M58 112 C52 96 50 78 56 64 C64 48 82 40 102 39 C124 38 146 46 156 62 C162 74 160 94 152 112 L146 112 C146 100 142 92 136 86 C124 80 112 78 100 79 C88 80 76 83 68 89 C63 95 61 104 60 112 Z"/>
-  <!-- right side: locks curling down and out -->
-  <path d="M146 54 C160 58 168 70 168 84 C162 75 155 70 146 68 Z"/>
-  <path d="M150 76 C161 82 166 95 162 109 C158 99 153 93 146 90 Z"/>
-  <!-- crown, sweeping left -->
-  <path d="M152 52 C142 38 124 33 108 35 C124 40 136 47 142 58 Z"/>
-  <path d="M134 40 C114 29 88 30 68 42 C86 39 104 41 120 48 Z"/>
-  <!-- left side: locks swept left and down -->
-  <path d="M74 48 C58 48 45 57 40 72 C49 64 60 60 72 60 Z"/>
-  <path d="M62 66 C49 70 42 83 42 97 C48 87 55 81 63 79 Z"/>
-  <path d="M61 84 C53 90 48 101 50 113 C54 104 58 98 63 96 Z"/>
+<path d="M56 128 C61 154 79 174 100 178 C83 170 68 154 63 132 Z" fill="#9c6446" opacity="0.4"/>
+<path d="M144 128 C139 154 121 174 100 178 C117 170 132 154 137 132 Z" fill="#9c6446" opacity="0.4"/>
+<!-- warm, full cheeks lifted by the smile -->
+<ellipse cx="74" cy="137" rx="10" ry="6" fill="#cc9474" opacity="0.45"/>
+<ellipse cx="126" cy="137" rx="10" ry="6" fill="#cc9474" opacity="0.45"/>
+<!-- hair: thick, black and wavy, standing up off the forehead and swept
+     back and over to the viewer's right, full over the ears -->
+<g fill="#16151a" stroke="#0f0d0c" stroke-width="2.6" stroke-linejoin="round">
+  <!-- the mass: parted on the viewer's left, rising into a big wave and
+       sweeping over to the right, where it falls full over the ear -->
+  <path d="M53 116 C46 100 45 80 50 64 C56 44 72 28 92 23 C114 18 138 26 152 42 C162 54 166 70 164 86 C163 98 159 108 154 118 L147 116 C148 104 146 94 141 87 C132 80 120 78 110 80 C100 75 88 75 78 80 C68 85 61 94 58 104 C57 108 57 112 57 116 Z"/>
+  <!-- the big wave on top, cresting left of centre and rolling right -->
+  <path d="M60 60 C64 36 86 20 108 20 C96 26 88 34 86 44 C76 46 66 52 60 60 Z"/>
+  <path d="M86 44 C98 26 126 22 146 34 C132 32 118 36 110 46 C102 43 94 43 86 44 Z"/>
+  <path d="M112 46 C130 36 154 44 162 62 C152 54 140 52 132 56 C126 51 120 48 112 46 Z"/>
+  <!-- wavy ends on the right, curling down past the temple -->
+  <path d="M146 62 C160 66 168 80 166 96 C162 88 156 84 150 84 Z"/>
+  <path d="M152 86 C162 94 164 106 160 118 C157 110 153 104 148 102 Z"/>
+  <path d="M164 72 C170 76 172 84 170 90 C168 84 164 80 160 79 Z"/>
+  <!-- the front lock, lifted off the forehead and swept right -->
+  <path d="M62 92 C66 74 84 62 106 61 C126 60 142 68 152 82 C138 73 122 71 108 75 C92 78 76 84 62 92 Z"/>
+  <!-- shorter on the left, just over the ear -->
+  <path d="M56 72 C47 80 44 92 46 106 C50 98 54 93 59 91 Z"/>
 </g>
-<!-- silver streaks on the left side, as in the portrait -->
+<!-- sheen and wave lines in the hair -->
 <g fill="none" stroke-linecap="round">
-  <path d="M124 41 C104 41 80 48 62 62" stroke="#8d929b" stroke-width="2.8"/>
-  <path d="M114 50 C96 53 76 60 60 74" stroke="#b8bdc5" stroke-width="2"/>
-  <path d="M90 42 C78 45 64 52 54 62" stroke="#b8bdc5" stroke-width="1.5"/>
+  <path d="M68 50 C80 38 98 32 116 33" stroke="#3b3a44" stroke-width="2.2"/>
+  <path d="M84 70 C98 64 116 63 134 69" stroke="#3b3a44" stroke-width="1.8"/>
+  <path d="M120 40 C136 40 150 48 157 60" stroke="#3b3a44" stroke-width="1.6"/>
+  <path d="M152 72 C157 78 159 86 158 94" stroke="#3b3a44" stroke-width="1.4"/>
 </g>
 <!-- a couple of loose strands at the hairline -->
-<g fill="none" stroke="#1c1a1d" stroke-width="1.8" stroke-linecap="round">
-  <path d="M104 79 C98 82 95 86 93 91"/>
-  <path d="M78 83 C74 88 73 93 74 97"/>
+<g fill="none" stroke="#16151a" stroke-width="1.8" stroke-linecap="round">
+  <path d="M110 79 C106 82 104 86 103 90"/>
+  <path d="M72 86 C69 90 68 94 69 98"/>
 </g>
-<!-- eyebrows: thick, slightly arched -->
-<path d="M70 100 Q81 92 95 97 L94 102 Q82 98 71 105 Z" fill="#1a1210"/>
-<path d="M130 100 Q119 92 105 97 L106 102 Q118 98 129 105 Z" fill="#1a1210"/>
-<!-- eyes: almond, dark brown, with a crease above -->
+<!-- eyebrows: thick and fairly straight, a little lifted -->
+<path d="M68 101 Q80 95 95 98 L94 102 Q81 99.5 69 105 Z" fill="#14100e"/>
+<path d="M132 101 Q120 95 105 98 L106 102 Q119 99.5 131 105 Z" fill="#14100e"/>
+<!-- eyes: warm and a little narrowed by the smile, dark brown -->
 <g class="eyes">
-  <path d="M75 115 Q84 108 93 115 Q84 120 75 115 Z" fill="#f6efe6" stroke="#1a1210" stroke-width="1.6"/>
-  <path d="M107 115 Q116 108 125 115 Q116 120 107 115 Z" fill="#f6efe6" stroke="#1a1210" stroke-width="1.6"/>
-  <circle cx="84" cy="114.5" r="3.7" fill="#4a2a18"/>
-  <circle cx="116" cy="114.5" r="3.7" fill="#4a2a18"/>
-  <circle cx="84" cy="114.5" r="1.8" fill="#140c08"/>
-  <circle cx="116" cy="114.5" r="1.8" fill="#140c08"/>
-  <circle cx="85.3" cy="113.2" r="1" fill="#fff"/>
-  <circle cx="117.3" cy="113.2" r="1" fill="#fff"/>
-  <path d="M74 114 Q84 106.5 94 114 M106 114 Q116 106.5 126 114" fill="none" stroke="#1a1210" stroke-width="2.6" stroke-linecap="round"/>
-  <path d="M77 109.5 Q84 105.5 91 109 M109 109 Q116 105.5 123 109.5" fill="none" stroke="#8a4e2a" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M74 116 Q84 109 94 116 Q84 119.5 74 116 Z" fill="#f4ece2" stroke="#1a1210" stroke-width="1.6"/>
+  <path d="M106 116 Q116 109 126 116 Q116 119.5 106 116 Z" fill="#f4ece2" stroke="#1a1210" stroke-width="1.6"/>
+  <circle cx="84" cy="115" r="3.6" fill="#3d2414"/>
+  <circle cx="116" cy="115" r="3.6" fill="#3d2414"/>
+  <circle cx="84" cy="115" r="1.8" fill="#120a06"/>
+  <circle cx="116" cy="115" r="1.8" fill="#120a06"/>
+  <circle cx="85.3" cy="113.8" r="1" fill="#fff"/>
+  <circle cx="117.3" cy="113.8" r="1" fill="#fff"/>
+  <path d="M73 115 Q84 107.5 95 115 M105 115 Q116 107.5 127 115" fill="none" stroke="#1a1210" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- lower lids pushed up by the smile -->
+  <path d="M76 119.5 Q84 122 92 119.5 M108 119.5 Q116 122 124 119.5" fill="none" stroke="#8a4f30" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M76 110.5 Q84 106.5 92 110 M108 110 Q116 106.5 124 110.5" fill="none" stroke="#8a4f30" stroke-width="1.2" stroke-linecap="round"/>
 </g>
 <g class="tu-acc eyes-closed" fill="none" stroke="#1a1210" stroke-width="2.4" stroke-linecap="round">
-  <path d="M75 115 Q84 119 93 115"/><path d="M107 115 Q116 119 125 115"/>
+  <path d="M74 116 Q84 120 94 116"/><path d="M106 116 Q116 120 126 116"/>
 </g>
-<!-- nose: straight, with a rounded tip -->
-<path d="M99 112 C98 121 95 126 94 130 C93 134 97 136 100 136 C103 136 107 134 106 130" fill="none" stroke="#8a4e2a" stroke-width="2.6" stroke-linecap="round"/>
-<path d="M93 131 C91 133 92 135 95 135 M107 131 C109 133 108 135 105 135" fill="none" stroke="#8a4e2a" stroke-width="1.6" stroke-linecap="round"/>
-<!-- moustache -->
-<path d="M83 142 C89 137 96 137 100 139.5 C104 137 111 137 117 142 C113 143.5 108 143 104 142.5 C102 142.3 101 143 100 143.5 C99 143 98 142.3 96 142.5 C92 143 87 143.5 83 142 Z" fill="#1a1210"/>
-<!-- a gentle, closed smile -->
+<!-- nose: broad, with a rounded tip and wide nostrils -->
+<path d="M99 113 C98 121 96 126 94 129" fill="none" stroke="#8a4f30" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M90 130 C86 132 87 138 92 138 C95 140 98 140 100 139 C102 140 105 140 108 138 C113 138 114 132 110 130" fill="none" stroke="#8a4f30" stroke-width="2.6" stroke-linecap="round"/>
+<path d="M93 136 C95 137 97 137 98 136 M102 136 C103 137 105 137 107 136" fill="none" stroke="#5e331f" stroke-width="1.6" stroke-linecap="round"/>
+<!-- smile lines -->
+<path d="M84 140 C80 145 80 151 83 155 M116 140 C120 145 120 151 117 155" fill="none" stroke="#8a4f30" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>
+<!-- a warm, closed smile with full lips -->
 <g class="mouth-smile">
-  <path d="M90 150 Q100 156.5 110 150 Q100 152.5 90 150 Z" fill="#b06f5c"/>
-  <path d="M89 148.5 Q95 147 100 148.5 Q105 147 111 148.5 Q100 152.5 89 148.5 Z" fill="#8f4f43"/>
+  <path d="M86 148 Q100 151 114 148 Q112 158 100 159 Q88 158 86 148 Z" fill="#9c5a4c"/>
+  <path d="M86 148 Q93 145.5 100 147.5 Q107 145.5 114 148 Q100 151.5 86 148 Z" fill="#7d4238"/>
+  <path d="M86 148 Q100 152.5 114 148" fill="none" stroke="#4a221b" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M84.5 146.5 L86.5 148.5 M115.5 146.5 L113.5 148.5" stroke="#4a221b" stroke-width="1.4" stroke-linecap="round"/>
 </g>
 <g class="tu-acc mouth-sleep">
-  <ellipse cx="100" cy="151" rx="4" ry="3" fill="#4a1f1a" stroke="#1a1210" stroke-width="1.6"/>
+  <ellipse cx="100" cy="152" rx="4" ry="3" fill="#4a1f1a" stroke="#1a1210" stroke-width="1.6"/>
 </g>
 <!-- sunglasses (sunny) -->
 <g class="tu-acc shades" stroke="#1a1210" stroke-width="2.5" stroke-linejoin="round">
@@ -102,7 +103,7 @@
   <!-- jacket: shoulders to hips, a little in at the waist -->
   <path d="M124 252 C104 255 84 260 72 270 C62 280 60 300 64 330 C68 360 74 390 80 410 L80 460 L240 460 L240 410 C246 390 252 360 256 330 C260 300 258 280 248 270 C236 260 216 255 196 252 Z" fill="#f7f7f4"/>
   <!-- skin in the V of the collar -->
-  <path d="M138 251 L160 318 L182 251 Z" fill="#a8653a"/>
+  <path d="M136 251 L160 318 L184 251 Z" fill="#9c6446"/>
 </g>
 <!-- shading down the far side -->
 <path d="M248 270 C258 280 260 300 256 330 C252 360 246 390 240 410 L240 460 L226 460 C230 420 236 360 240 320 C242 296 244 282 248 270 Z" fill="#1a1210" opacity="0.07"/>
@@ -137,8 +138,8 @@
   <path d="M72 268 C54 272 42 286 38 306 C34 340 32 380 34 418 L66 420 C68 384 72 344 76 314 C78 296 78 280 72 268 Z" fill="#f7f7f4"/>
   <path d="M248 268 C266 272 278 286 282 306 C286 340 288 380 286 418 L254 420 C252 384 248 344 244 314 C242 296 242 280 248 268 Z" fill="#f7f7f4"/>
   <!-- hands -->
-  <path d="M37 419 C34 433 38 447 50 449 C61 449 67 439 65 421 Z" fill="#c27c4c"/>
-  <path d="M283 419 C286 433 282 447 270 449 C259 449 253 439 255 421 Z" fill="#c27c4c"/>
+  <path d="M37 419 C34 433 38 447 50 449 C61 449 67 439 65 421 Z" fill="#b77e5c"/>
+  <path d="M283 419 C286 433 282 447 270 449 C259 449 253 439 255 421 Z" fill="#b77e5c"/>
 </g>
 <g fill="none" stroke="#c9c9c2" stroke-width="2" stroke-linecap="round">
   <path d="M44 330 C50 334 58 334 66 331 M276 330 C270 334 262 334 254 331"/>
